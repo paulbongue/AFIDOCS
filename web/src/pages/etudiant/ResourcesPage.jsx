@@ -48,6 +48,12 @@ export default function ResourcesPage() {
         ))}
       </div>
 
+      {active && (
+        <h3 className="mt" style={{ marginTop: 18 }}>
+          {filieres.find((f) => String(f.id) === String(active))?.nom}
+        </h3>
+      )}
+
       <div className="mt">
         {loading ? <div className="empty">Chargement…</div>
           : ressources.length === 0 ? <div className="empty">Aucune ressource trouvée.</div>

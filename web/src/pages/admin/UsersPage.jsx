@@ -162,7 +162,7 @@ export default function UsersPage() {
               <td>{ROLE_LABEL[u.role] || u.role}</td>
               <td>
                 {u.filiere ? <Badge code={u.filiere.code} couleur={u.filiere.couleur} /> : '—'}
-                {u.role === 'delegue' && u.niveau ? ` · ${u.niveau.nom}` : ''}
+                {u.niveau ? ` · ${u.niveau.nom}` : ''}
               </td>
               <td><button className="btn btn-danger" onClick={() => remove(u.id)}>Supprimer</button></td>
             </tr>

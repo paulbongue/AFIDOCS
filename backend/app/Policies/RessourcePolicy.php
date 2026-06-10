@@ -25,6 +25,11 @@ class RessourcePolicy
      */
     public function publishInMatiere(User $user, Matiere $matiere): bool
     {
+        // L'administrateur peut publier dans n'importe quelle filiere / classe.
+        if ($user->isAdmin()) {
+            return true;
+        }
+
         if (! $user->isDelegue()) {
             return false;
         }

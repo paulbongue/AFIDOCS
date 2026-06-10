@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('filieres', function (Blueprint $table) {
             $table->id();
-            $table->string('code', 10)->unique();   // BAF, GSE, GRH, IR, MJF, MMC, MAI, GL
+            $table->string('code', 10)->unique();   // MAI, BAF, GSE, TL, MMC, QHSE, GRH, DWMD, GL, SRT, MJF, LEA
             $table->string('nom');
             $table->string('couleur', 9);            // badge hexadecimal (#RRGGBB)
             $table->timestamps();

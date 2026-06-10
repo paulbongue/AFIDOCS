@@ -5,15 +5,17 @@ import * as Sharing from 'expo-sharing';
 
 import OfflineBanner from '../components/OfflineBanner';
 import ResourceCard from '../components/ResourceCard';
+import { useAuth } from '../context/AuthContext';
 import * as dbApi from '../db/database';
 import { colors, formatSize } from '../theme';
 
 export default function DownloadsScreen() {
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
 
   const load = useCallback(async () => {
-    setItems(await dbApi.getDownloaded());
-  }, []);
+    setItems(await dbApi.getDownloaded(user?.id));
+  }, [user]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 

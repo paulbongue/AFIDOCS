@@ -8,12 +8,14 @@ import { useFocusEffect } from '@react-navigation/native';
 import ResourceCard from '../components/ResourceCard';
 import OfflineBanner from '../components/OfflineBanner';
 import { useNetwork } from '../context/NetworkContext';
+import { useAuth } from '../context/AuthContext';
 import { fullSync } from '../services/sync';
 import * as dbApi from '../db/database';
 import { colors, colorForFiliere } from '../theme';
 
 export default function ResourceListScreen({ navigation }) {
   const { isOnline } = useNetwork();
+  const { user } = useAuth();
   const [ressources, setRessources] = useState([]);
   const [filieres, setFilieres] = useState([]);
   const [search, setSearch] = useState('');
@@ -28,13 +30,13 @@ export default function ResourceListScreen({ navigation }) {
     if (search) filters.search = search;
     if (activeFiliere) filters.filiere_id = activeFiliere;
     const [list, fils] = await Promise.all([
-      dbApi.getRessources(filters),
+      dbApi.getRessources(filters, user?.id),
       dbApi.getFilieres(),
     ]);
     setRessources(list);
     setFilieres(fils);
     setFirstLoad(false);
-  }, [search, activeFiliere]);
+  }, [search, activeFiliere, user]);
 
   // Synchronisation reseau si en ligne, puis relecture locale.
   const doSync = useCallback(async () => {
@@ -117,6 +119,12 @@ export default function ResourceListScreen({ navigation }) {
         />
       </View>
 
+      {activeFiliere != null && (
+        <Text style={styles.filiereTitle}>
+          {filieres.find((f) => f.id === activeFiliere)?.nom || ''}
+        </Text>
+      )}
+
       {syncing && (
         <Text style={styles.syncing}>Synchronisation en cours…</Text>
       )}
@@ -159,6 +167,7 @@ const styles = StyleSheet.create({
   chips: { paddingHorizontal: 12, gap: 8 },
   chip: { borderWidth: 1.5, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
   chipText: { fontWeight: '700', fontSize: 12 },
+  filiereTitle: { fontSize: 16, fontWeight: '800', color: colors.navy, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 2 },
   syncing: { textAlign: 'center', color: colors.textMuted, fontSize: 12, paddingVertical: 4 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
   emptyText: { color: colors.textMuted, textAlign: 'center', lineHeight: 20 },

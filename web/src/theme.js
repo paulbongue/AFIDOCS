@@ -1,7 +1,8 @@
 // Couleur par code filière (badges).
 export const filiereColors = {
-  BAF: '#7C3AED', GSE: '#16A34A', GRH: '#2563EB', IR: '#EA580C',
-  MJF: '#DC2626', MMC: '#DB2777', MAI: '#4F46E5', GL: '#0891B2',
+  MAI: '#4F46E5', BAF: '#7C3AED', GSE: '#16A34A', TL: '#0D9488',
+  MMC: '#DB2777', QHSE: '#CA8A04', GRH: '#2563EB', DWMD: '#0EA5E9',
+  GL: '#0891B2', SRT: '#EA580C', MJF: '#DC2626', LEA: '#65A30D',
 };
 
 export const colorForFiliere = (code) => filiereColors[code] || '#14213D';

@@ -68,7 +68,8 @@ export default function ResourceDetailPage() {
         {res.description && <p style={{ marginTop: 14 }}>{res.description}</p>}
 
         <div className="row mt">
-          <a className="btn btn-red" href={res.url_fichier} target="_blank" rel="noreferrer">⬇ Télécharger</a>
+          <a className="btn btn-ghost" href={res.url_fichier} target="_blank" rel="noreferrer">👁 Aperçu</a>
+          <a className="btn btn-red" href={res.url_fichier} download>⬇ Télécharger</a>
           {canDelete && (
             <button className="btn btn-danger" onClick={async () => {
               if (!confirm('Supprimer cette ressource ?')) return;

@@ -16,6 +16,13 @@ import ResourceDetailScreen from '../screens/ResourceDetailScreen';
 import DownloadsScreen from '../screens/DownloadsScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import PublishScreen from '../screens/PublishScreen';
+import AdminScreen from '../screens/AdminScreen';
+import AdminControlScreen from '../screens/AdminControlScreen';
+import AdminModerationScreen from '../screens/AdminModerationScreen';
+import AdminPublishScreen from '../screens/AdminPublishScreen';
+import AdminPedagogieScreen from '../screens/AdminPedagogieScreen';
+import AdminUsersScreen from '../screens/AdminUsersScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -66,8 +73,23 @@ function RessourcesStack() {
   );
 }
 
+function AdminStack() {
+  return (
+    <Stack.Navigator screenOptions={({ navigation }) => redHeader(navigation)}>
+      <Stack.Screen name="AdminHome" component={AdminScreen} />
+      <Stack.Screen name="AdminControl" component={AdminControlScreen} />
+      <Stack.Screen name="AdminModeration" component={AdminModerationScreen} />
+      <Stack.Screen name="AdminPublish" component={AdminPublishScreen} />
+      <Stack.Screen name="AdminPedagogie" component={AdminPedagogieScreen} />
+      <Stack.Screen name="AdminUsers" component={AdminUsersScreen} />
+    </Stack.Navigator>
+  );
+}
+
 function MainTabs() {
   const { unread } = useNotifications();
+  const { user } = useAuth();
+  const role = user?.role;
   return (
     <Tab.Navigator
       screenOptions={({ navigation }) => ({
@@ -88,11 +110,28 @@ function MainTabs() {
         component={RessourcesStack}
         options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon emoji="📚" color={color} focused={focused} /> }}
       />
-      <Tab.Screen
-        name="Hors-ligne"
-        component={DownloadsScreen}
-        options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="📥" color={color} focused={focused} /> }}
-      />
+      {/* Onglet spécifique au rôle */}
+      {role === 'delegue' && (
+        <Tab.Screen
+          name="Publier"
+          component={PublishScreen}
+          options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="⬆️" color={color} focused={focused} /> }}
+        />
+      )}
+      {role === 'admin' && (
+        <Tab.Screen
+          name="Admin"
+          component={AdminStack}
+          options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon emoji="⚙️" color={color} focused={focused} /> }}
+        />
+      )}
+      {role !== 'admin' && (
+        <Tab.Screen
+          name="Hors-ligne"
+          component={DownloadsScreen}
+          options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="📥" color={color} focused={focused} /> }}
+        />
+      )}
       <Tab.Screen
         name="Notifs"
         component={NotificationsScreen}

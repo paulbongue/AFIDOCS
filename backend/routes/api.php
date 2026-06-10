@@ -82,6 +82,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/matieres/{matiere}', [MatiereController::class, 'update']);
         Route::delete('/matieres/{matiere}', [MatiereController::class, 'destroy']);
 
+        // publication par l'admin (dans n'importe quelle filiere)
+        Route::post('/ressources', [RessourceController::class, 'store']);
         // moderation : suppression de toute ressource par l'admin
         Route::delete('/ressources/{ressource}', [RessourceController::class, 'destroy']);
     });

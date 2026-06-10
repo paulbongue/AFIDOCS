@@ -21,14 +21,14 @@ echo.
 where npm >nul 2>nul
 if errorlevel 1 (
   echo [ERREUR] Node.js / npm introuvable.
-  echo Installe Node.js (LTS) : https://nodejs.org  puis relance.
+  echo Installe Node.js ^(LTS^) : https://nodejs.org  puis relance.
   pause & exit /b 1
 )
 
 REM --- Preparation SDK 54 (une seule fois) : aligne toutes les dependances ---
 if not exist "node_modules\.afi_sdk54" (
   echo Premiere preparation pour Expo SDK 54 : nettoyage + installation...
-  echo (cela peut prendre 3-6 min la premiere fois)
+  echo cela peut prendre 3-6 min la premiere fois
   if exist node_modules rmdir /s /q node_modules
   if exist package-lock.json del /q package-lock.json
   call npm install --legacy-peer-deps

@@ -2,6 +2,24 @@
 // est désormais sous /legacy. On l'utilise pour conserver le mode hors-ligne.
 import * as FileSystem from 'expo-file-system/legacy';
 import client from '../api/client';
+import { API_URL } from '../config';
+
+// Origine de l'API (ex : http://192.168.1.10:8000) déduite de API_URL.
+const API_ORIGIN = API_URL.replace(/\/api\/?$/, '');
+
+// Le serveur génère les URLs de fichiers à partir de APP_URL (souvent
+// "localhost") — injoignable depuis le téléphone. On réécrit donc l'hôte
+// vers l'origine de l'API pour que le téléchargement aboutisse.
+function toReachableUrl(url) {
+  if (!url) return url;
+  const path = url.replace(/^https?:\/\/[^/]+/, ''); // garde le chemin après l'hôte
+  return API_ORIGIN + (path.startsWith('/') ? path : '/' + path);
+}
+
+// URL d'un fichier joignable depuis le téléphone (ouverture / aperçu en ligne).
+export function reachableFileUrl(url) {
+  return toReachableUrl(url);
+}
 import * as dbApi from '../db/database';
 
 // ---------------------------------------------------------------------------
@@ -25,13 +43,12 @@ export async function syncCatalogue() {
   await dbApi.saveCatalogue(data.data || []);
 }
 
-// Ressources : synchronisation INCREMENTALE via le parametre `since`.
+// Ressources : synchronisation COMPLETE (remplace le cache local).
+// On récupère toute la liste et on remplace, ce qui évite les ressources
+// obsolètes/fantômes (ex. après un re-seed qui change les IDs de filière).
 export async function syncRessources() {
-  const since = await dbApi.getMeta(LAST_SYNC_KEY);
-  const params = since ? { since } : {};
-  const { data } = await client.get('/ressources', { params });
-
-  await dbApi.upsertRessources(data.data || []);
+  const { data } = await client.get('/ressources');
+  await dbApi.replaceRessources(data.data || []);
   if (data.server_time) {
     await dbApi.setMeta(LAST_SYNC_KEY, data.server_time);
   }
@@ -46,35 +63,37 @@ export async function fullSync() {
   return count;
 }
 
-// Telecharge le fichier d'une ressource pour le rendre disponible hors-ligne.
-export async function downloadRessource(ressource) {
+// Telecharge le fichier d'une ressource pour le rendre disponible hors-ligne
+// POUR L'UTILISATEUR COURANT (fichier et etat propres a chaque compte).
+export async function downloadRessource(userId, ressource) {
   if (!ressource.url_fichier) {
     throw new Error("Cette ressource n'a pas de fichier telechargeable.");
   }
   await ensureDir();
 
-  // Nom de fichier local : id + extension d'origine.
-  const extMatch = ressource.url_fichier.split('?')[0].match(/\.([a-zA-Z0-9]+)$/);
+  // Nom de fichier local : utilisateur + ressource + extension d'origine.
+  const sourceUrl = toReachableUrl(ressource.url_fichier);
+  const extMatch = sourceUrl.split('?')[0].match(/\.([a-zA-Z0-9]+)$/);
   const ext = extMatch ? extMatch[1] : 'bin';
-  const dest = `${DOWNLOAD_DIR}ressource_${ressource.id}.${ext}`;
+  const dest = `${DOWNLOAD_DIR}u${userId}_r${ressource.id}.${ext}`;
 
-  const result = await FileSystem.downloadAsync(ressource.url_fichier, dest);
+  const result = await FileSystem.downloadAsync(sourceUrl, dest);
   if (result.status !== 200) {
     throw new Error('Echec du telechargement (HTTP ' + result.status + ').');
   }
 
-  await dbApi.setLocalUri(ressource.id, result.uri);
+  await dbApi.setLocalUri(userId, ressource.id, result.uri);
   return result.uri;
 }
 
-// Supprime le fichier local (libere de l'espace) sans perdre la metadonnee.
-export async function removeDownload(ressource) {
+// Supprime le fichier local de CET utilisateur (libere de l'espace).
+export async function removeDownload(userId, ressource) {
   if (ressource.local_uri) {
     try {
       await FileSystem.deleteAsync(ressource.local_uri, { idempotent: true });
     } catch (_) { /* ignore */ }
   }
-  await dbApi.setLocalUri(ressource.id, null);
+  await dbApi.setLocalUri(userId, ressource.id, null);
 }
 
 export async function getLastSyncAt() {

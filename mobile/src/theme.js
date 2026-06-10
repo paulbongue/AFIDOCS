@@ -12,16 +12,20 @@ export const colors = {
   redBright: '#E1342A',   // accent logo AFI-L'UE
   salmon: '#EBB9AC',      // surbrillance d'onglet/élément actif (fond)
 
+  navy2: '#1E2A47',
+
   // Surfaces
-  background: '#ECECEC',  // fond d'application (gris clair)
+  background: '#EEF0F3',  // fond d'application (gris bleuté doux)
   surface: '#FFFFFF',
-  cardGray: '#DCDCDC',    // carte d'information (détail ressource)
-  border: '#D5D5D5',
+  surface2: '#F7F8FA',
+  cardGray: '#E4E7EB',    // carte d'information (détail ressource)
+  border: '#DEE2E7',
+  borderStrong: '#CBD2DA',
 
   // Texte
   text: '#14213D',
-  textMuted: '#6B7280',
-  textLight: '#9AA3AF',
+  textMuted: '#5B6472',
+  textLight: '#98A2B0',
 
   // États
   success: '#16A34A',
@@ -34,14 +38,18 @@ export const colors = {
 
 // Couleur par code filière (badge / icône de ressource).
 export const filiereColors = {
+  MAI: '#4F46E5',
   BAF: '#7C3AED',
   GSE: '#16A34A',
-  GRH: '#2563EB',
-  IR: '#EA580C',
-  MJF: '#DC2626',
+  TL: '#0D9488',
   MMC: '#DB2777',
-  MAI: '#4F46E5',
+  QHSE: '#CA8A04',
+  GRH: '#2563EB',
+  DWMD: '#0EA5E9',
   GL: '#0891B2',
+  SRT: '#EA580C',
+  MJF: '#DC2626',
+  LEA: '#65A30D',
 };
 
 export function colorForFiliere(code) {
@@ -78,10 +86,17 @@ export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 };
 
 export const shadow = {
   card: {
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: '#101828',
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
     elevation: 2,
+  },
+  soft: {
+    shadowColor: '#101828',
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
 };

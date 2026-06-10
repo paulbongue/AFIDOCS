@@ -42,8 +42,8 @@ echo ============================================================
 echo   Base reconstruite avec succes.
 echo   Comptes (mot de passe : password) :
 echo     admin@afi.sn
-echo     delegue.ir@afi.sn  (delegue de la classe IR - M1)
-echo     etudiant.ir@afi.sn
+echo     delegue.srt@afi.sn  (delegue de la classe SRT - M1)
+echo     etudiant.srt@afi.sn
 echo   Tu peux relancer demarrer_backend.bat (ou il tourne deja).
 echo ============================================================
 pause

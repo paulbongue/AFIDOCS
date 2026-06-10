@@ -70,8 +70,8 @@ php artisan serve --host=0.0.0.0 --port=8000
 | Rôle | Email |
 |---|---|
 | Administrateur | `admin@afi.sn` |
-| Délégué (filière IR) | `delegue.ir@afi.sn` |
-| Étudiant | `etudiant.ir@afi.sn` |
+| Délégué (filière SRT) | `delegue.srt@afi.sn` |
+| Étudiant | `etudiant.srt@afi.sn` |
 
 *(un délégué par filière : `delegue.gl@afi.sn`, `delegue.baf@afi.sn`, etc.)*
 
@@ -89,8 +89,8 @@ npm run dev                # ouvre http://localhost:5173
 Connecte-toi avec un compte de démo : selon le rôle, tu arrives automatiquement dans l'espace correspondant.
 
 - **`admin@afi.sn`** → espace Administration (tableau de bord, gestion pédagogique filière/niveau/matière, utilisateurs, modération).
-- **`delegue.ir@afi.sn`** → espace Délégué (publication directe filière verrouillée, mes ressources).
-- **`etudiant.ir@afi.sn`** → espace Étudiant (ressources toutes filières, recherche, détail, commentaires).
+- **`delegue.srt@afi.sn`** → espace Délégué (publication directe classe verrouillée, mes ressources).
+- **`etudiant.srt@afi.sn`** → espace Étudiant (ressources toutes filières, recherche, détail, commentaires).
 
 > Le backend doit tourner (section 3). Si tu changes son URL/port, édite `web/.env` (`VITE_API_URL`).
 

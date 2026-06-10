@@ -1,5 +1,7 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import {
+  View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, TextInput,
+} from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
 import OfflineBanner from '../components/OfflineBanner';
@@ -8,6 +10,7 @@ import FiliereBadge from '../components/FiliereBadge';
 import { useAuth } from '../context/AuthContext';
 import { useNetwork } from '../context/NetworkContext';
 import { fullSync, getLastSyncAt } from '../services/sync';
+import client from '../api/client';
 import * as dbApi from '../db/database';
 import { colors, radius, shadow } from '../theme';
 
@@ -19,12 +22,32 @@ export default function ProfileScreen() {
   const [lastSync, setLastSync] = useState(null);
   const [downloaded, setDownloaded] = useState(0);
   const [syncing, setSyncing] = useState(false);
+  const [pwd, setPwd] = useState({ current_password: '', password: '', password_confirmation: '' });
+  const [pwdBusy, setPwdBusy] = useState(false);
 
   const refresh = useCallback(async () => {
     setLastSync(await getLastSyncAt());
-    const row = await dbApi.countDownloaded();
+    const row = await dbApi.countDownloaded(user?.id);
     setDownloaded(row?.n ?? 0);
-  }, []);
+  }, [user]);
+
+  async function changePassword() {
+    if (!isOnline) return Alert.alert('Hors-ligne', 'Connecte-toi à internet pour changer le mot de passe.');
+    if (!pwd.current_password || !pwd.password) {
+      return Alert.alert('Champs requis', 'Renseigne le mot de passe actuel et le nouveau.');
+    }
+    if (pwd.password !== pwd.password_confirmation) {
+      return Alert.alert('Erreur', 'Les deux nouveaux mots de passe ne correspondent pas.');
+    }
+    setPwdBusy(true);
+    try {
+      await client.post('/me/password', pwd);
+      setPwd({ current_password: '', password: '', password_confirmation: '' });
+      Alert.alert('Mot de passe', 'Mot de passe mis à jour.');
+    } catch (e) {
+      Alert.alert('Erreur', e?.response?.data?.message || 'Mise à jour impossible.');
+    } finally { setPwdBusy(false); }
+  }
 
   useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
 
@@ -72,6 +95,7 @@ export default function ProfileScreen() {
           <Row label="Nom d'utilisateur" value={user?.name} />
           <Row label="Statut" value={ROLE_LABEL[user?.role] || user?.role} />
           {user?.filiere && <Row label="Filière" value={`${user.filiere.code} — ${user.filiere.nom}`} />}
+          {user?.niveau && <Row label="Niveau / Classe" value={`${user.filiere?.code || ''} · ${user.niveau.nom}`} />}
         </View>
 
         {/* Synchronisation / hors-ligne */}
@@ -84,6 +108,23 @@ export default function ProfileScreen() {
 
           <TouchableOpacity style={styles.btnRed} onPress={handleSync} disabled={syncing} activeOpacity={0.85}>
             {syncing ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>🔄  Synchroniser maintenant</Text>}
+          </TouchableOpacity>
+        </View>
+
+        {/* Sécurité — changement de mot de passe */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Sécurité — changer mon mot de passe</Text>
+          <TextInput style={styles.input} placeholder="Mot de passe actuel" placeholderTextColor={colors.textLight}
+                     secureTextEntry value={pwd.current_password}
+                     onChangeText={(t) => setPwd({ ...pwd, current_password: t })} />
+          <TextInput style={styles.input} placeholder="Nouveau mot de passe" placeholderTextColor={colors.textLight}
+                     secureTextEntry value={pwd.password}
+                     onChangeText={(t) => setPwd({ ...pwd, password: t })} />
+          <TextInput style={styles.input} placeholder="Confirmer le nouveau mot de passe" placeholderTextColor={colors.textLight}
+                     secureTextEntry value={pwd.password_confirmation}
+                     onChangeText={(t) => setPwd({ ...pwd, password_confirmation: t })} />
+          <TouchableOpacity style={styles.btnRed} onPress={changePassword} disabled={pwdBusy} activeOpacity={0.85}>
+            {pwdBusy ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>Mettre à jour</Text>}
           </TouchableOpacity>
         </View>
 
@@ -117,6 +158,10 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.border, ...shadow.card,
   },
   cardTitle: { fontSize: 15, fontWeight: '800', color: colors.navy, marginBottom: 6 },
+  input: {
+    backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm,
+    paddingHorizontal: 12, paddingVertical: 10, color: colors.text, fontSize: 14, marginTop: 10,
+  },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, gap: 12 },
   rowLabel: { color: colors.textMuted, fontSize: 14 },
   rowValue: { color: colors.text, fontSize: 14, fontWeight: '600', flexShrink: 1, textAlign: 'right' },

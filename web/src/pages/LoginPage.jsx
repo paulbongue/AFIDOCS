@@ -69,7 +69,7 @@ export default function LoginPage() {
 
           <p className="muted" style={{ fontSize: 12, marginTop: 18, textAlign: 'center', lineHeight: 1.5 }}>
             Démo (mot de passe : password)<br />
-            admin@afi.sn · delegue.ir@afi.sn · etudiant.ir@afi.sn
+            admin@afi.sn · delegue.srt@afi.sn · etudiant.srt@afi.sn
           </p>
         </form>
       </div>

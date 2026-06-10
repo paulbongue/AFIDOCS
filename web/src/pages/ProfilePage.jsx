@@ -59,8 +59,8 @@ export default function ProfilePage() {
         {user?.filiere && (
           <div className="spread mt"><span className="muted">Filière</span><b>{user.filiere.code} — {user.filiere.nom}</b></div>
         )}
-        {user?.role === 'delegue' && user?.niveau && (
-          <div className="spread mt"><span className="muted">Classe</span><b>{user.filiere?.code} · {user.niveau.nom}</b></div>
+        {user?.niveau && (
+          <div className="spread mt"><span className="muted">Niveau / Classe</span><b>{user.filiere?.code} · {user.niveau.nom}</b></div>
         )}
       </div>
 

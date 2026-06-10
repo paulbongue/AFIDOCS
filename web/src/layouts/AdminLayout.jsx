@@ -12,6 +12,7 @@ export default function AdminLayout() {
         <aside className="sidebar">
           <div className="group-title">ADMINISTRATION</div>
           <NavLink to="/admin" end className={link}>▦ Tableau de bord</NavLink>
+          <NavLink to="/admin/publier" className={link}>⬆ Publier une ressource</NavLink>
           <NavLink to="/admin/controle" className={link}>⚙ Centre de contrôle</NavLink>
           <NavLink to="/admin/pedagogie" className={link}>▥ Gestion pédagogique</NavLink>
           <NavLink to="/admin/utilisateurs" className={link}>◐ Utilisateurs</NavLink>

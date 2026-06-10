@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { colors, radius, colorForFiliere, labelForType, formatSize } from '../theme';
+import { colors, radius, colorForFiliere, labelForType, formatSize, shadow } from '../theme';
 
 // Carte de ressource façon AFI-DOCS : icône carrée colorée (filière) + titre
 // marine + ligne de méta grise.
@@ -32,7 +32,7 @@ export default function ResourceCard({ ressource, onPress }) {
           {ressource.commentaires_count > 0 && (
             <Text style={styles.sub}>💬 {ressource.commentaires_count}</Text>
           )}
-          {isOffline && <Text style={styles.offline}>✓ hors-ligne</Text>}
+          {isOffline && <Text style={styles.offline}>● hors-ligne</Text>}
         </View>
       </View>
     </TouchableOpacity>
@@ -42,11 +42,11 @@ export default function ResourceCard({ ressource, onPress }) {
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row', backgroundColor: colors.surface, borderRadius: radius.md,
-    padding: 12, marginHorizontal: 14, marginVertical: 5,
-    borderWidth: 1, borderColor: colors.border,
+    padding: 13, marginHorizontal: 14, marginVertical: 5,
+    borderWidth: 1, borderColor: colors.border, ...shadow.soft,
   },
   iconBox: {
-    width: 46, height: 46, borderRadius: 10, marginRight: 12,
+    width: 48, height: 48, borderRadius: 12, marginRight: 12,
     alignItems: 'center', justifyContent: 'center',
   },
   iconGlyph: { color: 'rgba(255,255,255,0.9)', fontSize: 18, marginBottom: -4 },

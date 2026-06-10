@@ -59,6 +59,7 @@ export async function initDatabase() {
       ressource_id INTEGER,
       contenu TEXT,
       auteur_nom TEXT,
+      user_id INTEGER,
       created_at TEXT
     );
 
@@ -66,7 +67,18 @@ export async function initDatabase() {
       cle TEXT PRIMARY KEY,
       valeur TEXT
     );
+
+    -- Téléchargements PAR UTILISATEUR : l'état hors-ligne est propre à chaque compte.
+    CREATE TABLE IF NOT EXISTS downloads (
+      user_id INTEGER,
+      ressource_id INTEGER,
+      local_uri TEXT,
+      PRIMARY KEY (user_id, ressource_id)
+    );
   `);
+
+  // Migration douce : ajoute user_id aux installations existantes (ignore si déjà présent).
+  try { await db.execAsync('ALTER TABLE commentaires ADD COLUMN user_id INTEGER;'); } catch (_) { /* déjà là */ }
 
   return db;
 }
@@ -172,42 +184,67 @@ export async function upsertRessources(list) {
   });
 }
 
-export function getRessources(filters = {}) {
+// local_uri provient désormais de la table downloads PROPRE A l'utilisateur courant.
+// Remplace TOUT le cache ressources par la liste fournie (évite les
+// enregistrements fantômes/obsolètes après un re-seed côté serveur).
+export async function replaceRessources(list) {
+  await db.runAsync('DELETE FROM ressources');
+  await upsertRessources(list);
+}
+
+export function getRessources(filters = {}, userId = null) {
   const where = [];
-  const params = [];
+  const params = [userId];   // pour le LEFT JOIN downloads
 
   if (filters.search) {
-    where.push('(titre LIKE ? OR description LIKE ?)');
+    where.push('(r.titre LIKE ? OR r.description LIKE ?)');
     params.push(`%${filters.search}%`, `%${filters.search}%`);
   }
-  if (filters.filiere_id) { where.push('filiere_id = ?'); params.push(filters.filiere_id); }
-  if (filters.niveau_id) { where.push('niveau_id = ?'); params.push(filters.niveau_id); }
-  if (filters.matiere_id) { where.push('matiere_id = ?'); params.push(filters.matiere_id); }
-  if (filters.type_fichier) { where.push('type_fichier = ?'); params.push(filters.type_fichier); }
-  if (filters.offlineOnly) { where.push('local_uri IS NOT NULL'); }
+  if (filters.filiere_id) { where.push('r.filiere_id = ?'); params.push(filters.filiere_id); }
+  if (filters.niveau_id) { where.push('r.niveau_id = ?'); params.push(filters.niveau_id); }
+  if (filters.matiere_id) { where.push('r.matiere_id = ?'); params.push(filters.matiere_id); }
+  if (filters.type_fichier) { where.push('r.type_fichier = ?'); params.push(filters.type_fichier); }
+  if (filters.offlineOnly) { where.push('d.local_uri IS NOT NULL'); }
 
   const sql =
-    'SELECT * FROM ressources' +
+    'SELECT r.*, d.local_uri AS local_uri FROM ressources r ' +
+    'LEFT JOIN downloads d ON d.ressource_id = r.id AND d.user_id = ?' +
     (where.length ? ' WHERE ' + where.join(' AND ') : '') +
-    ' ORDER BY datetime(updated_at) DESC';
+    ' ORDER BY datetime(r.updated_at) DESC';
 
   return db.getAllAsync(sql, params);
 }
 
-export function getRessource(id) {
-  return db.getFirstAsync('SELECT * FROM ressources WHERE id = ?', [id]);
+export function getRessource(id, userId = null) {
+  return db.getFirstAsync(
+    'SELECT r.*, d.local_uri AS local_uri FROM ressources r ' +
+    'LEFT JOIN downloads d ON d.ressource_id = r.id AND d.user_id = ? WHERE r.id = ?',
+    [userId, id]
+  );
 }
 
-export async function setLocalUri(id, uri) {
-  await db.runAsync('UPDATE ressources SET local_uri = ? WHERE id = ?', [uri, id]);
+export async function setLocalUri(userId, id, uri) {
+  if (uri) {
+    await db.runAsync(
+      'INSERT INTO downloads (user_id, ressource_id, local_uri) VALUES (?,?,?) ' +
+      'ON CONFLICT(user_id, ressource_id) DO UPDATE SET local_uri = excluded.local_uri',
+      [userId, id, uri]
+    );
+  } else {
+    await db.runAsync('DELETE FROM downloads WHERE user_id = ? AND ressource_id = ?', [userId, id]);
+  }
 }
 
-export function getDownloaded() {
-  return db.getAllAsync('SELECT * FROM ressources WHERE local_uri IS NOT NULL ORDER BY titre');
+export function getDownloaded(userId) {
+  return db.getAllAsync(
+    'SELECT r.*, d.local_uri AS local_uri FROM downloads d ' +
+    'JOIN ressources r ON r.id = d.ressource_id WHERE d.user_id = ? ORDER BY r.titre',
+    [userId]
+  );
 }
 
-export function countDownloaded() {
-  return db.getFirstAsync('SELECT COUNT(*) AS n FROM ressources WHERE local_uri IS NOT NULL');
+export function countDownloaded(userId) {
+  return db.getFirstAsync('SELECT COUNT(*) AS n FROM downloads WHERE user_id = ?', [userId]);
 }
 
 // --- Commentaires ----------------------------------------------------------
@@ -217,8 +254,8 @@ export async function saveComments(ressourceId, list) {
     await db.runAsync('DELETE FROM commentaires WHERE ressource_id = ?', [ressourceId]);
     for (const c of list) {
       await db.runAsync(
-        'INSERT INTO commentaires (id, ressource_id, contenu, auteur_nom, created_at) VALUES (?,?,?,?,?)',
-        [c.id, ressourceId, c.contenu, c.auteur?.name ?? '', c.created_at ?? '']
+        'INSERT INTO commentaires (id, ressource_id, contenu, auteur_nom, user_id, created_at) VALUES (?,?,?,?,?,?)',
+        [c.id, ressourceId, c.contenu, c.auteur?.name ?? '', c.user_id ?? null, c.created_at ?? '']
       );
     }
   });

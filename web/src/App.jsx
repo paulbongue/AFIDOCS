@@ -24,6 +24,7 @@ import PedagogiePage from './pages/admin/PedagogiePage';
 import UsersPage from './pages/admin/UsersPage';
 import ModerationPage from './pages/admin/ModerationPage';
 import ControlCenterPage from './pages/admin/ControlCenterPage';
+import AdminPublishPage from './pages/admin/PublishPage';
 
 // Redirige vers l'espace correspondant au rôle de l'utilisateur connecté.
 function Home() {
@@ -72,6 +73,7 @@ export default function App() {
         element={<RequireRole roles={['admin']}><AdminLayout /></RequireRole>}
       >
         <Route index element={<AdminDashboard />} />
+        <Route path="publier" element={<AdminPublishPage />} />
         <Route path="controle" element={<ControlCenterPage />} />
         <Route path="pedagogie" element={<PedagogiePage />} />
         <Route path="utilisateurs" element={<UsersPage />} />

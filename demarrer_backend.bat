@@ -81,7 +81,7 @@ echo [5/5] Demarrage du serveur API sur http://localhost:8000
 echo ------------------------------------------------------------
 echo   Laisse CETTE fenetre ouverte tant que tu utilises l'app.
 echo   Comptes de demo (mot de passe : password) :
-echo     admin@afi.sn  .  delegue.ir@afi.sn  .  etudiant.ir@afi.sn
+echo     admin@afi.sn  .  delegue.srt@afi.sn  .  etudiant.srt@afi.sn
 echo ------------------------------------------------------------
 "%PHP%" artisan serve --host=0.0.0.0 --port=8000
 pause

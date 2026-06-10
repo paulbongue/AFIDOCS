@@ -20,13 +20,13 @@ export default function HomeScreen({ navigation }) {
 
   const load = useCallback(async () => {
     const [all, dl, fils] = await Promise.all([
-      dbApi.getRessources(),
-      dbApi.countDownloaded(),
+      dbApi.getRessources({}, user?.id),
+      dbApi.countDownloaded(user?.id),
       dbApi.getFilieres(),
     ]);
     setStats({ disponibles: all.length, telechargees: dl?.n ?? 0, filieres: fils.length });
     setRecents(all.slice(0, 5));
-  }, []);
+  }, [user]);
 
   useFocusEffect(useCallback(() => {
     let active = true;

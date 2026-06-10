@@ -11,17 +11,24 @@
       "resizeMode": "contain",
       "backgroundColor": "#14213D"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "sn.afi.docs"
     },
     "android": {
       "package": "sn.afi.docs",
-      "permissions": ["INTERNET"]
+      "permissions": [
+        "INTERNET"
+      ]
     },
     "web": {
       "bundler": "metro"
-    }
+    },
+    "plugins": [
+      "expo-sqlite"
+    ]
   }
 }

@@ -15,35 +15,43 @@ use Illuminate\Support\Facades\Storage;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Donnees de demonstration : 8 filieres AFI, hierarchie pedagogique,
+     * Donnees de demonstration : 12 filieres AFI, hierarchie pedagogique,
      * comptes (admin / delegues / etudiants) et ressources d'exemple.
      *
      * Mot de passe commun a tous les comptes de demo : "password"
      */
     public function run(): void
     {
-        // --- 8 filieres avec code couleur (badge visuel app) -----------------
+        // --- 12 filieres AFI-L'UE avec code couleur (badge visuel app) -------
         $filieres = [
-            ['code' => 'BAF', 'nom' => 'Banque, Assurance et Finance',      'couleur' => '#7C3AED'],
-            ['code' => 'GSE', 'nom' => "Gestion des Systemes d'Entreprise",  'couleur' => '#16A34A'],
-            ['code' => 'GRH', 'nom' => 'Gestion des Ressources Humaines',    'couleur' => '#2563EB'],
-            ['code' => 'IR',  'nom' => 'Informatique et Reseaux',            'couleur' => '#EA580C'],
-            ['code' => 'MJF', 'nom' => 'Management Juridique et Fiscal',     'couleur' => '#DC2626'],
-            ['code' => 'MMC', 'nom' => 'Marketing, Management et Communication', 'couleur' => '#DB2777'],
-            ['code' => 'MAI', 'nom' => 'Management des Affaires Internationales', 'couleur' => '#4F46E5'],
-            ['code' => 'GL',  'nom' => 'Genie Logiciel',                     'couleur' => '#0891B2'],
+            ['code' => 'MAI',  'nom' => 'Management des Affaires Internationales',          'couleur' => '#4F46E5'],
+            ['code' => 'BAF',  'nom' => 'Banque Assurance Finance',                         'couleur' => '#7C3AED'],
+            ['code' => 'GSE',  'nom' => 'Gestion et Strategie des Entreprises',             'couleur' => '#16A34A'],
+            ['code' => 'TL',   'nom' => 'Transport Logistique',                             'couleur' => '#0D9488'],
+            ['code' => 'MMC',  'nom' => 'Marketing Management et Communication Digitale',   'couleur' => '#DB2777'],
+            ['code' => 'QHSE', 'nom' => 'Qualite Hygiene Securite et Environnement',        'couleur' => '#CA8A04'],
+            ['code' => 'GRH',  'nom' => 'Gestion des Ressources Humaines',                  'couleur' => '#2563EB'],
+            ['code' => 'DWMD', 'nom' => 'Developpement Web et Marketing Digital',           'couleur' => '#0EA5E9'],
+            ['code' => 'GL',   'nom' => 'Genie Logiciel',                                   'couleur' => '#0891B2'],
+            ['code' => 'SRT',  'nom' => 'Systeme Reseau Telecom',                           'couleur' => '#EA580C'],
+            ['code' => 'MJF',  'nom' => 'Management Juridique et Fiscal',                   'couleur' => '#DC2626'],
+            ['code' => 'LEA',  'nom' => 'Langues Etrangeres Appliquees a la Gestion',       'couleur' => '#65A30D'],
         ];
 
         // Matieres types par filiere (modifiables ensuite par l'Admin).
         $matieresParFiliere = [
-            'BAF' => ['Comptabilite generale', 'Analyse financiere', 'Droit bancaire'],
-            'GSE' => ['Management des organisations', 'Controle de gestion', 'Logistique'],
-            'GRH' => ['Droit du travail', 'Gestion de la paie', 'Recrutement'],
-            'IR'  => ['Administration reseaux', 'Securite informatique', 'Systemes Linux'],
-            'MJF' => ['Droit fiscal', 'Droit des societes', 'Fiscalite des entreprises'],
-            'MMC' => ['Marketing digital', 'Communication d\'entreprise', 'Etudes de marche'],
-            'MAI' => ['Commerce international', 'Negociation interculturelle', 'Logistique internationale'],
-            'GL'  => ['Programmation orientee objet', 'Genie logiciel', 'Bases de donnees'],
+            'MAI'  => ['Commerce international', 'Negociation interculturelle', 'Logistique internationale'],
+            'BAF'  => ['Comptabilite generale', 'Analyse financiere', 'Droit bancaire'],
+            'GSE'  => ['Management des organisations', 'Controle de gestion', 'Strategie d\'entreprise'],
+            'TL'   => ['Gestion des transports', 'Chaine logistique', 'Douane et reglementation'],
+            'MMC'  => ['Marketing digital', 'Communication d\'entreprise', 'Etudes de marche'],
+            'QHSE' => ['Management de la qualite', 'Securite au travail', 'Droit de l\'environnement'],
+            'GRH'  => ['Droit du travail', 'Gestion de la paie', 'Recrutement'],
+            'DWMD' => ['Developpement web', 'Marketing digital', 'UX/UI design'],
+            'GL'   => ['Programmation orientee objet', 'Genie logiciel', 'Bases de donnees'],
+            'SRT'  => ['Administration reseaux', 'Telecoms et telephonie', 'Securite des systemes'],
+            'MJF'  => ['Droit fiscal', 'Droit des societes', 'Fiscalite des entreprises'],
+            'LEA'  => ['Anglais des affaires', 'Espagnol commercial', 'Traduction professionnelle'],
         ];
 
         $niveaux = ['L3', 'M1', 'M2'];
@@ -135,9 +143,9 @@ class DatabaseSeeder extends Seeder
             $slug = strtolower($code).'.'.strtolower($niveau->nom);
 
             for ($i = 1; $i <= 10; $i++) {
-                // Emails de demo reconnaissables pour la classe M1 de IR/GL/BAF.
+                // Emails de demo reconnaissables pour la classe M1 de SRT/GL/BAF.
                 $email = "etudiant.{$slug}.{$i}@afi.sn";
-                if ($i === 1 && $niveau->nom === 'M1' && in_array($code, ['IR', 'GL', 'BAF'], true)) {
+                if ($i === 1 && $niveau->nom === 'M1' && in_array($code, ['SRT', 'GL', 'BAF'], true)) {
                     $email = 'etudiant.'.strtolower($code).'@afi.sn';
                 }
 
@@ -163,7 +171,7 @@ class DatabaseSeeder extends Seeder
 
         $demoRessources = [
             ['BAF', 'Cours - Comptabilite generale (chap. 1-3)', 'Support de cours introductif a la comptabilite.'],
-            ['IR',  'TP - Configuration d\'un routeur Cisco',     'Travaux pratiques pas a pas sur la configuration reseau.'],
+            ['SRT', 'TP - Configuration d\'un routeur Cisco',     'Travaux pratiques pas a pas sur la configuration reseau.'],
             ['GL',  'Cours - Programmation orientee objet en Java', 'Concepts POO : classes, heritage, polymorphisme.'],
             ['GL',  'Sujet d\'examen - Bases de donnees 2024',     'Annale corrigee de l\'examen de bases de donnees.'],
             ['GRH', 'Fiche - Le contrat de travail',               'Synthese sur les types de contrats et le droit du travail.'],

@@ -1,21 +1,23 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator,
-  TextInput, Alert,
+  TextInput, Alert, Linking,
 } from 'react-native';
 import * as Sharing from 'expo-sharing';
 
 import OfflineBanner from '../components/OfflineBanner';
 import Avatar from '../components/Avatar';
 import { useNetwork } from '../context/NetworkContext';
+import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import * as dbApi from '../db/database';
-import { downloadRessource, removeDownload } from '../services/sync';
+import { downloadRessource, removeDownload, reachableFileUrl } from '../services/sync';
 import { colors, radius, labelForType, formatSize } from '../theme';
 
 export default function ResourceDetailScreen({ route }) {
   const { id } = route.params;
   const { isOnline } = useNetwork();
+  const { user } = useAuth();
 
   const [ressource, setRessource] = useState(null);
   const [comments, setComments] = useState([]);
@@ -24,7 +26,7 @@ export default function ResourceDetailScreen({ route }) {
   const [downloading, setDownloading] = useState(false);
 
   const load = useCallback(async () => {
-    setRessource(await dbApi.getRessource(id));
+    setRessource(await dbApi.getRessource(id, user?.id));
     setComments(await dbApi.getComments(id));
 
     if (isOnline) {
@@ -33,7 +35,7 @@ export default function ResourceDetailScreen({ route }) {
         const r = data.data;
         await dbApi.upsertRessources([r]);
         await dbApi.saveComments(id, r.commentaires || []);
-        setRessource(await dbApi.getRessource(id));
+        setRessource(await dbApi.getRessource(id, user?.id));
         setComments(await dbApi.getComments(id));
       } catch (_) { /* cache */ }
     }
@@ -45,8 +47,8 @@ export default function ResourceDetailScreen({ route }) {
     if (!isOnline) return Alert.alert('Hors-ligne', 'Connecte-toi à internet pour télécharger.');
     setDownloading(true);
     try {
-      await downloadRessource(ressource);
-      setRessource(await dbApi.getRessource(id));
+      await downloadRessource(user?.id, ressource);
+      setRessource(await dbApi.getRessource(id, user?.id));
       Alert.alert('Téléchargé', 'Ressource disponible hors-ligne.');
     } catch (e) {
       Alert.alert('Erreur', e.message || 'Téléchargement impossible.');
@@ -61,9 +63,19 @@ export default function ResourceDetailScreen({ route }) {
     await Sharing.shareAsync(ressource.local_uri);
   }
 
+  // Aperçu / ouverture en ligne (sans télécharger) via le navigateur du téléphone.
+  async function handlePreview() {
+    if (!isOnline) return Alert.alert('Hors-ligne', "Connecte-toi à internet pour l'aperçu en ligne.");
+    try {
+      await Linking.openURL(reachableFileUrl(ressource.url_fichier));
+    } catch (_) {
+      Alert.alert('Erreur', "Impossible d'ouvrir le fichier.");
+    }
+  }
+
   async function handleRemove() {
-    await removeDownload(ressource);
-    setRessource(await dbApi.getRessource(id));
+    await removeDownload(user?.id, ressource);
+    setRessource(await dbApi.getRessource(id, user?.id));
   }
 
   async function submitComment() {
@@ -77,6 +89,20 @@ export default function ResourceDetailScreen({ route }) {
     } catch (_) {
       Alert.alert('Erreur', 'Commentaire non envoyé.');
     } finally { setBusy(false); }
+  }
+
+  function confirmDeleteComment(c) {
+    if (!isOnline) return Alert.alert('Hors-ligne', 'Connecte-toi à internet pour supprimer.');
+    Alert.alert('Supprimer', 'Supprimer ce commentaire ?', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer', style: 'destructive',
+        onPress: async () => {
+          try { await client.delete(`/commentaires/${c.id}`); await load(); }
+          catch (_) { Alert.alert('Erreur', 'Suppression impossible.'); }
+        },
+      },
+    ]);
   }
 
   if (!ressource) {
@@ -124,6 +150,10 @@ export default function ResourceDetailScreen({ route }) {
                 {downloading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>⬇  Télécharger</Text>}
               </TouchableOpacity>
             )}
+
+            <TouchableOpacity style={styles.btnOutline} onPress={handlePreview} activeOpacity={0.85}>
+              <Text style={styles.btnOutlineText}>👁  Aperçu / Ouvrir en ligne</Text>
+            </TouchableOpacity>
           </View>
           {isOffline && (
             <TouchableOpacity onPress={handleRemove}>
@@ -154,15 +184,23 @@ export default function ResourceDetailScreen({ route }) {
           </TouchableOpacity>
         </View>
 
-        {comments.map((c) => (
-          <View key={String(c.id)} style={styles.comment}>
-            <Avatar name={c.auteur_nom} size={34} bg={colors.navy} />
-            <View style={styles.commentBody}>
-              <Text style={styles.commentAuthor}>{c.auteur_nom}</Text>
-              <Text style={styles.commentText}>{c.contenu}</Text>
+        {comments.map((c) => {
+          const canDelete = String(c.user_id) === String(user?.id) || user?.role === 'admin';
+          return (
+            <View key={String(c.id)} style={styles.comment}>
+              <Avatar name={c.auteur_nom} size={34} bg={colors.navy} />
+              <View style={styles.commentBody}>
+                <Text style={styles.commentAuthor}>{c.auteur_nom}</Text>
+                <Text style={styles.commentText}>{c.contenu}</Text>
+                {canDelete && (
+                  <TouchableOpacity onPress={() => confirmDeleteComment(c)}>
+                    <Text style={styles.commentDelete}>Supprimer</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
         {comments.length === 0 && <Text style={styles.noComment}>Aucun commentaire pour le moment.</Text>}
       </ScrollView>
     </View>
@@ -190,6 +228,8 @@ const styles = StyleSheet.create({
   actions: { marginTop: 16 },
   btnRed: { backgroundColor: colors.red, borderRadius: radius.sm, paddingVertical: 13, alignItems: 'center' },
   btnRedText: { color: '#fff', fontWeight: '800', fontSize: 15 },
+  btnOutline: { borderWidth: 1.5, borderColor: colors.navy, borderRadius: radius.sm, paddingVertical: 12, alignItems: 'center', marginTop: 8 },
+  btnOutlineText: { color: colors.navy, fontWeight: '700', fontSize: 14 },
   remove: { color: colors.red, textAlign: 'center', marginTop: 12, fontWeight: '600' },
   section: { fontSize: 16, fontWeight: '800', color: colors.navy, marginTop: 26, marginBottom: 12 },
   commentBox: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
@@ -207,5 +247,6 @@ const styles = StyleSheet.create({
   commentBody: { flex: 1 },
   commentAuthor: { fontWeight: '800', color: colors.navy, fontSize: 13 },
   commentText: { color: colors.text, marginTop: 3, lineHeight: 20 },
+  commentDelete: { color: colors.red, fontWeight: '700', fontSize: 12, marginTop: 6 },
   noComment: { color: colors.textMuted, marginTop: 10, fontStyle: 'italic' },
 });

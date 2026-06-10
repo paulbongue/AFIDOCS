@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Une des 8 formations de l'AFI : BAF, GSE, GRH, IR, MJF, MMC, MAI, GL.
+ * Une des 12 filieres de l'AFI-L'UE : MAI, BAF, GSE, TL, MMC, QHSE, GRH, DWMD, GL, SRT, MJF, LEA.
  * Sommet de la hierarchie pedagogique filiere -> niveau -> matiere -> ressource.
  * `couleur` : code hexadecimal pour le badge visuel cote app.
  */
