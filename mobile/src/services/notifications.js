@@ -7,7 +7,9 @@ import client from '../api/client';
 // Affiche les notifications reçues au premier plan.
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    // SDK 54 : shouldShowAlert est remplacé par shouldShowBanner + shouldShowList.
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),

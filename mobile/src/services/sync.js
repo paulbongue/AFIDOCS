@@ -1,4 +1,6 @@
-import * as FileSystem from 'expo-file-system';
+// SDK 54 : l'ancienne API FileSystem (downloadAsync, documentDirectory, …)
+// est désormais sous /legacy. On l'utilise pour conserver le mode hors-ligne.
+import * as FileSystem from 'expo-file-system/legacy';
 import client from '../api/client';
 import * as dbApi from '../db/database';
 

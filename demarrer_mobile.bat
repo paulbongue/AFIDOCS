@@ -25,10 +25,17 @@ if errorlevel 1 (
   pause & exit /b 1
 )
 
-if not exist "node_modules" (
-  echo Installation des dependances (npm install)... 2-4 min la 1re fois.
-  call npm install
+REM --- Preparation SDK 54 (une seule fois) : aligne toutes les dependances ---
+if not exist "node_modules\.afi_sdk54" (
+  echo Premiere preparation pour Expo SDK 54 : nettoyage + installation...
+  echo (cela peut prendre 3-6 min la premiere fois)
+  if exist node_modules rmdir /s /q node_modules
+  if exist package-lock.json del /q package-lock.json
+  call npm install --legacy-peer-deps
   if errorlevel 1 ( echo [ERREUR] npm install a echoue. & pause & exit /b 1 )
+  echo Alignement des versions sur le SDK 54...
+  call npx expo install --fix
+  echo ok> "node_modules\.afi_sdk54"
 )
 
 echo.
