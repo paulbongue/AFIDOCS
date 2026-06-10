@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "AFI Docs",
+    "slug": "afi-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#14213D",
+    "splash": {
+      "image": "./assets/logo-afi.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#14213D"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "sn.afi.docs"
+    },
+    "android": {
+      "package": "sn.afi.docs",
+      "permissions": ["INTERNET"]
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

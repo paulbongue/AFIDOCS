@@ -1,0 +1,126 @@
+import React from 'react';
+import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+
+import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationsContext';
+import { colors } from '../theme';
+import { Wordmark } from '../components/Logo';
+import Avatar from '../components/Avatar';
+
+import LoginScreen from '../screens/LoginScreen';
+import HomeScreen from '../screens/HomeScreen';
+import ResourceListScreen from '../screens/ResourceListScreen';
+import ResourceDetailScreen from '../screens/ResourceDetailScreen';
+import DownloadsScreen from '../screens/DownloadsScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+
+const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+// En-tête rouge brique commun (wordmark AFI-DOCS centré + avatar à droite).
+function redHeader(navigation, { back = false } = {}) {
+  return {
+    headerStyle: { backgroundColor: colors.red },
+    headerTintColor: '#fff',
+    headerShadowVisible: false,
+    headerTitleAlign: 'center',
+    headerTitle: () => <Wordmark color="#fff" size={20} />,
+    headerRight: () => <HeaderAvatar navigation={navigation} />,
+  };
+}
+
+function HeaderAvatar({ navigation }) {
+  const { user } = useAuth();
+  return (
+    <TouchableOpacity onPress={() => navigation.navigate('Profil')} style={{ marginRight: 6 }}>
+      <Avatar name={user?.name} size={32} bg={colors.navy} />
+    </TouchableOpacity>
+  );
+}
+
+function TabIcon({ emoji, color, focused }) {
+  return (
+    <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
+      <Text style={{ fontSize: 18, color }}>{emoji}</Text>
+    </View>
+  );
+}
+
+function RessourcesStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="RessourcesList"
+        component={ResourceListScreen}
+        options={({ navigation }) => redHeader(navigation)}
+      />
+      <Stack.Screen
+        name="RessourceDetail"
+        component={ResourceDetailScreen}
+        options={({ navigation }) => redHeader(navigation, { back: true })}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function MainTabs() {
+  const { unread } = useNotifications();
+  return (
+    <Tab.Navigator
+      screenOptions={({ navigation }) => ({
+        ...redHeader(navigation),
+        tabBarActiveTintColor: colors.red,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarStyle: { height: 60, paddingBottom: 8, paddingTop: 6 },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+      })}
+    >
+      <Tab.Screen
+        name="Accueil"
+        component={HomeScreen}
+        options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="🏠" color={color} focused={focused} /> }}
+      />
+      <Tab.Screen
+        name="Ressources"
+        component={RessourcesStack}
+        options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon emoji="📚" color={color} focused={focused} /> }}
+      />
+      <Tab.Screen
+        name="Hors-ligne"
+        component={DownloadsScreen}
+        options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="📥" color={color} focused={focused} /> }}
+      />
+      <Tab.Screen
+        name="Notifs"
+        component={NotificationsScreen}
+        options={{
+          tabBarBadge: unread > 0 ? (unread > 9 ? '9+' : unread) : undefined,
+          tabBarIcon: ({ color, focused }) => <TabIcon emoji="🔔" color={color} focused={focused} />,
+        }}
+      />
+      <Tab.Screen
+        name="Profil"
+        component={ProfileScreen}
+        options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="👤" color={color} focused={focused} /> }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+export default function RootNavigator() {
+  const { user } = useAuth();
+
+  return user ? <MainTabs /> : (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+    </Stack.Navigator>
+  );
+}
+
+const styles = StyleSheet.create({
+  tabIcon: { width: 44, height: 30, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  tabIconActive: { backgroundColor: colors.salmon },
+});

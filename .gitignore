@@ -1,0 +1,19 @@
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Dépendances (réinstallables via composer install / npm install)
+backend/vendor/
+mobile/node_modules/
+
+# Environnement
+backend/.env
+mobile/.env
+
+# Build / cache
+mobile/.expo/
+mobile/dist/
+backend/storage/*.key
