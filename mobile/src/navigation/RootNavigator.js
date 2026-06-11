@@ -13,10 +13,12 @@ import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import ResourceListScreen from '../screens/ResourceListScreen';
 import ResourceDetailScreen from '../screens/ResourceDetailScreen';
+import PreviewScreen from '../screens/PreviewScreen';
 import DownloadsScreen from '../screens/DownloadsScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import PublishScreen from '../screens/PublishScreen';
+import MyResourcesScreen from '../screens/MyResourcesScreen';
 import AdminScreen from '../screens/AdminScreen';
 import AdminControlScreen from '../screens/AdminControlScreen';
 import AdminModerationScreen from '../screens/AdminModerationScreen';
@@ -69,6 +71,20 @@ function RessourcesStack() {
         component={ResourceDetailScreen}
         options={({ navigation }) => redHeader(navigation, { back: true })}
       />
+      <Stack.Screen
+        name="RessourcePreview"
+        component={PreviewScreen}
+        options={({ navigation }) => redHeader(navigation, { back: true })}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function PublierStack() {
+  return (
+    <Stack.Navigator screenOptions={({ navigation }) => redHeader(navigation)}>
+      <Stack.Screen name="PublishHome" component={PublishScreen} />
+      <Stack.Screen name="MesRessources" component={MyResourcesScreen} />
     </Stack.Navigator>
   );
 }
@@ -96,8 +112,16 @@ function MainTabs() {
         ...redHeader(navigation),
         tabBarActiveTintColor: colors.red,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { height: 60, paddingBottom: 8, paddingTop: 6 },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarStyle: {
+          height: 64, paddingBottom: 9, paddingTop: 7,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border, borderTopWidth: 1,
+          // légère élévation pour détacher la barre du contenu
+          shadowColor: '#101828', shadowOpacity: 0.06, shadowRadius: 8,
+          shadowOffset: { width: 0, height: -2 }, elevation: 8,
+        },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
+        tabBarItemStyle: { paddingTop: 2 },
       })}
     >
       <Tab.Screen
@@ -114,8 +138,8 @@ function MainTabs() {
       {role === 'delegue' && (
         <Tab.Screen
           name="Publier"
-          component={PublishScreen}
-          options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="⬆️" color={color} focused={focused} /> }}
+          component={PublierStack}
+          options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon emoji="⬆️" color={color} focused={focused} /> }}
         />
       )}
       {role === 'admin' && (
@@ -125,13 +149,11 @@ function MainTabs() {
           options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon emoji="⚙️" color={color} focused={focused} /> }}
         />
       )}
-      {role !== 'admin' && (
-        <Tab.Screen
-          name="Hors-ligne"
-          component={DownloadsScreen}
-          options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="📥" color={color} focused={focused} /> }}
-        />
-      )}
+      <Tab.Screen
+        name="Hors-ligne"
+        component={DownloadsScreen}
+        options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="📥" color={color} focused={focused} /> }}
+      />
       <Tab.Screen
         name="Notifs"
         component={NotificationsScreen}

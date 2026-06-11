@@ -11,7 +11,7 @@ import client from '../api/client';
 import { colors, radius } from '../theme';
 
 // Publication directe par le délégué — limitée à SA CLASSE (niveau).
-export default function PublishScreen() {
+export default function PublishScreen({ navigation }) {
   const { user } = useAuth();
   const { isOnline } = useNetwork();
   const [filiere, setFiliere] = useState(null);
@@ -21,6 +21,7 @@ export default function PublishScreen() {
   const [description, setDescription] = useState('');
   const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [mine, setMine] = useState([]);
 
   useEffect(() => {
     if (!isOnline) return;
@@ -30,6 +31,28 @@ export default function PublishScreen() {
       setNiveau((f?.niveaux || []).find((n) => n.id === user?.niveau_id) || null);
     }).catch(() => {});
   }, [user, isOnline]);
+
+  async function loadMine() {
+    try {
+      const { data } = await client.get('/ressources');
+      setMine((data.data || []).filter((r) => r.user_id === user?.id));
+    } catch (_) { /* ignore */ }
+  }
+
+  useEffect(() => { if (isOnline) loadMine(); }, [isOnline, user]); // eslint-disable-line
+
+  function confirmDeleteMine(item) {
+    Alert.alert('Supprimer', `Supprimer « ${item.titre} » ?`, [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer', style: 'destructive',
+        onPress: async () => {
+          try { await client.delete(`/ressources/${item.id}`); await loadMine(); }
+          catch (_) { Alert.alert('Erreur', 'Suppression impossible.'); }
+        },
+      },
+    ]);
+  }
 
   const matieres = niveau?.matieres || [];
 
@@ -62,6 +85,7 @@ export default function PublishScreen() {
       await client.post('/ressources', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       Alert.alert('Publié', 'Ressource publiée et disponible immédiatement.');
       setTitre(''); setDescription(''); setFile(null); setMatiereId(null);
+      loadMine();
     } catch (e) {
       Alert.alert('Erreur', e?.response?.data?.message || 'Publication impossible.');
     } finally {
@@ -87,7 +111,12 @@ export default function PublishScreen() {
     <View style={styles.flex}>
       <OfflineBanner />
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Publier une ressource</Text>
+        <View style={styles.topRow}>
+          <Text style={styles.title}>Publier une ressource</Text>
+          <TouchableOpacity style={styles.mineBtn} onPress={() => navigation.navigate('MesRessources')}>
+            <Text style={styles.mineBtnText}>📂 Mes ressources</Text>
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.label}>Ma classe (verrouillée)</Text>
         <View style={styles.locked}>
@@ -125,6 +154,22 @@ export default function PublishScreen() {
         <TouchableOpacity style={styles.publish} onPress={publish} disabled={busy}>
           {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.publishText}>Publier</Text>}
         </TouchableOpacity>
+
+        {/* Mes ressources publiées */}
+        <Text style={[styles.title, { marginTop: 28, fontSize: 17 }]}>Mes ressources publiées ({mine.length})</Text>
+        {mine.length === 0 ? (
+          <Text style={styles.muted}>Vous n'avez encore rien publié.</Text>
+        ) : mine.map((r) => (
+          <View key={r.id} style={styles.mineRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.mineTitle} numberOfLines={1}>{r.titre}</Text>
+              <Text style={styles.mineMeta} numberOfLines={1}>{r.matiere?.nom}</Text>
+            </View>
+            <TouchableOpacity style={styles.mineDel} onPress={() => confirmDeleteMine(r)}>
+              <Text style={styles.mineDelText}>Suppr.</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
       </ScrollView>
     </View>
   );
@@ -135,9 +180,20 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 30 },
   info: { color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
   content: { padding: 16 },
-  title: { fontSize: 20, fontWeight: '900', color: colors.navy, marginBottom: 8 },
+  title: { fontSize: 20, fontWeight: '900', color: colors.navy },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 10 },
+  mineBtn: { backgroundColor: colors.navy, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
+  mineBtnText: { color: '#fff', fontWeight: '700', fontSize: 12 },
   label: { fontSize: 13, fontWeight: '700', color: colors.navy, marginTop: 14, marginBottom: 6 },
   muted: { color: colors.textMuted },
+  mineRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface,
+    borderRadius: radius.sm, padding: 12, marginTop: 8, borderWidth: 1, borderColor: colors.border,
+  },
+  mineTitle: { fontWeight: '800', color: colors.navy },
+  mineMeta: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+  mineDel: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.red, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
+  mineDelText: { color: colors.red, fontWeight: '700', fontSize: 12 },
   locked: { backgroundColor: '#EDEDED', borderRadius: radius.sm, padding: 12, borderWidth: 1, borderColor: colors.border },
   lockedText: { color: colors.textMuted, fontWeight: '700' },
   input: {
@@ -152,7 +208,7 @@ const styles = StyleSheet.create({
   optionText: { color: colors.text },
   optionTextActive: { color: colors.red, fontWeight: '700' },
   fileBtn: {
-    borderWidth: 1.5, borderColor: colors.accent || colors.navy, borderStyle: 'dashed',
+    borderWidth: 1.5, borderColor: colors.navy, borderStyle: 'dashed',
     borderRadius: radius.sm, padding: 14, alignItems: 'center',
   },
   fileBtnText: { color: colors.navy, fontWeight: '700' },

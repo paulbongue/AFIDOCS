@@ -86,67 +86,118 @@ class RessourceController extends Controller
         $data = $request->validate([
             'titre' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'matiere_id' => ['required', 'integer', 'exists:matieres,id'],
-            'fichier' => ['required', 'file', 'max:51200', // 50 Mo
-                'mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,jpg,jpeg,png,mp4'],
+            'matiere_id' => ['nullable', 'integer', 'exists:matieres,id'],
+            'matiere_ids' => ['nullable', 'array'],
+            'matiere_ids.*' => ['integer', 'exists:matieres,id'],
+            // Tout type de document accepte (jusqu'a 50 Mo).
+            'fichier' => ['required', 'file', 'max:51200'],
         ]);
 
-        $matiere = Matiere::with('niveau')->findOrFail($data['matiere_id']);
+        // Cibles : une OU plusieurs matieres (classes/filieres partageant le cours).
+        $targets = ! empty($data['matiere_ids'])
+            ? array_values(array_unique($data['matiere_ids']))
+            : (! empty($data['matiere_id']) ? [$data['matiere_id']] : []);
 
-        // Controle serveur : le Delegue ne publie que dans sa filiere (403 sinon).
-        if ($request->user()->cannot('publishInMatiere', [Ressource::class, $matiere])) {
-            return response()->json(['message' => 'Acces interdit.'], 403);
+        if (empty($targets)) {
+            return response()->json([
+                'message' => 'Selectionne au moins une matiere.',
+                'errors' => ['matiere_id' => ['Au moins une matiere est requise.']],
+            ], 422);
+        }
+
+        $matieres = Matiere::with('niveau.filiere')->whereIn('id', $targets)->get();
+
+        // Coherence : une publication multi-cibles ne vise que des classes du MEME
+        // niveau (seules les filieres de meme niveau partagent un cours commun).
+        if ($matieres->pluck('niveau.nom')->unique()->count() > 1) {
+            return response()->json([
+                'message' => 'Toutes les classes choisies doivent etre du meme niveau.',
+            ], 422);
+        }
+
+        // Il faut le droit de publier dans CHAQUE matiere ciblee.
+        foreach ($matieres as $m) {
+            if ($request->user()->cannot('publishInMatiere', [Ressource::class, $m])) {
+                return response()->json(['message' => 'Acces interdit pour une des filieres choisies.'], 403);
+            }
         }
 
         $file = $request->file('fichier');
-        $path = $file->store('ressources', 'public');
+        $type = $this->resolveType($file->getClientOriginalExtension());
+        $size = $file->getSize();
+        $basePath = $file->store('ressources', 'public');
 
-        $ressource = Ressource::create([
-            'titre' => $data['titre'],
-            'description' => $data['description'] ?? null,
-            'type_fichier' => $this->resolveType($file->getClientOriginalExtension()),
-            'chemin_fichier' => $path,
-            'taille_fichier' => $file->getSize(),
-            'matiere_id' => $matiere->id,
-            'user_id' => $request->user()->id,
-        ]);
+        $created = [];
+        foreach ($matieres as $i => $m) {
+            // 1re cible : on reutilise le fichier stocke ; suivantes : une copie.
+            $path = $i === 0 ? $basePath : $this->duplicateStored($basePath);
 
-        $ressource->load([
-            'auteur:id,name,role',
-            'matiere.niveau.filiere:id,code,nom,couleur',
-        ]);
+            $ressource = Ressource::create([
+                'titre' => $data['titre'],
+                'description' => $data['description'] ?? null,
+                'type_fichier' => $type,
+                'chemin_fichier' => $path,
+                'taille_fichier' => $size,
+                'matiere_id' => $m->id,
+                'user_id' => $request->user()->id,
+            ]);
+            $ressource->load(['auteur:id,name,role', 'matiere.niveau.filiere:id,code,nom,couleur']);
 
-        // --- Notifier les etudiants de la filiere (in-app + email + push) ----
+            $this->notifyPublication($ressource, $m, $request->user());
+            $created[] = $ressource;
+        }
+
+        return response()->json([
+            'data' => count($created) === 1 ? $created[0] : $created,
+            'count' => count($created),
+        ], 201);
+    }
+
+    // Duplique un fichier deja stocke (publication multi-filieres).
+    private function duplicateStored(string $path): string
+    {
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+        $ext = pathinfo($path, PATHINFO_EXTENSION);
+        $new = 'ressources/'.\Illuminate\Support\Str::random(40).($ext ? '.'.$ext : '');
+        $disk->copy($path, $new);
+
+        return $new;
+    }
+
+    // Notifie les etudiants de la filiere + les admins (in-app + email + push).
+    private function notifyPublication(Ressource $ressource, Matiere $matiere, $author): void
+    {
         try {
             $matiere->loadMissing('niveau.filiere');
             $filiere = $matiere->niveau?->filiere;
+            if (! $filiere) {
+                return;
+            }
 
-            if ($filiere) {
-                $etudiants = \App\Models\User::where('role', \App\Models\User::ROLE_ETUDIANT)
-                    ->where('filiere_id', $filiere->id)
-                    ->get();
+            $recipients = \App\Models\User::where('id', '!=', $author->id)
+                ->where(function ($q) use ($filiere) {
+                    $q->where(function ($qq) use ($filiere) {
+                        $qq->where('role', \App\Models\User::ROLE_ETUDIANT)
+                           ->where('filiere_id', $filiere->id);
+                    })->orWhere('role', \App\Models\User::ROLE_ADMIN);
+                })
+                ->get();
 
-                if ($etudiants->isNotEmpty()) {
-                    \Illuminate\Support\Facades\Notification::send(
-                        $etudiants,
-                        new \App\Notifications\RessourcePubliee(
-                            $ressource, $filiere->code, $filiere->nom, $matiere->nom
-                        )
-                    );
-
-                    \App\Services\ExpoPushService::send(
-                        $etudiants->pluck('expo_push_token')->all(),
-                        "Nouvelle ressource — {$filiere->code}",
-                        $ressource->titre,
-                        ['ressource_id' => $ressource->id]
-                    );
-                }
+            if ($recipients->isNotEmpty()) {
+                \Illuminate\Support\Facades\Notification::send(
+                    $recipients,
+                    new \App\Notifications\RessourcePubliee($ressource, $filiere->code, $filiere->nom, $matiere->nom)
+                );
+                \App\Services\ExpoPushService::send(
+                    $recipients->pluck('expo_push_token')->all(),
+                    "Nouvelle ressource — {$filiere->code}",
+                    $ressource->titre,
+                    ['ressource_id' => $ressource->id]
+                );
             }
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Notification publication echouee : '.$e->getMessage());
         }
-
-        return response()->json(['data' => $ressource], 201);
     }
 
     public function update(Request $request, Ressource $ressource): JsonResponse
@@ -185,11 +236,11 @@ class RessourceController extends Controller
 
         return match (true) {
             $extension === 'pdf' => 'pdf',
-            in_array($extension, ['doc', 'docx']) => 'docx',
-            in_array($extension, ['ppt', 'pptx']) => 'pptx',
-            in_array($extension, ['xls', 'xlsx']) => 'xlsx',
-            in_array($extension, ['jpg', 'jpeg', 'png']) => 'image',
-            $extension === 'mp4' => 'video',
+            in_array($extension, ['doc', 'docx', 'odt', 'rtf']) => 'docx',
+            in_array($extension, ['ppt', 'pptx', 'odp']) => 'pptx',
+            in_array($extension, ['xls', 'xlsx', 'ods', 'csv']) => 'xlsx',
+            in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'heic']) => 'image',
+            in_array($extension, ['mp4', 'webm', 'mov', 'mkv', 'avi', 'm4v']) => 'video',
             default => 'autre',
         };
     }

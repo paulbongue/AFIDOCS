@@ -20,6 +20,7 @@ export default function AdminUsersScreen() {
   const [filieres, setFilieres] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [q, setQ] = useState('');
+  const [filiereF, setFiliereF] = useState(null);
   const [busy, setBusy] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
@@ -56,9 +57,12 @@ export default function AdminUsersScreen() {
   }
 
   const filtered = users.filter((u) => {
-    if (!q) return true;
-    const s = q.toLowerCase();
-    return `${u.name} ${u.email} ${u.filiere?.code || ''} ${u.niveau?.nom || ''}`.toLowerCase().includes(s);
+    if (filiereF && String(u.filiere?.id) !== String(filiereF)) return false;
+    if (q) {
+      const s = q.toLowerCase();
+      if (!`${u.name} ${u.email} ${u.filiere?.code || ''} ${u.niveau?.nom || ''}`.toLowerCase().includes(s)) return false;
+    }
+    return true;
   });
 
   return (
@@ -96,9 +100,9 @@ export default function AdminUsersScreen() {
                       onPress={() => setForm({ ...form, filiere_id: f.id, niveau_id: null })} />
               ))}
             </View>
-            {form.role === 'delegue' && form.filiere_id && (
+            {form.role !== 'admin' && form.filiere_id && (
               <>
-                <Text style={styles.lbl}>Classe / niveau</Text>
+                <Text style={styles.lbl}>Niveau / Classe {form.role === 'delegue' ? '(obligatoire)' : '(optionnel)'}</Text>
                 <View style={styles.chips}>
                   {niveaux.map((n) => (
                     <Chip key={n.id} label={n.nom} active={form.niveau_id === n.id} color={colors.red}
@@ -115,6 +119,14 @@ export default function AdminUsersScreen() {
 
         <TextInput style={[styles.input, { marginTop: 14 }]} placeholder="Rechercher (nom, email, filière, classe)…"
                    placeholderTextColor={colors.textLight} value={q} onChangeText={setQ} />
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 8 }}>
+          <Chip label="Toutes" active={!filiereF} color={colors.red} onPress={() => setFiliereF(null)} />
+          {filieres.map((f) => (
+            <Chip key={f.id} label={f.code} active={filiereF === f.id}
+                  color={f.couleur || colorForFiliere(f.code)} onPress={() => setFiliereF(f.id)} />
+          ))}
+        </ScrollView>
 
         {filtered.map((u) => (
           <View key={u.id} style={styles.uRow}>

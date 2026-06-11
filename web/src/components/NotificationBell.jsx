@@ -20,11 +20,18 @@ export default function NotificationBell() {
     } catch (_) { /* silencieux */ }
   }, []);
 
-  // Chargement initial + rafraîchissement périodique (30 s).
+  // Chargement initial + rafraîchissement périodique (15 s) + au retour sur l'onglet.
   useEffect(() => {
     load();
-    const t = setInterval(load, 30000);
-    return () => clearInterval(t);
+    const t = setInterval(load, 15000);
+    const onFocus = () => load();
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
+    };
   }, [load]);
 
   // Fermer le panneau au clic extérieur.

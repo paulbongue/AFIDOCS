@@ -14,7 +14,7 @@ import * as dbApi from '../db/database';
 import { downloadRessource, removeDownload, reachableFileUrl } from '../services/sync';
 import { colors, radius, labelForType, formatSize } from '../theme';
 
-export default function ResourceDetailScreen({ route }) {
+export default function ResourceDetailScreen({ route, navigation }) {
   const { id } = route.params;
   const { isOnline } = useNetwork();
   const { user } = useAuth();
@@ -63,14 +63,15 @@ export default function ResourceDetailScreen({ route }) {
     await Sharing.shareAsync(ressource.local_uri);
   }
 
-  // Aperçu / ouverture en ligne (sans télécharger) via le navigateur du téléphone.
-  async function handlePreview() {
-    if (!isOnline) return Alert.alert('Hors-ligne', "Connecte-toi à internet pour l'aperçu en ligne.");
-    try {
-      await Linking.openURL(reachableFileUrl(ressource.url_fichier));
-    } catch (_) {
-      Alert.alert('Erreur', "Impossible d'ouvrir le fichier.");
+  // Aperçu IN-APP : visionneuse intégrée (fichier local si déjà téléchargé,
+  // sinon depuis le serveur).
+  function handlePreview() {
+    const src = ressource.local_uri || reachableFileUrl(ressource.url_fichier);
+    if (!src) return Alert.alert('Indisponible', 'Aucun fichier à prévisualiser.');
+    if (!ressource.local_uri && !isOnline) {
+      return Alert.alert('Hors-ligne', "Connecte-toi à internet, ou télécharge le fichier pour l'aperçu hors-ligne.");
     }
+    navigation.navigate('RessourcePreview', { url: src, type: ressource.type_fichier, titre: ressource.titre });
   }
 
   async function handleRemove() {

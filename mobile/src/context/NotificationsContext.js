@@ -19,7 +19,7 @@ export function NotificationsProvider({ children }) {
 
   useEffect(() => {
     refresh();
-    const t = setInterval(refresh, 30000);
+    const t = setInterval(refresh, 15000);
     // Rafraîchit aussi le compteur dès qu'un push arrive (app au premier plan).
     let sub;
     try { sub = Notifications.addNotificationReceivedListener(() => refresh()); } catch (_) {}

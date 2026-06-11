@@ -53,6 +53,14 @@ class ClasseController extends Controller
             'user_id' => ['required', 'integer', 'exists:users,id'],
         ]);
 
+        // Révocation AUTOMATIQUE des délégués actuels de cette classe
+        // (une classe n'a qu'un seul délégué). Ils redeviennent étudiants
+        // mais restent rattachés à la classe.
+        User::where('niveau_id', $niveau->id)
+            ->where('role', User::ROLE_DELEGUE)
+            ->where('id', '!=', $data['user_id'])
+            ->update(['role' => User::ROLE_ETUDIANT]);
+
         $user = User::findOrFail($data['user_id']);
         $user->update([
             'role' => User::ROLE_DELEGUE,

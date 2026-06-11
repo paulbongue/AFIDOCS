@@ -4,8 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Commentaire;
 use App\Models\Ressource;
+use App\Models\User;
+use App\Notifications\CommentairePublie;
+use App\Services\ExpoPushService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class CommentaireController extends Controller
 {
@@ -37,6 +42,36 @@ class CommentaireController extends Controller
         ]);
 
         $commentaire->load('auteur:id,name,role');
+
+        // --- Notifier l'auteur de la ressource (délégué) + les admins --------
+        // (in-app + email + push), en excluant l'auteur du commentaire.
+        try {
+            $user = $request->user();
+            $ressource->loadMissing('auteur');
+
+            $recipients = collect();
+            if ($ressource->auteur && (int) $ressource->auteur->id !== (int) $user->id) {
+                $recipients->push($ressource->auteur);
+            }
+            $admins = User::where('role', User::ROLE_ADMIN)
+                ->where('id', '!=', $user->id)
+                ->get();
+            $recipients = $recipients->merge($admins)->unique('id')->values();
+
+            if ($recipients->isNotEmpty()) {
+                $extrait = mb_strimwidth($data['contenu'], 0, 120, '…');
+                Notification::send($recipients, new CommentairePublie($ressource, $user->name, $extrait));
+
+                ExpoPushService::send(
+                    $recipients->pluck('expo_push_token')->all(),
+                    'Nouveau commentaire',
+                    "{$user->name} : ".$extrait,
+                    ['ressource_id' => $ressource->id]
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Notification commentaire echouee : '.$e->getMessage());
+        }
 
         return response()->json(['data' => $commentaire], 201);
     }

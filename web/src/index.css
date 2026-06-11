@@ -229,6 +229,56 @@ table.tbl tr:last-child td { border-bottom: none; }
 .bell-item.unread:hover { background: #FBE4DD; }
 .bell-time { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
+/* Bouton hamburger : caché sur desktop, affiché en mobile (media query) */
+.menu-btn {
+  display: none; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border: none; border-radius: 9px; cursor: pointer;
+  background: rgba(255,255,255,.16); color: #fff; font-size: 19px; line-height: 1;
+  transition: background var(--t);
+}
+.menu-btn:hover { background: rgba(255,255,255,.28); }
+.sidebar-backdrop { display: none; }
+
+/* ---- Responsive : tablette & mobile -------------------------------------- */
+@media (max-width: 860px) {
+  :root { --topbar-h: 60px; }
+  .topbar { padding: 0 12px; }
+  .topbar .wordmark { font-size: 18px; letter-spacing: 1px; }
+  .brand-left { gap: 10px; }
+  .brand-logo { height: 30px; padding: 3px 6px; }
+  .topbar .right { gap: 10px; }
+
+  .menu-btn { display: inline-flex; }
+
+  /* La barre latérale devient un TIROIR dépliable via le bouton ☰ */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform var(--t);
+    z-index: 40; box-shadow: var(--sh-lg); width: 274px;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-backdrop {
+    display: block; position: fixed; inset: var(--topbar-h) 0 0 0;
+    background: rgba(0,0,0,.45); z-index: 35;
+  }
+
+  .content { margin-left: 0; padding: 18px 14px; max-width: 100%; }
+  .page-title { font-size: 22px; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+
+  /* Tableaux : défilement horizontal plutôt que débordement */
+  table.tbl { display: block; overflow-x: auto; white-space: nowrap; }
+
+  .bell-panel { width: 92vw; right: -6px; }
+}
+
+@media (max-width: 600px) {
+  .topbar .right > span { display: none; }   /* masque le nom à côté de l'avatar */
+  .stats-row { grid-template-columns: 1fr; }
+  .content { padding: 14px 12px; }
+  .login-card { padding: 24px; }
+}
+
 /* ---- Accessibilité : mouvement réduit ------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }

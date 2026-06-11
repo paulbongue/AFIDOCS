@@ -114,9 +114,9 @@ export default function UsersPage() {
               {filieres.map((f) => <option key={f.id} value={f.id}>{f.code} — {f.nom}</option>)}
             </select>
           </div>
-          {form.role === 'delegue' && (
+          {form.role !== 'admin' && (
             <div style={{ flex: 1, minWidth: 160 }}>
-              <label className="field">Classe / niveau (obligatoire)</label>
+              <label className="field">Niveau / Classe {form.role === 'delegue' ? '(obligatoire)' : '(optionnel)'}</label>
               <select className="input" value={form.niveau_id}
                       onChange={(e) => setForm({ ...form, niveau_id: e.target.value })} disabled={!form.filiere_id}>
                 <option value="">—</option>

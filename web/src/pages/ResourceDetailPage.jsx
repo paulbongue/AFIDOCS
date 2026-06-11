@@ -12,6 +12,7 @@ export default function ResourceDetailPage() {
   const [res, setRes] = useState(null);
   const [comment, setComment] = useState('');
   const [busy, setBusy] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const load = useCallback(async () => {
     const { data } = await client.get(`/ressources/${id}`);
@@ -44,8 +45,18 @@ export default function ResourceDetailPage() {
   const accent = f?.couleur || colorForFiliere(f?.code);
   const canDelete = user?.role === 'admin' || (user?.role === 'delegue' && res.user_id === user?.id);
 
+  const listBase = user?.role === 'delegue' ? '/delegue/ressources'
+    : user?.role === 'etudiant' ? '/etudiant/ressources' : null;
+
   return (
     <div>
+      <div className="row" style={{ marginBottom: 14, gap: 10 }}>
+        <button className="btn btn-ghost" onClick={() => navigate(-1)}>← Retour</button>
+        {listBase && (
+          <button className="btn btn-ghost" onClick={() => navigate(listBase)}>Liste des ressources</button>
+        )}
+      </div>
+
       <div className="breadcrumb">
         {f?.code} <span className="sep">›</span> {niveau?.nom} <span className="sep">›</span> {res.matiere?.nom}
       </div>
@@ -68,7 +79,9 @@ export default function ResourceDetailPage() {
         {res.description && <p style={{ marginTop: 14 }}>{res.description}</p>}
 
         <div className="row mt">
-          <a className="btn btn-ghost" href={res.url_fichier} target="_blank" rel="noreferrer">👁 Aperçu</a>
+          <button className="btn btn-ghost" onClick={() => setShowPreview((s) => !s)}>
+            👁 {showPreview ? "Masquer l'aperçu" : 'Aperçu'}
+          </button>
           <a className="btn btn-red" href={res.url_fichier} download>⬇ Télécharger</a>
           {canDelete && (
             <button className="btn btn-danger" onClick={async () => {
@@ -79,6 +92,28 @@ export default function ResourceDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Visionneuse intégrée (sans quitter la plateforme) */}
+      {showPreview && (
+        res.type_fichier === 'image' ? (
+          <div className="card mt" style={{ padding: 0, overflow: 'hidden' }}>
+            <img src={res.url_fichier} alt={res.titre} style={{ width: '100%', display: 'block' }} />
+          </div>
+        ) : res.type_fichier === 'pdf' ? (
+          <div className="card mt" style={{ padding: 0, overflow: 'hidden' }}>
+            <iframe title="Aperçu du document" src={res.url_fichier}
+                    style={{ width: '100%', height: '78vh', border: 'none', display: 'block' }} />
+          </div>
+        ) : (
+          <div className="card mt">
+            <div className="muted">
+              L'aperçu intégré n'est disponible que pour les PDF et les images. Pour un fichier
+              {' '}{labelForType(res.type_fichier)} (Word, PowerPoint, Excel…), télécharge-le pour le consulter.
+            </div>
+            <a className="btn btn-ghost mt" href={res.url_fichier} target="_blank" rel="noreferrer">Ouvrir dans un nouvel onglet</a>
+          </div>
+        )
+      )}
 
       <h3 className="mt">Commentaires ({res.commentaires?.length || 0})</h3>
 
