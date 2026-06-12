@@ -20,6 +20,7 @@
     },
     "android": {
       "package": "sn.afi.docs",
+      "softwareKeyboardLayoutMode": "pan",
       "permissions": [
         "INTERNET"
       ]

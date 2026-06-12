@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 
@@ -80,9 +81,11 @@ export default function AdminPublishScreen() {
   }
 
   return (
-    <View style={styles.flex}>
+    <KeyboardAvoidingView style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
       <OfflineBanner />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Publier une ressource</Text>
 
         <Text style={styles.label}>Titre</Text>
@@ -135,7 +138,7 @@ export default function AdminPublishScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

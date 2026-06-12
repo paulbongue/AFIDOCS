@@ -82,11 +82,6 @@ export default function LoginScreen() {
             <Text style={styles.offline}>● Hors-ligne — connexion internet requise pour s'identifier</Text>
           )}
         </View>
-
-        <Text style={styles.hint}>
-          Comptes de démo (mot de passe : password){'\n'}
-          admin@afi.sn · delegue.srt@afi.sn · etudiant.srt@afi.sn
-        </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );

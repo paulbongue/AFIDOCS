@@ -68,11 +68,6 @@ export default function LoginPage() {
           <button className="btn btn-red" style={{ width: '100%', marginTop: 20 }} disabled={loading}>
             {loading ? 'Connexion…' : 'Se connecter'}
           </button>
-
-          <p className="muted" style={{ fontSize: 12, marginTop: 18, textAlign: 'center', lineHeight: 1.5 }}>
-            Démo (mot de passe : password)<br />
-            admin@afi.sn · delegue.srt@afi.sn · etudiant.srt@afi.sn
-          </p>
         </form>
       </div>
     </div>

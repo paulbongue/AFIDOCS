@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -88,9 +89,11 @@ export default function AdminUsersScreen() {
   });
 
   return (
-    <View style={styles.flex}>
+    <KeyboardAvoidingView style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
       <OfflineBanner />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.headRow}>
           <Text style={styles.title}>Utilisateurs ({filtered.length})</Text>
           <TouchableOpacity style={styles.newBtn}
@@ -173,7 +176,7 @@ export default function AdminUsersScreen() {
           </View>
         ))}
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

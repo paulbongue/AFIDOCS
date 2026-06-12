@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator,
-  TextInput, Alert, Linking,
+  TextInput, Alert, Linking, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
@@ -162,9 +162,11 @@ export default function ResourceDetailScreen({ route, navigation }) {
     || (user?.role === 'delegue' && authorId != null && String(authorId) === String(user?.id));
 
   return (
-    <View style={styles.flex}>
+    <KeyboardAvoidingView style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
       <OfflineBanner />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {/* Fil d'Ariane */}
         <Text style={styles.breadcrumb}>
           <Text style={styles.crumb}>{ressource.filiere_code}</Text>
@@ -281,7 +283,7 @@ export default function ResourceDetailScreen({ route, navigation }) {
         })}
         {comments.length === 0 && <Text style={styles.noComment}>Aucun commentaire pour le moment.</Text>}
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, TextInput,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -73,9 +74,11 @@ export default function ProfileScreen() {
   const syncLabel = lastSync ? new Date(lastSync).toLocaleString('fr-FR') : 'jamais';
 
   return (
-    <View style={styles.flex}>
+    <KeyboardAvoidingView style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
       <OfflineBanner />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {/* En-tête profil */}
         <View style={styles.head}>
           <Avatar name={user?.name} size={64} bg={colors.navy} />
@@ -132,7 +135,7 @@ export default function ProfileScreen() {
           <Text style={styles.btnLogoutText}>Se déconnecter</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

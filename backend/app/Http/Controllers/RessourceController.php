@@ -169,16 +169,20 @@ class RessourceController extends Controller
     {
         try {
             $matiere->loadMissing('niveau.filiere');
-            $filiere = $matiere->niveau?->filiere;
-            if (! $filiere) {
+            $niveau = $matiere->niveau;
+            $filiere = $niveau?->filiere;
+            if (! $niveau || ! $filiere) {
                 return;
             }
 
+            // Etudiants de la CLASSE exacte (meme filiere ET meme niveau) + admins.
+            // Un M2 d'une filiere n'est pas notifie d'un cours ajoute en M1.
             $recipients = \App\Models\User::where('id', '!=', $author->id)
-                ->where(function ($q) use ($filiere) {
-                    $q->where(function ($qq) use ($filiere) {
+                ->where(function ($q) use ($filiere, $niveau) {
+                    $q->where(function ($qq) use ($filiere, $niveau) {
                         $qq->where('role', \App\Models\User::ROLE_ETUDIANT)
-                           ->where('filiere_id', $filiere->id);
+                           ->where('filiere_id', $filiere->id)
+                           ->where('niveau_id', $niveau->id);
                     })->orWhere('role', \App\Models\User::ROLE_ADMIN);
                 })
                 ->get();

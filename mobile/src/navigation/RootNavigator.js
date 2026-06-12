@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationsContext';
@@ -106,6 +107,7 @@ function MainTabs() {
   const { unread } = useNotifications();
   const { user } = useAuth();
   const role = user?.role;
+  const insets = useSafeAreaInsets(); // marge basse (boutons/gestes du téléphone)
   return (
     <Tab.Navigator
       initialRouteName="Ressources"
@@ -114,7 +116,7 @@ function MainTabs() {
         tabBarActiveTintColor: colors.red,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          height: 64, paddingBottom: 9, paddingTop: 7,
+          height: 64 + insets.bottom, paddingBottom: 9 + insets.bottom, paddingTop: 7,
           backgroundColor: colors.surface,
           borderTopColor: colors.border, borderTopWidth: 1,
           // légère élévation pour détacher la barre du contenu
