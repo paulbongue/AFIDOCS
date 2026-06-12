@@ -4,6 +4,7 @@ import {
   TextInput, Alert, Linking,
 } from 'react-native';
 import * as Sharing from 'expo-sharing';
+import * as DocumentPicker from 'expo-document-picker';
 
 import OfflineBanner from '../components/OfflineBanner';
 import Avatar from '../components/Avatar';
@@ -25,6 +26,14 @@ export default function ResourceDetailScreen({ route, navigation }) {
   const [busy, setBusy] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
+  // Édition (réservée à l'auteur délégué ou à l'admin, en ligne).
+  const [authorId, setAuthorId] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [eTitre, setETitre] = useState('');
+  const [eDesc, setEDesc] = useState('');
+  const [eFile, setEFile] = useState(null);
+  const [saving, setSaving] = useState(false);
+
   const load = useCallback(async () => {
     setRessource(await dbApi.getRessource(id, user?.id));
     setComments(await dbApi.getComments(id));
@@ -33,6 +42,7 @@ export default function ResourceDetailScreen({ route, navigation }) {
       try {
         const { data } = await client.get(`/ressources/${id}`);
         const r = data.data;
+        setAuthorId(r.user_id ?? null);
         await dbApi.upsertRessources([r]);
         await dbApi.saveComments(id, r.commentaires || []);
         setRessource(await dbApi.getRessource(id, user?.id));
@@ -79,6 +89,42 @@ export default function ResourceDetailScreen({ route, navigation }) {
     setRessource(await dbApi.getRessource(id, user?.id));
   }
 
+  function startEdit() {
+    setETitre(ressource.titre || '');
+    setEDesc(ressource.description || '');
+    setEFile(null);
+    setEditing(true);
+  }
+
+  async function pickNewFile() {
+    try {
+      const res = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
+      if (!res.canceled) setEFile(res.assets?.[0] || null);
+    } catch (_) { Alert.alert('Erreur', 'Sélection du fichier impossible.'); }
+  }
+
+  async function saveEdit() {
+    if (!eTitre.trim()) return Alert.alert('Titre requis', 'Le titre ne peut pas être vide.');
+    if (!isOnline) return Alert.alert('Hors-ligne', 'Connecte-toi à internet pour enregistrer.');
+    setSaving(true);
+    try {
+      const fd = new FormData();
+      fd.append('_method', 'PUT'); // method spoofing pour l'envoi multipart
+      fd.append('titre', eTitre.trim());
+      fd.append('description', eDesc);
+      if (eFile) {
+        fd.append('fichier', { uri: eFile.uri, name: eFile.name || 'fichier', type: eFile.mimeType || 'application/octet-stream' });
+      }
+      const url = user?.role === 'admin' ? `/admin/ressources/${id}` : `/ressources/${id}`;
+      await client.post(url, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setEditing(false);
+      await load();
+      Alert.alert('Modifié', 'La ressource a été mise à jour.');
+    } catch (e) {
+      Alert.alert('Erreur', e?.response?.data?.message || 'Modification impossible.');
+    } finally { setSaving(false); }
+  }
+
   async function submitComment() {
     if (!newComment.trim()) return;
     if (!isOnline) return Alert.alert('Hors-ligne', 'Connecte-toi à internet pour commenter.');
@@ -112,6 +158,8 @@ export default function ResourceDetailScreen({ route, navigation }) {
 
   const isOffline = !!ressource.local_uri;
   const accent = ressource.filiere_couleur || colors.navy;
+  const canEdit = user?.role === 'admin'
+    || (user?.role === 'delegue' && authorId != null && String(authorId) === String(user?.id));
 
   return (
     <View style={styles.flex}>
@@ -161,7 +209,36 @@ export default function ResourceDetailScreen({ route, navigation }) {
               <Text style={styles.remove}>Retirer du hors-ligne</Text>
             </TouchableOpacity>
           )}
+          {canEdit && !editing && (
+            <TouchableOpacity style={styles.btnOutline} onPress={startEdit} activeOpacity={0.85}>
+              <Text style={styles.btnOutlineText}>✏️  Modifier la ressource</Text>
+            </TouchableOpacity>
+          )}
         </View>
+
+        {/* Formulaire d'édition (titre / description / remplacement de fichier) */}
+        {editing && (
+          <View style={styles.editCard}>
+            <Text style={styles.editTitle}>Modifier la ressource</Text>
+            <Text style={styles.editLbl}>Titre</Text>
+            <TextInput style={styles.editInput} value={eTitre} onChangeText={setETitre}
+                       placeholder="Titre" placeholderTextColor={colors.textLight} />
+            <Text style={styles.editLbl}>Description</Text>
+            <TextInput style={[styles.editInput, { height: 80 }]} value={eDesc} onChangeText={setEDesc}
+                       multiline placeholder="Description" placeholderTextColor={colors.textLight} />
+            <TouchableOpacity style={styles.fileBtn} onPress={pickNewFile}>
+              <Text style={styles.fileBtnText}>{eFile ? `📎 ${eFile.name}` : '＋ Remplacer le fichier (optionnel)'}</Text>
+            </TouchableOpacity>
+            <View style={styles.editActions}>
+              <TouchableOpacity style={styles.btnRed} onPress={saveEdit} disabled={saving} activeOpacity={0.85}>
+                {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>Enregistrer</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setEditing(false)}>
+                <Text style={styles.cancelText}>Annuler</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         {/* Commentaires */}
         <Text style={styles.section}>Commentaires ({comments.length})</Text>
@@ -232,6 +309,24 @@ const styles = StyleSheet.create({
   btnOutline: { borderWidth: 1.5, borderColor: colors.navy, borderRadius: radius.sm, paddingVertical: 12, alignItems: 'center', marginTop: 8 },
   btnOutlineText: { color: colors.navy, fontWeight: '700', fontSize: 14 },
   remove: { color: colors.red, textAlign: 'center', marginTop: 12, fontWeight: '600' },
+  editCard: {
+    backgroundColor: colors.surface, borderRadius: radius.md, padding: 16, marginTop: 14,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  editTitle: { fontSize: 16, fontWeight: '900', color: colors.navy, marginBottom: 8 },
+  editLbl: { fontSize: 13, fontWeight: '700', color: colors.navy, marginTop: 10, marginBottom: 4 },
+  editInput: {
+    backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm,
+    paddingHorizontal: 12, paddingVertical: 10, color: colors.text, fontSize: 15,
+  },
+  fileBtn: {
+    borderWidth: 1.5, borderColor: colors.navy, borderStyle: 'dashed', borderRadius: radius.sm,
+    padding: 12, alignItems: 'center', marginTop: 12,
+  },
+  fileBtnText: { color: colors.navy, fontWeight: '700' },
+  editActions: { flexDirection: 'row', gap: 10, marginTop: 14, alignItems: 'center' },
+  cancelBtn: { paddingVertical: 12, paddingHorizontal: 16 },
+  cancelText: { color: colors.textMuted, fontWeight: '700' },
   section: { fontSize: 16, fontWeight: '800', color: colors.navy, marginTop: 26, marginBottom: 12 },
   commentBox: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
   commentInput: {

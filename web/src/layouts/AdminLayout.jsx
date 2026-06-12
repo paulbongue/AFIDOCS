@@ -9,6 +9,7 @@ export default function AdminLayout() {
     <DashboardShell profilePath="/admin/profil">
       <div className="group-title">ADMINISTRATION</div>
       <NavLink to="/admin" end className={link}>▦ Tableau de bord</NavLink>
+      <NavLink to="/admin/ressources" className={link}>▭ Ressources</NavLink>
       <NavLink to="/admin/publier" className={link}>⬆ Publier une ressource</NavLink>
       <NavLink to="/admin/controle" className={link}>⚙ Centre de contrôle</NavLink>
       <NavLink to="/admin/pedagogie" className={link}>▥ Gestion pédagogique</NavLink>

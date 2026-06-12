@@ -24,7 +24,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 // --- Public -----------------------------------------------------------------
-Route::post('/login', [AuthController::class, 'login']);
+// Limitation anti-brute-force : 6 tentatives de connexion par minute et par IP.
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 
 // --- Authentifie (admin | delegue | etudiant) -------------------------------
 Route::middleware('auth:sanctum')->group(function () {
@@ -84,6 +85,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // publication par l'admin (dans n'importe quelle filiere)
         Route::post('/ressources', [RessourceController::class, 'store']);
+        // edition de n'importe quelle ressource par l'admin
+        Route::put('/ressources/{ressource}', [RessourceController::class, 'update']);
         // moderation : suppression de toute ressource par l'admin
         Route::delete('/ressources/{ressource}', [RessourceController::class, 'destroy']);
     });

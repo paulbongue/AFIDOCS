@@ -14,12 +14,48 @@ export default function ResourceDetailPage() {
   const [busy, setBusy] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
+  // Édition de la ressource (titre / description / remplacement de fichier).
+  const [editing, setEditing] = useState(false);
+  const [eTitre, setETitre] = useState('');
+  const [eDesc, setEDesc] = useState('');
+  const [eFile, setEFile] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [editMsg, setEditMsg] = useState(null);
+
   const load = useCallback(async () => {
     const { data } = await client.get(`/ressources/${id}`);
     setRes(data.data);
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+
+  function startEdit() {
+    setETitre(res.titre || '');
+    setEDesc(res.description || '');
+    setEFile(null);
+    setEditMsg(null);
+    setEditing(true);
+  }
+
+  async function saveEdit(e) {
+    e.preventDefault();
+    setEditMsg(null);
+    if (!eTitre.trim()) { setEditMsg({ type: 'err', text: 'Le titre est requis.' }); return; }
+    setSaving(true);
+    try {
+      const fd = new FormData();
+      fd.append('_method', 'PUT'); // method spoofing : envoi multipart
+      fd.append('titre', eTitre.trim());
+      fd.append('description', eDesc);
+      if (eFile) fd.append('fichier', eFile);
+      const url = user?.role === 'admin' ? `/admin/ressources/${id}` : `/ressources/${id}`;
+      await client.post(url, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setEditing(false);
+      await load();
+    } catch (err) {
+      setEditMsg({ type: 'err', text: err?.response?.data?.message || 'Modification impossible.' });
+    } finally { setSaving(false); }
+  }
 
   async function sendComment(e) {
     e.preventDefault();
@@ -44,6 +80,7 @@ export default function ResourceDetailPage() {
   const niveau = res.matiere?.niveau;
   const accent = f?.couleur || colorForFiliere(f?.code);
   const canDelete = user?.role === 'admin' || (user?.role === 'delegue' && res.user_id === user?.id);
+  const canEdit = canDelete; // mêmes droits : admin partout, délégué sur les siennes
 
   const listBase = user?.role === 'delegue' ? '/delegue/ressources'
     : user?.role === 'etudiant' ? '/etudiant/ressources' : null;
@@ -83,6 +120,9 @@ export default function ResourceDetailPage() {
             👁 {showPreview ? "Masquer l'aperçu" : 'Aperçu'}
           </button>
           <a className="btn btn-red" href={res.url_fichier} download>⬇ Télécharger</a>
+          {canEdit && !editing && (
+            <button className="btn btn-ghost" onClick={startEdit}>✏ Modifier</button>
+          )}
           {canDelete && (
             <button className="btn btn-danger" onClick={async () => {
               if (!confirm('Supprimer cette ressource ?')) return;
@@ -92,6 +132,30 @@ export default function ResourceDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Formulaire d'édition (titre / description / remplacement de fichier) */}
+      {editing && (
+        <form className="card mt" onSubmit={saveEdit}>
+          <h3>Modifier la ressource</h3>
+          <label className="field">Titre</label>
+          <input className="input" value={eTitre} onChange={(e) => setETitre(e.target.value)} />
+
+          <label className="field">Description</label>
+          <textarea className="input" rows={3} value={eDesc} onChange={(e) => setEDesc(e.target.value)} />
+
+          <label className="field">Remplacer le fichier (optionnel)</label>
+          <input className="input" type="file" onChange={(e) => setEFile(e.target.files?.[0] || null)} />
+          <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+            Laisse vide pour conserver le fichier actuel.
+          </div>
+
+          {editMsg && <div style={{ marginTop: 10, color: 'var(--red)' }}>{editMsg.text}</div>}
+          <div className="row mt">
+            <button className="btn btn-red" disabled={saving}>{saving ? 'Enregistrement…' : 'Enregistrer'}</button>
+            <button type="button" className="btn btn-ghost" onClick={() => setEditing(false)}>Annuler</button>
+          </div>
+        </form>
+      )}
 
       {/* Visionneuse intégrée (sans quitter la plateforme) */}
       {showPreview && (

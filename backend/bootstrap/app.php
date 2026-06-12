@@ -21,6 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->statefulApi();
 
+        // En-tetes de securite HTTP sur toutes les reponses.
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
         // Alias du middleware de role (admin | delegue | etudiant).
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,

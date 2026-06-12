@@ -200,6 +200,11 @@ class RessourceController extends Controller
         }
     }
 
+    /**
+     * Modifier une ressource publiee.
+     * - Delegue : uniquement SES ressources.  - Admin : n'importe laquelle.
+     * Le fichier peut etre remplace (optionnel) ; titre/description editables.
+     */
     public function update(Request $request, Ressource $ressource): JsonResponse
     {
         if ($request->user()->cannot('update', $ressource)) {
@@ -209,9 +214,28 @@ class RessourceController extends Controller
         $data = $request->validate([
             'titre' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            // Remplacement de fichier facultatif (tout type, jusqu'a 50 Mo).
+            'fichier' => ['nullable', 'file', 'max:51200'],
         ]);
 
-        $ressource->update($data);
+        $payload = [
+            'titre' => $data['titre'] ?? $ressource->titre,
+            'description' => $data['description'] ?? $ressource->description,
+        ];
+
+        // Si un nouveau fichier est fourni : on remplace l'ancien.
+        if ($request->hasFile('fichier')) {
+            $file = $request->file('fichier');
+            if ($ressource->chemin_fichier) {
+                Storage::disk('public')->delete($ressource->chemin_fichier);
+            }
+            $payload['chemin_fichier'] = $file->store('ressources', 'public');
+            $payload['type_fichier'] = $this->resolveType($file->getClientOriginalExtension());
+            $payload['taille_fichier'] = $file->getSize();
+        }
+
+        $ressource->update($payload);
+        $ressource->load(['auteur:id,name,role', 'matiere.niveau.filiere:id,code,nom,couleur']);
 
         return response()->json(['data' => $ressource]);
     }

@@ -9,6 +9,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [filieres, setFilieres] = useState([]);
   const [form, setForm] = useState(EMPTY);
+  const [editingId, setEditingId] = useState(null); // null = création, sinon édition
   const [msg, setMsg] = useState(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -29,7 +30,27 @@ export default function UsersPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  async function create(e) {
+  function startEdit(u) {
+    setEditingId(u.id);
+    setForm({
+      name: u.name || '',
+      email: u.email || '',
+      password: '', // laisser vide = inchangé
+      role: u.role || 'etudiant',
+      filiere_id: u.filiere?.id ? String(u.filiere.id) : '',
+      niveau_id: u.niveau?.id ? String(u.niveau.id) : '',
+    });
+    setMsg(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setForm(EMPTY);
+    setMsg(null);
+  }
+
+  async function submit(e) {
     e.preventDefault();
     setMsg(null);
     setBusy(true);
@@ -39,12 +60,19 @@ export default function UsersPage() {
         filiere_id: form.filiere_id || null,
         niveau_id: form.niveau_id || null,
       };
-      await client.post('/admin/users', payload);
-      setMsg({ type: 'ok', text: 'Compte créé.' });
+      if (editingId) {
+        if (!payload.password) delete payload.password; // mot de passe inchangé
+        await client.put(`/admin/users/${editingId}`, payload);
+        setMsg({ type: 'ok', text: 'Compte modifié.' });
+      } else {
+        await client.post('/admin/users', payload);
+        setMsg({ type: 'ok', text: 'Compte créé.' });
+      }
       setForm(EMPTY);
+      setEditingId(null);
       await load();
     } catch (err) {
-      setMsg({ type: 'err', text: err?.response?.data?.message || 'Création impossible.' });
+      setMsg({ type: 'err', text: err?.response?.data?.message || 'Opération impossible.' });
     } finally { setBusy(false); }
   }
 
@@ -81,8 +109,8 @@ export default function UsersPage() {
         </div>
       )}
 
-      <form className="card" onSubmit={create}>
-        <h3>Créer un compte</h3>
+      <form className="card" onSubmit={submit}>
+        <h3>{editingId ? 'Modifier le compte' : 'Créer un compte'}</h3>
         <div className="row mt" style={{ gap: 12, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 160 }}>
             <label className="field">Nom</label>
@@ -93,8 +121,10 @@ export default function UsersPage() {
             <input className="input" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           </div>
           <div style={{ flex: 1, minWidth: 140 }}>
-            <label className="field">Mot de passe</label>
-            <input className="input" type="text" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+            <label className="field">Mot de passe {editingId && '(laisser vide = inchangé)'}</label>
+            <input className="input" type="text" value={form.password}
+                   placeholder={editingId ? '••••••••' : ''}
+                   onChange={(e) => setForm({ ...form, password: e.target.value })} />
           </div>
         </div>
         <div className="row mt" style={{ gap: 12, flexWrap: 'wrap' }}>
@@ -127,7 +157,14 @@ export default function UsersPage() {
           )}
         </div>
         {msg && <div style={{ marginTop: 12, color: msg.type === 'ok' ? 'var(--success)' : 'var(--red)' }}>{msg.text}</div>}
-        <button className="btn btn-red mt" disabled={busy}>{busy ? 'Création…' : 'Créer le compte'}</button>
+        <div className="row mt">
+          <button className="btn btn-red" disabled={busy}>
+            {busy ? 'Enregistrement…' : editingId ? 'Enregistrer les modifications' : 'Créer le compte'}
+          </button>
+          {editingId && (
+            <button type="button" className="btn btn-ghost" onClick={cancelEdit}>Annuler</button>
+          )}
+        </div>
       </form>
 
       <h3 className="mt" style={{ marginTop: 28 }}>Comptes ({filtered.length} / {users.length})</h3>
@@ -164,7 +201,12 @@ export default function UsersPage() {
                 {u.filiere ? <Badge code={u.filiere.code} couleur={u.filiere.couleur} /> : '—'}
                 {u.niveau ? ` · ${u.niveau.nom}` : ''}
               </td>
-              <td><button className="btn btn-danger" onClick={() => remove(u.id)}>Supprimer</button></td>
+              <td>
+                <div className="row" style={{ gap: 6, justifyContent: 'flex-end' }}>
+                  <button className="btn btn-ghost" onClick={() => startEdit(u)}>Modifier</button>
+                  <button className="btn btn-danger" onClick={() => remove(u.id)}>Supprimer</button>
+                </div>
+              </td>
             </tr>
           ))}
         </tbody>

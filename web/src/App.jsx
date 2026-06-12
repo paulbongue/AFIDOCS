@@ -26,14 +26,15 @@ import ModerationPage from './pages/admin/ModerationPage';
 import ControlCenterPage from './pages/admin/ControlCenterPage';
 import AdminPublishPage from './pages/admin/PublishPage';
 
-// Redirige vers l'espace correspondant au rôle de l'utilisateur connecté.
+// Après connexion, on atterrit directement sur la liste des ressources
+// (étudiant/délégué : leur classe en avant ; admin : toutes les ressources).
 function Home() {
   const { user, loading } = useAuth();
   if (loading) return <div className="empty">Chargement…</div>;
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role === 'admin') return <Navigate to="/admin" replace />;
-  if (user.role === 'delegue') return <Navigate to="/delegue" replace />;
-  return <Navigate to="/etudiant" replace />;
+  if (user.role === 'admin') return <Navigate to="/admin/ressources" replace />;
+  if (user.role === 'delegue') return <Navigate to="/delegue/ressources" replace />;
+  return <Navigate to="/etudiant/ressources" replace />;
 }
 
 export default function App() {
@@ -73,6 +74,7 @@ export default function App() {
         element={<RequireRole roles={['admin']}><AdminLayout /></RequireRole>}
       >
         <Route index element={<AdminDashboard />} />
+        <Route path="ressources" element={<ResourcesPage />} />
         <Route path="publier" element={<AdminPublishPage />} />
         <Route path="controle" element={<ControlCenterPage />} />
         <Route path="pedagogie" element={<PedagogiePage />} />

@@ -108,6 +108,7 @@ function MainTabs() {
   const role = user?.role;
   return (
     <Tab.Navigator
+      initialRouteName="Ressources"
       screenOptions={({ navigation }) => ({
         ...redHeader(navigation),
         tabBarActiveTintColor: colors.red,

@@ -19,6 +19,7 @@ export default function AdminUsersScreen() {
   const [users, setUsers] = useState([]);
   const [filieres, setFilieres] = useState([]);
   const [form, setForm] = useState(EMPTY);
+  const [editingId, setEditingId] = useState(null); // null = création
   const [q, setQ] = useState('');
   const [filiereF, setFiliereF] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -34,16 +35,37 @@ export default function AdminUsersScreen() {
 
   const niveaux = useMemo(() => filieres.find((f) => f.id === form.filiere_id)?.niveaux || [], [filieres, form.filiere_id]);
 
-  async function create() {
-    if (!form.name || !form.email || !form.password) return Alert.alert('Champs requis', 'Nom, email et mot de passe.');
+  function startEdit(u) {
+    setEditingId(u.id);
+    setForm({
+      name: u.name || '', email: u.email || '', password: '',
+      role: u.role || 'etudiant',
+      filiere_id: u.filiere?.id ?? null, niveau_id: u.niveau?.id ?? null,
+    });
+    setShowForm(true);
+  }
+
+  function closeForm() {
+    setShowForm(false); setEditingId(null); setForm(EMPTY);
+  }
+
+  async function submit() {
+    if (!form.name || !form.email) return Alert.alert('Champs requis', 'Nom et email.');
+    if (!editingId && !form.password) return Alert.alert('Champs requis', 'Mot de passe.');
     if (form.role === 'delegue' && !form.niveau_id) return Alert.alert('Classe requise', 'Un délégué doit avoir une classe.');
     setBusy(true);
     try {
-      await client.post('/admin/users', { ...form, filiere_id: form.filiere_id || null, niveau_id: form.niveau_id || null });
-      setForm(EMPTY); setShowForm(false); await load();
-      Alert.alert('Compte créé', 'Le compte a été ajouté.');
+      const payload = { ...form, filiere_id: form.filiere_id || null, niveau_id: form.niveau_id || null };
+      if (editingId) {
+        if (!payload.password) delete payload.password; // inchangé
+        await client.put(`/admin/users/${editingId}`, payload);
+      } else {
+        await client.post('/admin/users', payload);
+      }
+      closeForm(); await load();
+      Alert.alert(editingId ? 'Compte modifié' : 'Compte créé', 'Opération réussie.');
     } catch (e) {
-      Alert.alert('Erreur', e?.response?.data?.message || 'Création impossible.');
+      Alert.alert('Erreur', e?.response?.data?.message || 'Opération impossible.');
     } finally { setBusy(false); }
   }
 
@@ -71,19 +93,23 @@ export default function AdminUsersScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.headRow}>
           <Text style={styles.title}>Utilisateurs ({filtered.length})</Text>
-          <TouchableOpacity style={styles.newBtn} onPress={() => setShowForm((s) => !s)}>
+          <TouchableOpacity style={styles.newBtn}
+            onPress={() => (showForm ? closeForm() : (setForm(EMPTY), setEditingId(null), setShowForm(true)))}>
             <Text style={styles.newBtnText}>{showForm ? 'Fermer' : '+ Nouveau'}</Text>
           </TouchableOpacity>
         </View>
 
         {showForm && (
           <View style={styles.formCard}>
+            <Text style={styles.formTitle}>{editingId ? 'Modifier le compte' : 'Nouveau compte'}</Text>
             <TextInput style={styles.input} placeholder="Nom" placeholderTextColor={colors.textLight}
                        value={form.name} onChangeText={(t) => setForm({ ...form, name: t })} />
             <TextInput style={styles.input} placeholder="Email" placeholderTextColor={colors.textLight}
                        autoCapitalize="none" keyboardType="email-address"
                        value={form.email} onChangeText={(t) => setForm({ ...form, email: t })} />
-            <TextInput style={styles.input} placeholder="Mot de passe" placeholderTextColor={colors.textLight}
+            <TextInput style={styles.input}
+                       placeholder={editingId ? 'Mot de passe (laisser vide = inchangé)' : 'Mot de passe'}
+                       placeholderTextColor={colors.textLight}
                        value={form.password} onChangeText={(t) => setForm({ ...form, password: t })} />
             <Text style={styles.lbl}>Rôle</Text>
             <View style={styles.chips}>
@@ -111,8 +137,10 @@ export default function AdminUsersScreen() {
                 </View>
               </>
             )}
-            <TouchableOpacity style={styles.create} onPress={create} disabled={busy}>
-              <Text style={styles.createText}>{busy ? 'Création…' : 'Créer le compte'}</Text>
+            <TouchableOpacity style={styles.create} onPress={submit} disabled={busy}>
+              <Text style={styles.createText}>
+                {busy ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Créer le compte'}
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -136,6 +164,9 @@ export default function AdminUsersScreen() {
                 {u.email} · {u.role}{u.filiere ? ` · ${u.filiere.code}` : ''}{u.niveau ? ` ${u.niveau.nom}` : ''}
               </Text>
             </View>
+            <TouchableOpacity style={styles.editBtn} onPress={() => startEdit(u)}>
+              <Text style={styles.editBtnText}>Éditer</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.del} onPress={() => confirmDelete(u)}>
               <Text style={styles.delText}>Suppr.</Text>
             </TouchableOpacity>
@@ -163,6 +194,7 @@ const styles = StyleSheet.create({
   newBtn: { backgroundColor: colors.red, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
   newBtnText: { color: '#fff', fontWeight: '700', fontSize: 12 },
   formCard: { backgroundColor: '#F3F3F3', borderRadius: radius.md, padding: 14, marginTop: 12 },
+  formTitle: { fontSize: 15, fontWeight: '900', color: colors.navy, marginBottom: 10 },
   input: {
     backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm,
     paddingHorizontal: 12, paddingVertical: 10, color: colors.text, marginBottom: 8,
@@ -181,4 +213,6 @@ const styles = StyleSheet.create({
   uMeta: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
   del: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.red, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   delText: { color: colors.red, fontWeight: '700', fontSize: 12 },
+  editBtn: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.navy, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
+  editBtnText: { color: colors.navy, fontWeight: '700', fontSize: 12 },
 });
