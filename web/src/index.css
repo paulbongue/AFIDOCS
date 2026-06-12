@@ -266,8 +266,13 @@ table.tbl tr:last-child td { border-bottom: none; }
   .page-title { font-size: 22px; }
   .stats-row { grid-template-columns: 1fr 1fr; }
 
-  /* Tableaux : défilement horizontal plutôt que débordement */
-  table.tbl { display: block; overflow-x: auto; white-space: nowrap; }
+  /* Les rangées et lignes "espacées" se replient sur mobile (pas de débordement) */
+  .row, .spread { flex-wrap: wrap; }
+
+  /* Tableaux : les cellules se replient pour tenir dans la largeur de l'écran
+     (croissance verticale), avec défilement horizontal seulement en secours */
+  table.tbl { display: block; overflow-x: auto; }
+  table.tbl td, table.tbl th { white-space: normal; word-break: break-word; }
 
   .bell-panel { width: 92vw; right: -6px; }
 }
@@ -278,6 +283,26 @@ table.tbl tr:last-child td { border-bottom: none; }
   .content { padding: 14px 12px; }
   .login-card { padding: 24px; }
 }
+
+/* ---- Anti-débordement & coupure des longs textes ------------------------- */
+html, body { max-width: 100%; overflow-x: hidden; }
+.content { overflow-x: hidden; }
+/* Évite qu'un enfant flex refuse de rétrécir et déborde horizontalement */
+.row > *, .spread > * { min-width: 0; }
+/* Les longs textes (emails, titres, noms de filière) se coupent au lieu de déborder */
+.page-title, h2, h3, .res-title, .res-meta, .muted, .breadcrumb,
+table.tbl td, table.tbl th, .card b, .nav-item span { overflow-wrap: anywhere; }
+img { max-width: 100%; height: auto; }
+
+/* ---- Champ mot de passe (bouton œil) ------------------------------------- */
+.pwd-wrap { position: relative; }
+.pwd-wrap .input { padding-right: 44px; }
+.pwd-toggle {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; font-size: 16px; line-height: 1; padding: 6px;
+  cursor: pointer; color: var(--muted); border-radius: 8px;
+}
+.pwd-toggle:hover { background: var(--surface-2); }
 
 /* ---- Finitions : fluidité & confort d'usage ------------------------------ */
 html { scroll-behavior: smooth; }

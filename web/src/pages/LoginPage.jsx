@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import PasswordInput from '../components/PasswordInput';
 
 export default function LoginPage() {
   const { login, user } = useAuth();
@@ -60,8 +61,8 @@ export default function LoginPage() {
                  onChange={(e) => setEmail(e.target.value)} placeholder="prenom.nom@afi.sn" />
 
           <label className="field">Mot de passe</label>
-          <input className="input" type="password" value={password}
-                 onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+          <PasswordInput value={password}
+                         onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
 
           {error && <div style={{ color: 'var(--red)', fontSize: 13, marginTop: 12 }}>{error}</div>}
 

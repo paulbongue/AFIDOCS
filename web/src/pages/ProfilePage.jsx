@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import Badge from '../components/Badge';
+import PasswordInput from '../components/PasswordInput';
 import { ROLE_LABEL, initials } from '../theme';
 
 export default function ProfilePage() {
@@ -67,13 +68,13 @@ export default function ProfilePage() {
       <form className="card mt" style={{ maxWidth: 560 }} onSubmit={changePassword}>
         <h3>Sécurité — Modifier mon mot de passe</h3>
         <label className="field">Mot de passe actuel</label>
-        <input className="input" type="password" value={pwd.current_password}
+        <PasswordInput value={pwd.current_password}
                onChange={(e) => setPwd({ ...pwd, current_password: e.target.value })} />
         <label className="field">Nouveau mot de passe</label>
-        <input className="input" type="password" value={pwd.password}
+        <PasswordInput value={pwd.password}
                onChange={(e) => setPwd({ ...pwd, password: e.target.value })} />
         <label className="field">Confirmer le nouveau mot de passe</label>
-        <input className="input" type="password" value={pwd.password_confirmation}
+        <PasswordInput value={pwd.password_confirmation}
                onChange={(e) => setPwd({ ...pwd, password_confirmation: e.target.value })} />
         {msg && (
           <div style={{ marginTop: 12, color: msg.type === 'ok' ? 'var(--success)' : 'var(--red)' }}>
