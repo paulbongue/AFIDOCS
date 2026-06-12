@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import DashboardShell from '../components/DashboardShell';
 import { useAuth } from '../context/AuthContext';
+import { IconDashboard, IconUpload, IconFolder, IconBook, IconUser, IconCap } from '../components/Icons';
 
 const link = ({ isActive }) => 'nav-item' + (isActive ? ' active' : '');
 
@@ -10,19 +11,19 @@ export default function DelegueLayout() {
   return (
     <DashboardShell profilePath="/delegue/profil">
       <div className="group-title">NAVIGATION</div>
-      <NavLink to="/delegue" end className={link}>▦ Tableau de bord</NavLink>
-      <NavLink to="/delegue/publier" className={link}>⬆ Publier une ressource</NavLink>
-      <NavLink to="/delegue/mes-ressources" className={link}>▤ Mes ressources</NavLink>
-      <NavLink to="/delegue/ressources" className={link}>▭ Toutes les ressources</NavLink>
+      <NavLink to="/delegue" end className={link}><IconDashboard /><span>Tableau de bord</span></NavLink>
+      <NavLink to="/delegue/publier" className={link}><IconUpload /><span>Publier une ressource</span></NavLink>
+      <NavLink to="/delegue/mes-ressources" className={link}><IconFolder /><span>Mes ressources</span></NavLink>
+      <NavLink to="/delegue/ressources" className={link}><IconBook /><span>Toutes les ressources</span></NavLink>
 
       <div className="group-title">MON COMPTE</div>
-      <NavLink to="/delegue/profil" className={link}>◍ Profil</NavLink>
+      <NavLink to="/delegue/profil" className={link}><IconUser /><span>Profil</span></NavLink>
 
       {user?.filiere && (
         <>
           <div className="group-title">MA CLASSE</div>
           <div className="nav-item" style={{ cursor: 'default' }}>
-            ‹/› {user.filiere.code}{user.niveau ? ` · ${user.niveau.nom}` : ''}
+            <IconCap /><span>{user.filiere.code}{user.niveau ? ` · ${user.niveau.nom}` : ''}</span>
           </div>
         </>
       )}

@@ -68,7 +68,15 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.statsRow}>
           <StatCard value={stats.disponibles} label="Ressources disponibles" icon="📘" />
           <StatCard value={stats.telechargees} label="Hors-ligne" icon="📥" />
-          <StatCard value={stats.filieres} label="Filières" icon="🎓" />
+          {user?.filiere_id ? (
+            <StatCard
+              value={user.filiere?.code || '—'}
+              label={`${user.niveau?.nom ? user.niveau.nom + ' · ' : ''}${user.filiere?.nom || ''}`}
+              icon="🎓"
+            />
+          ) : (
+            <StatCard value={stats.filieres} label="Filières" icon="🎓" />
+          )}
         </View>
 
         <Text style={styles.section}>Ressources récentes</Text>

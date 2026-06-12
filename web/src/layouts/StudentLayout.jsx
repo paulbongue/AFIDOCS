@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import DashboardShell from '../components/DashboardShell';
 import { useAuth } from '../context/AuthContext';
+import { IconDashboard, IconBook, IconSearch, IconUser, IconCap } from '../components/Icons';
 
 const link = ({ isActive }) => 'nav-item' + (isActive ? ' active' : '');
 
@@ -10,18 +11,18 @@ export default function StudentLayout() {
   return (
     <DashboardShell profilePath="/etudiant/profil">
       <div className="group-title">NAVIGATION</div>
-      <NavLink to="/etudiant" end className={link}>▦ Tableau de bord</NavLink>
-      <NavLink to="/etudiant/ressources" className={link}>▭ Ressources</NavLink>
-      <NavLink to="/etudiant/recherche" className={link}>⌕ Recherche</NavLink>
+      <NavLink to="/etudiant" end className={link}><IconDashboard /><span>Tableau de bord</span></NavLink>
+      <NavLink to="/etudiant/ressources" className={link}><IconBook /><span>Ressources</span></NavLink>
+      <NavLink to="/etudiant/recherche" className={link}><IconSearch /><span>Recherche</span></NavLink>
 
       <div className="group-title">MON COMPTE</div>
-      <NavLink to="/etudiant/profil" className={link}>◍ Profil</NavLink>
+      <NavLink to="/etudiant/profil" className={link}><IconUser /><span>Profil</span></NavLink>
 
       {user?.filiere && (
         <>
           <div className="group-title">MA FILIÈRE</div>
           <div className="nav-item" style={{ cursor: 'default' }}>
-            ‹/› {user.filiere.code}{user.niveau ? ` · ${user.niveau.nom}` : ''}
+            <IconCap /><span>{user.filiere.code}{user.niveau ? ` · ${user.niveau.nom}` : ''}</span>
           </div>
         </>
       )}

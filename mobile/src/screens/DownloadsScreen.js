@@ -7,6 +7,7 @@ import OfflineBanner from '../components/OfflineBanner';
 import ResourceCard from '../components/ResourceCard';
 import { useAuth } from '../context/AuthContext';
 import * as dbApi from '../db/database';
+import { removeDownload } from '../services/sync';
 import { colors, formatSize } from '../theme';
 
 export default function DownloadsScreen() {
@@ -28,6 +29,20 @@ export default function DownloadsScreen() {
     await Sharing.shareAsync(item.local_uri);
   }
 
+  // Supprime le fichier local pour libérer de l'espace (re-téléchargeable ensuite).
+  function confirmRemove(item) {
+    Alert.alert('Libérer de l\'espace', `Supprimer « ${item.titre} » de cet appareil ?\nLa ressource reste disponible et re-téléchargeable.`, [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer', style: 'destructive',
+        onPress: async () => {
+          try { await removeDownload(user?.id, item); await load(); }
+          catch (_) { Alert.alert('Erreur', 'Suppression impossible.'); }
+        },
+      },
+    ]);
+  }
+
   const totalSize = items.reduce((s, i) => s + (i.taille_fichier || 0), 0);
 
   return (
@@ -42,7 +57,14 @@ export default function DownloadsScreen() {
         data={items}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
-          <ResourceCard ressource={item} onPress={() => open(item)} />
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <ResourceCard ressource={item} onPress={() => open(item)} />
+            </View>
+            <TouchableOpacity style={styles.del} onPress={() => confirmRemove(item)} accessibilityLabel="Supprimer de l'appareil">
+              <Text style={styles.delIcon}>🗑</Text>
+            </TouchableOpacity>
+          </View>
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -69,4 +91,10 @@ const styles = StyleSheet.create({
   emptyIcon: { fontSize: 48, marginBottom: 12 },
   emptyText: { color: colors.textMuted, textAlign: 'center', lineHeight: 20 },
   tip: { color: colors.textMuted, fontSize: 11, textAlign: 'center', padding: 8 },
+  row: { flexDirection: 'row', alignItems: 'center', paddingRight: 14 },
+  del: {
+    width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface,
+  },
+  delIcon: { fontSize: 17 },
 });
