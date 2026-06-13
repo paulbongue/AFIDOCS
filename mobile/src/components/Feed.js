@@ -89,8 +89,12 @@ export default function Feed() {
       await client.post('/feed/posts', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       setText(''); setImage(null); setTargets([]); setNiveauId(null);
       await load();
-    } catch (_) { Alert.alert('Erreur', 'Publication impossible.'); }
-    finally { setPosting(false); }
+    } catch (e) {
+      const st = e?.response?.status;
+      const msg = st === 413 ? 'Photo trop volumineuse pour le serveur.'
+        : e?.response?.data?.message || `Publication impossible${st ? ` (erreur ${st})` : ''}.`;
+      Alert.alert('Erreur', msg);
+    } finally { setPosting(false); }
   }
 
   function confirmDeletePost(id) {

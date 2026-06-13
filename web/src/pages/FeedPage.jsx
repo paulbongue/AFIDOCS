@@ -19,6 +19,7 @@ export default function FeedPage() {
   const [targets, setTargets] = useState([]);   // ids de filières ciblées
   const [niveauId, setNiveauId] = useState('');
   const [posting, setPosting] = useState(false);
+  const [postErr, setPostErr] = useState(null);
 
   // Emploi du temps (admin)
   const [schedTitre, setSchedTitre] = useState('');
@@ -73,6 +74,7 @@ export default function FeedPage() {
     e.preventDefault();
     if (!text.trim() && !image) return;
     setPosting(true);
+    setPostErr(null);
     try {
       const fd = new FormData();
       if (text.trim()) fd.append('contenu', text.trim());
@@ -82,6 +84,15 @@ export default function FeedPage() {
       await client.post('/feed/posts', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       setText(''); setImage(null); setPreview(null); setTargets([]); setNiveauId('');
       await load();
+    } catch (e2) {
+      const st = e2?.response?.status;
+      setPostErr(
+        st === 413 ? 'Photo trop volumineuse pour le serveur.'
+          : e2?.response?.data?.message
+          || e2?.response?.data?.errors?.contenu?.[0]
+          || e2?.response?.data?.errors?.image?.[0]
+          || `Publication impossible${st ? ` (erreur ${st})` : ''}.`
+      );
     } finally { setPosting(false); }
   }
 
@@ -188,6 +199,7 @@ export default function FeedPage() {
             </label>
             <button className="btn btn-red" disabled={posting}>{posting ? 'Publication…' : 'Publier'}</button>
           </div>
+          {postErr && <div style={{ color: 'var(--red)', marginTop: 10 }}>{postErr}</div>}
         </form>
       )}
 
