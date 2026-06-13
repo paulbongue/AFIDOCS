@@ -78,15 +78,17 @@ function RessourcesStack() {
         component={PreviewScreen}
         options={({ navigation }) => redHeader(navigation, { back: true })}
       />
-    </Stack.Navigator>
-  );
-}
-
-function PublierStack() {
-  return (
-    <Stack.Navigator screenOptions={({ navigation }) => redHeader(navigation)}>
-      <Stack.Screen name="PublishHome" component={PublishScreen} />
-      <Stack.Screen name="MesRessources" component={MyResourcesScreen} />
+      {/* Publication fusionnée dans l'espace Ressources (accès délégué). */}
+      <Stack.Screen
+        name="PublishHome"
+        component={PublishScreen}
+        options={({ navigation }) => redHeader(navigation, { back: true })}
+      />
+      <Stack.Screen
+        name="MesRessources"
+        component={MyResourcesScreen}
+        options={({ navigation }) => redHeader(navigation, { back: true })}
+      />
     </Stack.Navigator>
   );
 }
@@ -138,14 +140,7 @@ function MainTabs() {
         component={RessourcesStack}
         options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon emoji="📚" color={color} focused={focused} /> }}
       />
-      {/* Onglet spécifique au rôle */}
-      {role === 'delegue' && (
-        <Tab.Screen
-          name="Publier"
-          component={PublierStack}
-          options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon emoji="⬆️" color={color} focused={focused} /> }}
-        />
-      )}
+      {/* Onglet spécifique au rôle (le délégué publie depuis l'espace Ressources) */}
       {role === 'admin' && (
         <Tab.Screen
           name="Admin"

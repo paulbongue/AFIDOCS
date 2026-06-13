@@ -8,6 +8,7 @@ import { IconPin } from '../components/Icons';
 export default function FeedPage() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
+  const [err, setErr] = useState(null);
   const [filieres, setFilieres] = useState([]);
 
   // Composer de publication
@@ -27,15 +28,30 @@ export default function FeedPage() {
   const [commentText, setCommentText] = useState({});
 
   const load = useCallback(async () => {
-    const { data } = await client.get('/feed');
-    setData(data);
+    setErr(null);
+    try {
+      const { data } = await client.get('/feed');
+      setData(data);
+    } catch (e) {
+      setErr("Impossible de charger les annonces. Vérifiez votre connexion.");
+    }
   }, []);
 
   useEffect(() => {
     load();
-    client.get('/filieres').then(({ data }) => setFilieres(data.data || []));
+    client.get('/filieres').then(({ data }) => setFilieres(data.data || [])).catch(() => {});
   }, [load]);
 
+  if (err) {
+    return (
+      <div className="empty">
+        {err}
+        <div style={{ marginTop: 12 }}>
+          <button className="btn btn-red" onClick={load}>Réessayer</button>
+        </div>
+      </div>
+    );
+  }
   if (!data) return <div className="empty">Chargement…</div>;
   const { posts, schedule, can_post, is_admin, ttl_days } = data;
 

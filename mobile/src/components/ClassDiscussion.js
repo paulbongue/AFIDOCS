@@ -19,16 +19,22 @@ export default function ClassDiscussion() {
   const niveauId = user?.niveau_id;
 
   const [data, setData] = useState(null);
+  const [err, setErr] = useState(null);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [schedBusy, setSchedBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (!niveauId || !isOnline) return;
+    setErr(null);
     try {
       const { data } = await client.get(`/classes/${niveauId}/discussion`);
       setData(data);
-    } catch (_) { /* accès refusé / hors-ligne */ }
+    } catch (e) {
+      setErr(e?.response?.status === 403
+        ? 'Espace réservé aux membres de la classe.'
+        : 'Impossible de charger la discussion.');
+    }
   }, [niveauId, isOnline]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -38,6 +44,14 @@ export default function ClassDiscussion() {
   }
   if (!isOnline) {
     return <View style={styles.center}><Text style={styles.muted}>Connecte-toi à internet pour accéder à la discussion de classe.</Text></View>;
+  }
+  if (err) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.muted}>{err}</Text>
+        <TouchableOpacity style={styles.btnRed} onPress={load}><Text style={styles.btnRedText}>Réessayer</Text></TouchableOpacity>
+      </View>
+    );
   }
   if (!data) {
     return <View style={styles.center}><ActivityIndicator size="large" color={colors.red} /></View>;

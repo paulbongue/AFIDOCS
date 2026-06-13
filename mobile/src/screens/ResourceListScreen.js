@@ -110,6 +110,18 @@ export default function ResourceListScreen({ navigation }) {
         </Text>
       )}
 
+      {/* Délégué : publication accessible depuis l'espace Ressources */}
+      {user?.role === 'delegue' && (
+        <View style={styles.delegRow}>
+          <TouchableOpacity style={styles.pubBtn} onPress={() => navigation.navigate('PublishHome')}>
+            <Text style={styles.pubBtnText}>⬆️ Publier</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.pubBtnAlt} onPress={() => navigation.navigate('MesRessources')}>
+            <Text style={styles.pubBtnAltText}>📁 Mes ressources</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Bascule liste / grille */}
       <View style={styles.viewToggle}>
         <TouchableOpacity style={[styles.vtBtn, view === 'list' && styles.vtBtnActive]}
@@ -223,6 +235,11 @@ const styles = StyleSheet.create({
   chipNText: { fontWeight: '700', fontSize: 12, color: colors.navy },
   chipNTextActive: { color: '#fff' },
   filiereTitle: { fontSize: 15, fontWeight: '800', color: colors.navy, paddingHorizontal: 16, paddingTop: 2, paddingBottom: 4 },
+  delegRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 14, marginTop: 8 },
+  pubBtn: { backgroundColor: colors.red, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 16 },
+  pubBtnText: { color: '#fff', fontWeight: '800', fontSize: 13 },
+  pubBtnAlt: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 16 },
+  pubBtnAltText: { color: colors.navy, fontWeight: '800', fontSize: 13 },
   viewToggle: { flexDirection: 'row', alignSelf: 'flex-start', marginHorizontal: 14, marginTop: 4, marginBottom: 2,
     borderWidth: 1, borderColor: colors.border, borderRadius: 20, overflow: 'hidden', backgroundColor: colors.surface },
   vtBtn: { paddingHorizontal: 14, paddingVertical: 7 },

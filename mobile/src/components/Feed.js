@@ -18,6 +18,7 @@ export default function Feed() {
   const { isOnline } = useNetwork();
 
   const [data, setData] = useState(null);
+  const [err, setErr] = useState(null);
   const [filieres, setFilieres] = useState([]);
 
   const [text, setText] = useState('');
@@ -31,10 +32,13 @@ export default function Feed() {
 
   const load = useCallback(async () => {
     if (!isOnline) return;
+    setErr(null);
     try {
       const { data } = await client.get('/feed');
       setData(data);
-    } catch (_) { /* */ }
+    } catch (e) {
+      setErr('Impossible de charger les annonces.');
+    }
   }, [isOnline]);
 
   useFocusEffect(useCallback(() => {
@@ -44,6 +48,14 @@ export default function Feed() {
 
   if (!isOnline) {
     return <View style={styles.center}><Text style={styles.muted}>Connecte-toi à internet pour voir les annonces.</Text></View>;
+  }
+  if (err) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.muted}>{err}</Text>
+        <TouchableOpacity style={styles.btnRed} onPress={load}><Text style={styles.btnRedText}>Réessayer</Text></TouchableOpacity>
+      </View>
+    );
   }
   if (!data) {
     return <View style={styles.center}><ActivityIndicator size="large" color={colors.red} /></View>;

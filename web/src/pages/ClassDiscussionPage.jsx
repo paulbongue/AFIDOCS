@@ -10,6 +10,7 @@ export default function ClassDiscussionPage() {
   const niveauId = user?.niveau_id;
 
   const [data, setData] = useState(null);
+  const [err, setErr] = useState(null);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -19,14 +20,31 @@ export default function ClassDiscussionPage() {
 
   const load = useCallback(async () => {
     if (!niveauId) return;
-    const { data } = await client.get(`/classes/${niveauId}/discussion`);
-    setData(data);
+    setErr(null);
+    try {
+      const { data } = await client.get(`/classes/${niveauId}/discussion`);
+      setData(data);
+    } catch (e) {
+      setErr(e?.response?.status === 403
+        ? "Cet espace est réservé aux membres de la classe."
+        : "Impossible de charger la discussion. Vérifiez votre connexion.");
+    }
   }, [niveauId]);
 
   useEffect(() => { load(); }, [load]);
 
   if (!niveauId) {
     return <div className="empty">Aucune classe ne vous est associée. Contactez l'administration.</div>;
+  }
+  if (err) {
+    return (
+      <div className="empty">
+        {err}
+        <div style={{ marginTop: 12 }}>
+          <button className="btn btn-red" onClick={load}>Réessayer</button>
+        </div>
+      </div>
+    );
   }
   if (!data) return <div className="empty">Chargement…</div>;
 
