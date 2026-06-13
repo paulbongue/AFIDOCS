@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext';
 import RequireRole from './components/RequireRole';
 
 import LoginPage from './pages/LoginPage';
+import LandingPage from './pages/LandingPage';
 import ProfilePage from './pages/ProfilePage';
 import ResourceDetailPage from './pages/ResourceDetailPage';
 
@@ -26,12 +27,12 @@ import ModerationPage from './pages/admin/ModerationPage';
 import ControlCenterPage from './pages/admin/ControlCenterPage';
 import AdminPublishPage from './pages/admin/PublishPage';
 
-// Après connexion, on atterrit directement sur la liste des ressources
-// (étudiant/délégué : leur classe en avant ; admin : toutes les ressources).
+// Racine : page d'accueil publique si non connecté, sinon redirection vers
+// l'espace du rôle (atterrissage direct sur la liste des ressources).
 function Home() {
   const { user, loading } = useAuth();
   if (loading) return <div className="empty">Chargement…</div>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <LandingPage />;
   if (user.role === 'admin') return <Navigate to="/admin/ressources" replace />;
   if (user.role === 'delegue') return <Navigate to="/delegue/ressources" replace />;
   return <Navigate to="/etudiant/ressources" replace />;

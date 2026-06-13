@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert,
   KeyboardAvoidingView, Platform,
@@ -23,8 +23,19 @@ export default function AdminUsersScreen() {
   const [editingId, setEditingId] = useState(null); // null = création
   const [q, setQ] = useState('');
   const [filiereF, setFiliereF] = useState(null);
+  const [niveauF, setNiveauF] = useState(null);      // filtre niveau/classe
+  const [visible, setVisible] = useState(10);         // pagination "voir plus"
   const [busy, setBusy] = useState(false);
   const [showForm, setShowForm] = useState(false);
+
+  // Niveaux de la filière filtrée (pour le sous-filtre par classe).
+  const filterNiveaux = useMemo(
+    () => filieres.find((f) => String(f.id) === String(filiereF))?.niveaux || [],
+    [filieres, filiereF],
+  );
+
+  // On revient à la 1re page dès qu'un filtre change.
+  useEffect(() => { setVisible(10); }, [q, filiereF, niveauF]);
 
   const load = useCallback(async () => {
     const [u, f] = await Promise.all([client.get('/admin/users'), client.get('/filieres')]);
@@ -81,12 +92,14 @@ export default function AdminUsersScreen() {
 
   const filtered = users.filter((u) => {
     if (filiereF && String(u.filiere?.id) !== String(filiereF)) return false;
+    if (niveauF && String(u.niveau?.id) !== String(niveauF)) return false;
     if (q) {
       const s = q.toLowerCase();
       if (!`${u.name} ${u.email} ${u.filiere?.code || ''} ${u.niveau?.nom || ''}`.toLowerCase().includes(s)) return false;
     }
     return true;
   });
+  const shown = filtered.slice(0, visible);
 
   return (
     <KeyboardAvoidingView style={styles.flex}
@@ -152,14 +165,25 @@ export default function AdminUsersScreen() {
                    placeholderTextColor={colors.textLight} value={q} onChangeText={setQ} />
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 8 }}>
-          <Chip label="Toutes" active={!filiereF} color={colors.red} onPress={() => setFiliereF(null)} />
+          <Chip label="Toutes" active={!filiereF} color={colors.red} onPress={() => { setFiliereF(null); setNiveauF(null); }} />
           {filieres.map((f) => (
             <Chip key={f.id} label={f.code} active={filiereF === f.id}
-                  color={f.couleur || colorForFiliere(f.code)} onPress={() => setFiliereF(f.id)} />
+                  color={f.couleur || colorForFiliere(f.code)} onPress={() => { setFiliereF(f.id); setNiveauF(null); }} />
           ))}
         </ScrollView>
 
-        {filtered.map((u) => (
+        {/* Sous-filtre par niveau / classe une fois une filière choisie */}
+        {filiereF && filterNiveaux.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 8 }}>
+            <Chip label="Tous niveaux" active={!niveauF} color={colors.navy} onPress={() => setNiveauF(null)} />
+            {filterNiveaux.map((n) => (
+              <Chip key={n.id} label={n.nom} active={String(niveauF) === String(n.id)} color={colors.navy}
+                    onPress={() => setNiveauF(n.id)} />
+            ))}
+          </ScrollView>
+        )}
+
+        {shown.map((u) => (
           <View key={u.id} style={styles.uRow}>
             <View style={{ flex: 1 }}>
               <Text style={styles.uName}>{u.name}</Text>
@@ -175,6 +199,13 @@ export default function AdminUsersScreen() {
             </TouchableOpacity>
           </View>
         ))}
+
+        {filtered.length === 0 && <Text style={styles.muted}>Aucun compte ne correspond.</Text>}
+        {filtered.length > visible && (
+          <TouchableOpacity style={styles.more} onPress={() => setVisible((v) => v + 10)}>
+            <Text style={styles.moreText}>Voir plus ({filtered.length - visible} restant·s)</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -218,4 +249,7 @@ const styles = StyleSheet.create({
   delText: { color: colors.red, fontWeight: '700', fontSize: 12 },
   editBtn: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.navy, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   editBtnText: { color: colors.navy, fontWeight: '700', fontSize: 12 },
+  muted: { color: colors.textMuted, textAlign: 'center', padding: 20 },
+  more: { borderWidth: 1.5, borderColor: colors.navy, borderRadius: radius.sm, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
+  moreText: { color: colors.navy, fontWeight: '800' },
 });

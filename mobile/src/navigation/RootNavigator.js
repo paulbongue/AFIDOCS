@@ -152,11 +152,13 @@ function MainTabs() {
           options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon emoji="⚙️" color={color} focused={focused} /> }}
         />
       )}
-      <Tab.Screen
-        name="Hors-ligne"
-        component={DownloadsScreen}
-        options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="📥" color={color} focused={focused} /> }}
-      />
+      {role !== 'admin' && (
+        <Tab.Screen
+          name="Hors-ligne"
+          component={DownloadsScreen}
+          options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="📥" color={color} focused={focused} /> }}
+        />
+      )}
       <Tab.Screen
         name="Notifs"
         component={NotificationsScreen}

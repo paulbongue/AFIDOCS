@@ -20,7 +20,10 @@ export default function ResourceListScreen({ navigation }) {
   const [filieres, setFilieres] = useState([]);
   const [search, setSearch] = useState('');
   const [activeFiliere, setActiveFiliere] = useState(null);
+  const [activeNiveau, setActiveNiveau] = useState(null); // niveau_id choisi dans la filière
+  const [niveauxList, setNiveauxList] = useState([]);     // niveaux de la filière active
   const [browse, setBrowse] = useState(false);   // false = recommandées (ma classe)
+  const [view, setView] = useState('list');       // 'list' | 'grid'
   const [refreshing, setRefreshing] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [firstLoad, setFirstLoad] = useState(true);
@@ -30,12 +33,17 @@ export default function ResourceListScreen({ navigation }) {
     const fils = await dbApi.getFilieres();
     setFilieres(fils);
 
+    // Tous les niveaux/classes de la filière sélectionnée (pas seulement ceux
+    // qui ont déjà des ressources).
+    setNiveauxList(activeFiliere != null ? await dbApi.getNiveaux(activeFiliere) : []);
+
     let list;
     if (browse || !user?.filiere_id) {
       // Exploration (ou admin sans classe) : toutes les ressources.
       const filters = {};
       if (search) filters.search = search;
       if (activeFiliere) filters.filiere_id = activeFiliere;
+      if (activeNiveau) filters.niveau_id = activeNiveau;
       list = await dbApi.getRessources(filters, user?.id);
     } else {
       // Recommandées : filière + niveau de l'utilisateur.
@@ -45,7 +53,7 @@ export default function ResourceListScreen({ navigation }) {
     }
     setRessources(list);
     setFirstLoad(false);
-  }, [browse, search, activeFiliere, user]);
+  }, [browse, search, activeFiliere, activeNiveau, user]);
 
   const doSync = useCallback(async () => {
     if (!isOnline) return;
@@ -64,7 +72,7 @@ export default function ResourceListScreen({ navigation }) {
     }, [loadLocal, doSync, isOnline])
   );
 
-  useEffect(() => { loadLocal(); }, [browse, search, activeFiliere, loadLocal]);
+  useEffect(() => { loadLocal(); }, [browse, search, activeFiliere, activeNiveau, loadLocal]);
 
   async function onRefresh() {
     setRefreshing(true);
@@ -88,7 +96,7 @@ export default function ResourceListScreen({ navigation }) {
         </Text>
         {hasClass && (
           <TouchableOpacity style={[styles.browseBtn, browse && styles.browseBtnAlt]}
-                            onPress={() => { setBrowse((b) => !b); setSearch(''); setActiveFiliere(null); }}>
+                            onPress={() => { setBrowse((b) => !b); setSearch(''); setActiveFiliere(null); setActiveNiveau(null); }}>
             <Text style={[styles.browseText, browse && styles.browseTextAlt]}>
               {browse ? '← Ma classe' : '🔎 Autres ressources'}
             </Text>
@@ -101,6 +109,18 @@ export default function ResourceListScreen({ navigation }) {
           {user.filiere.code}{user.niveau ? ` · ${user.niveau.nom}` : ''} — {user.filiere.nom}
         </Text>
       )}
+
+      {/* Bascule liste / grille */}
+      <View style={styles.viewToggle}>
+        <TouchableOpacity style={[styles.vtBtn, view === 'list' && styles.vtBtnActive]}
+                          onPress={() => setView('list')}>
+          <Text style={[styles.vtText, view === 'list' && styles.vtTextActive]}>☰ Liste</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.vtBtn, view === 'grid' && styles.vtBtnActive]}
+                          onPress={() => setView('grid')}>
+          <Text style={[styles.vtText, view === 'grid' && styles.vtTextActive]}>▦ Cartes</Text>
+        </TouchableOpacity>
+      </View>
 
       {showBrowseUI && (
         <>
@@ -115,7 +135,7 @@ export default function ResourceListScreen({ navigation }) {
               return (
                 <TouchableOpacity key={String(item.id)}
                   style={[styles.chip, { borderColor: c }, act && { backgroundColor: c }]}
-                  onPress={() => setActiveFiliere(item.id)}>
+                  onPress={() => { setActiveFiliere(item.id); setActiveNiveau(null); }}>
                   <Text style={[styles.chipText, { color: act ? '#fff' : c }]}>{item.code}</Text>
                 </TouchableOpacity>
               );
@@ -123,6 +143,26 @@ export default function ResourceListScreen({ navigation }) {
           </ScrollView>
           {activeFiliere != null && (
             <Text style={styles.filiereTitle}>{filieres.find((f) => f.id === activeFiliere)?.nom || ''}</Text>
+          )}
+          {/* Sous-filtre par niveau / classe une fois la filière choisie */}
+          {activeFiliere != null && niveauxList.length > 0 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+              <TouchableOpacity
+                style={[styles.chipN, !activeNiveau && styles.chipNActive]}
+                onPress={() => setActiveNiveau(null)}>
+                <Text style={[styles.chipNText, !activeNiveau && styles.chipNTextActive]}>Tous niveaux</Text>
+              </TouchableOpacity>
+              {niveauxList.map((n) => {
+                const act = String(activeNiveau) === String(n.id);
+                return (
+                  <TouchableOpacity key={n.id}
+                    style={[styles.chipN, act && styles.chipNActive]}
+                    onPress={() => setActiveNiveau(n.id)}>
+                    <Text style={[styles.chipNText, act && styles.chipNTextActive]}>{n.nom}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           )}
         </>
       )}
@@ -136,10 +176,13 @@ export default function ResourceListScreen({ navigation }) {
       <OfflineBanner />
       <FlatList
         data={ressources}
+        key={view}
+        numColumns={view === 'grid' ? 2 : 1}
+        columnWrapperStyle={view === 'grid' ? styles.gridWrap : undefined}
         keyExtractor={(item) => String(item.id)}
         ListHeaderComponent={header}
         renderItem={({ item }) => (
-          <ResourceCard ressource={item}
+          <ResourceCard ressource={item} compact={view === 'grid'}
             onPress={() => navigation.navigate('RessourceDetail', { id: item.id, titre: item.titre })} />
         )}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -175,7 +218,18 @@ const styles = StyleSheet.create({
   chips: { paddingHorizontal: 12, gap: 8, paddingBottom: 6 },
   chip: { borderWidth: 1.5, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
   chipText: { fontWeight: '700', fontSize: 12 },
+  chipN: { borderWidth: 1, borderColor: colors.navy, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: '#fff' },
+  chipNActive: { backgroundColor: colors.navy },
+  chipNText: { fontWeight: '700', fontSize: 12, color: colors.navy },
+  chipNTextActive: { color: '#fff' },
   filiereTitle: { fontSize: 15, fontWeight: '800', color: colors.navy, paddingHorizontal: 16, paddingTop: 2, paddingBottom: 4 },
+  viewToggle: { flexDirection: 'row', alignSelf: 'flex-start', marginHorizontal: 14, marginTop: 4, marginBottom: 2,
+    borderWidth: 1, borderColor: colors.border, borderRadius: 20, overflow: 'hidden', backgroundColor: colors.surface },
+  vtBtn: { paddingHorizontal: 14, paddingVertical: 7 },
+  vtBtnActive: { backgroundColor: colors.red },
+  vtText: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
+  vtTextActive: { color: '#fff' },
+  gridWrap: { paddingHorizontal: 8, gap: 0 },
   syncing: { textAlign: 'center', color: colors.textMuted, fontSize: 12, paddingVertical: 4 },
   empty: { alignItems: 'center', justifyContent: 'center', padding: 40 },
   emptyText: { color: colors.textMuted, textAlign: 'center', lineHeight: 20 },

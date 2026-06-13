@@ -32,6 +32,16 @@ export default function ProfilePage() {
     }
   }
 
+  async function logoutOthers() {
+    setMsg(null);
+    try {
+      const { data } = await client.post('/logout-others');
+      setMsg({ type: 'ok', text: `Déconnecté de ${data.revoked ?? 0} autre(s) appareil(s).` });
+    } catch (_) {
+      setMsg({ type: 'err', text: 'Action impossible.' });
+    }
+  }
+
   async function handleLogout() {
     await logout();
     navigate('/login', { replace: true });
@@ -83,6 +93,17 @@ export default function ProfilePage() {
         )}
         <button className="btn btn-red mt" disabled={busy}>{busy ? 'Enregistrement…' : 'Mettre à jour'}</button>
       </form>
+
+      <div className="card mt" style={{ maxWidth: 560 }}>
+        <h3>Appareils connectés</h3>
+        <p className="muted" style={{ marginTop: 6 }}>
+          Un compte peut être connecté sur <b>3 appareils</b> au maximum. Au-delà, l'appareil le plus
+          ancien est déconnecté automatiquement. Vous pouvez aussi déconnecter manuellement les autres.
+        </p>
+        <button type="button" className="btn btn-ghost mt" onClick={logoutOthers}>
+          Déconnecter les autres appareils
+        </button>
+      </div>
 
       <button className="btn btn-danger mt" onClick={handleLogout}>Se déconnecter</button>
     </div>

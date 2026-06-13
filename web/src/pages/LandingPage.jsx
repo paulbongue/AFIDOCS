@@ -1,0 +1,102 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  IconLayers, IconDownload, IconBell, IconEye, IconLock, IconUsers,
+} from '../components/Icons';
+
+const FEATURES = [
+  { icon: IconLayers, t: 'Organisé par filière et classe', d: 'Chaque ressource est rangée par filière, niveau et matière. On trouve ce qu’il faut en un clin d’œil.' },
+  { icon: IconDownload, t: 'Téléchargement & hors-ligne', d: 'Téléchargez vos cours et consultez-les sans connexion, où que vous soyez.' },
+  { icon: IconBell, t: 'Notifications en temps réel', d: 'Soyez prévenu dès qu’une nouvelle ressource est publiée pour votre classe.' },
+  { icon: IconEye, t: 'Aperçu intégré', d: 'Visualisez PDF et images directement dans la plateforme, sans rien installer.' },
+  { icon: IconLock, t: 'Accès sécurisé', d: 'Connexion par compte, chiffrement HTTPS et limite d’appareils par utilisateur.' },
+  { icon: IconUsers, t: 'Délégués & administration', d: 'Les délégués publient pour leur classe ; l’administration garde le contrôle.' },
+];
+
+const FILIERES = ['MAI', 'BAF', 'GSE', 'TL', 'MMC', 'QHSE', 'GRH', 'DWMD', 'GL', 'SRT', 'MJF', 'LEA'];
+
+const STATS = [
+  { v: '12', l: 'Filières' },
+  { v: 'L3 · M1 · M2', l: 'Niveaux' },
+  { v: 'PDF · Word · PPT…', l: 'Tous formats' },
+  { v: '100%', l: 'Hors-ligne' },
+];
+
+export default function LandingPage() {
+  const navigate = useNavigate();
+  const login = () => navigate('/login');
+
+  return (
+    <div className="landing">
+      <header className="lp-nav">
+        <div className="lp-brand">
+          <img src="/logo-afi.png" alt="AFI-L'UE" />
+          <span className="lp-wordmark">AFI-DOCS</span>
+        </div>
+        <button className="btn btn-red" onClick={login}>Se connecter</button>
+      </header>
+
+      <section className="lp-hero">
+        <span className="lp-badge">Plateforme de ressources pédagogiques · AFI-L'UE</span>
+        <h1>Accédez à tous vos <span>supports de cours</span> en un seul endroit</h1>
+        <p>
+          Téléchargez, consultez et organisez vos ressources pédagogiques en toute simplicité —
+          la documentation de l'Université AFI, disponible partout, même hors connexion.
+        </p>
+        <div className="lp-hero-cta">
+          <button className="btn btn-red" onClick={login}>Se connecter</button>
+          <a className="btn btn-ghost" href="#features">Découvrir la plateforme</a>
+        </div>
+
+        <div className="lp-stats">
+          {STATS.map((s) => (
+            <div key={s.l} className="lp-stat">
+              <div className="lp-stat-v">{s.v}</div>
+              <div className="lp-stat-l">{s.l}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="features" className="lp-section">
+        <div className="lp-section-head">
+          <h2>Tout ce dont vous avez besoin</h2>
+          <p className="muted">Une plateforme pensée pour les étudiants, les délégués et l'administration.</p>
+        </div>
+        <div className="lp-grid">
+          {FEATURES.map(({ icon: Icon, t, d }) => (
+            <div key={t} className="lp-feature">
+              <div className="lp-feature-ico"><Icon size={22} /></div>
+              <h3>{t}</h3>
+              <p>{d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="lp-section lp-filieres">
+        <div className="lp-section-head">
+          <h2>Nos filières</h2>
+          <p className="muted">Les 12 filières de l'AFI, chacune avec ses classes et ses matières.</p>
+        </div>
+        <div className="lp-chips">
+          {FILIERES.map((f) => <span key={f} className="lp-chip">{f}</span>)}
+        </div>
+      </section>
+
+      <section className="lp-cta">
+        <h2>Prêt à accéder à vos ressources pédagogiques ?</h2>
+        <p>Connectez-vous avec votre compte AFI pour retrouver tous vos cours.</p>
+        <button className="btn btn-light" onClick={login}>Se connecter</button>
+      </section>
+
+      <footer className="lp-footer">
+        <div className="lp-foot-brand">
+          <img src="/logo-afi.png" alt="AFI-L'UE" />
+          <span>AFI-DOCS — L'Université de l'Entreprise</span>
+        </div>
+        <div className="lp-foot-note">© {new Date().getFullYear()} AFI-DOCS · Plateforme de ressources pédagogiques.</div>
+      </footer>
+    </div>
+  );
+}

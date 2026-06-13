@@ -39,34 +39,41 @@ export default function LoginPage() {
   return (
     <div className="login-wrap">
       <div className="login-left">
-        <div>
-          <img src="/logo-afi.png" alt="AFI-L'UE" style={{ height: 60, display: 'block' }} />
-          <div className="afi-sub" style={{ color: 'rgba(255,255,255,.85)', marginTop: 8 }}>
-            L'Université de l'Entreprise
-          </div>
+        <div className="login-brand">
+          <img src="/logo-afi.png" alt="AFI-L'UE" />
         </div>
-        <div style={{ marginTop: 60 }}>
-          <div className="big">AFI-DOCS</div>
-          <div className="tag">Votre Documentation pour un meilleur apprentissage.</div>
+
+        <div className="login-hero">
+          <h1>Accédez à tous vos <span>supports de cours</span> en un seul endroit</h1>
+          <p>La documentation pédagogique d'AFI-L'UE, accessible partout — et disponible même hors connexion.</p>
+          <ul className="login-feats">
+            <li>Ressources organisées par filière et par classe</li>
+            <li>Téléchargement et consultation hors-ligne</li>
+            <li>Notifications des nouvelles publications</li>
+          </ul>
         </div>
+
+        <div className="login-foot">AFI-DOCS · L'Université de l'Entreprise</div>
       </div>
 
       <div className="login-right">
         <form className="login-card" onSubmit={onSubmit}>
-          <h2 style={{ marginBottom: 6 }}>Connexion</h2>
-          <p className="muted" style={{ fontSize: 13, marginTop: 0 }}>Accédez à votre espace.</p>
+          <div className="login-card-head">
+            <h2>Connexion</h2>
+            <p className="muted">Accédez à votre espace AFI-DOCS.</p>
+          </div>
 
           <label className="field">Identifiant</label>
-          <input className="input" type="email" value={email}
+          <input className="input" type="email" value={email} autoComplete="username"
                  onChange={(e) => setEmail(e.target.value)} placeholder="prenom.nom@afi.sn" />
 
           <label className="field">Mot de passe</label>
-          <PasswordInput value={password}
+          <PasswordInput value={password} autoComplete="current-password"
                          onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
 
-          {error && <div style={{ color: 'var(--red)', fontSize: 13, marginTop: 12 }}>{error}</div>}
+          {error && <div className="login-err">{error}</div>}
 
-          <button className="btn btn-red" style={{ width: '100%', marginTop: 20 }} disabled={loading}>
+          <button className="btn btn-red" style={{ width: '100%', marginTop: 22 }} disabled={loading}>
             {loading ? 'Connexion…' : 'Se connecter'}
           </button>
         </form>

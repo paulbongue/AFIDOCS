@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert,
-  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 
@@ -9,12 +8,12 @@ import OfflineBanner from '../components/OfflineBanner';
 import client from '../api/client';
 import { colors, radius, colorForFiliere } from '../theme';
 
-// Publication par l'ADMIN : on peut viser PLUSIEURS matières/filières à la fois
-// (classes partageant un même cours).
+// Publication ADMIN simplifiée : accordéon Filière → Niveau → matières.
+// Choix multiple, avec verrou de niveau (mêmes niveaux uniquement).
 export default function AdminPublishScreen() {
   const [filieres, setFilieres] = useState([]);
-  const [selected, setSelected] = useState([]);   // matiere_id[]
-  const [q, setQ] = useState('');
+  const [expanded, setExpanded] = useState({});   // { filiereId: bool }
+  const [selected, setSelected] = useState([]);    // matiere_id[]
   const [titre, setTitre] = useState('');
   const [description, setDescription] = useState('');
   const [file, setFile] = useState(null);
@@ -24,35 +23,24 @@ export default function AdminPublishScreen() {
     client.get('/filieres').then(({ data }) => setFilieres(data.data || [])).catch(() => {});
   }, []);
 
-  const matieres = useMemo(() => {
-    const out = [];
-    for (const f of filieres) {
-      for (const n of f.niveaux || []) {
-        for (const m of n.matieres || []) {
-          out.push({ id: m.id, nom: m.nom, niveau: n.nom, filiere: f });
-        }
-      }
+  const matInfo = useMemo(() => {
+    const m = {};
+    for (const f of filieres) for (const n of f.niveaux || []) for (const mat of n.matieres || []) {
+      m[mat.id] = { niveauNom: n.nom };
     }
-    return out;
+    return m;
   }, [filieres]);
 
-  const shown = useMemo(() => {
-    if (!q) return matieres;
-    const s = q.toLowerCase();
-    return matieres.filter((m) =>
-      `${m.filiere.code} ${m.filiere.nom} ${m.niveau} ${m.nom}`.toLowerCase().includes(s));
-  }, [matieres, q]);
-
-  // Une fois une 1re matière choisie, on verrouille le niveau : seules les classes
-  // du MÊME niveau peuvent être ajoutées (seules elles partagent un cours commun).
-  const lockedNiveau = useMemo(() => {
-    if (selected.length === 0) return null;
-    return matieres.find((m) => m.id === selected[0])?.niveau || null;
-  }, [selected, matieres]);
+  const lockedNiveau = selected.length ? matInfo[selected[0]]?.niveauNom : null;
 
   function toggle(id) {
     setSelected((p) => p.includes(id) ? p.filter((x) => x !== id) : [...p, id]);
   }
+  function toggleFiliere(fid) {
+    setExpanded((e) => ({ ...e, [fid]: !e[fid] }));
+  }
+  const countIn = (f) => (f.niveaux || []).reduce((s, n) =>
+    s + (n.matieres || []).filter((m) => selected.includes(m.id)).length, 0);
 
   async function pickFile() {
     try {
@@ -74,18 +62,16 @@ export default function AdminPublishScreen() {
       fd.append('fichier', { uri: file.uri, name: file.name || 'fichier', type: file.mimeType || 'application/octet-stream' });
       const { data } = await client.post('/admin/ressources', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       Alert.alert('Publié', `Ressource publiée dans ${data.count || selected.length} classe(s).`);
-      setTitre(''); setDescription(''); setFile(null); setSelected([]); setQ('');
+      setTitre(''); setDescription(''); setFile(null); setSelected([]);
     } catch (e) {
       Alert.alert('Erreur', e?.response?.data?.message || 'Publication impossible.');
     } finally { setBusy(false); }
   }
 
   return (
-    <KeyboardAvoidingView style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+    <View style={styles.flex}>
       <OfflineBanner />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Publier une ressource</Text>
 
         <Text style={styles.label}>Titre</Text>
@@ -96,36 +82,54 @@ export default function AdminPublishScreen() {
         <TextInput style={[styles.input, { height: 70 }]} value={description} onChangeText={setDescription} multiline />
 
         <Text style={styles.label}>
-          Filières / classes destinataires{selected.length > 0 ? ` — ${selected.length} choisie(s)` : ''}
+          Destinataires{selected.length > 0 ? ` — ${selected.length} matière(s)` : ''}
         </Text>
-        <TextInput style={styles.input} value={q} onChangeText={setQ}
-                   placeholder="Filtrer par filière, niveau, matière…" placeholderTextColor={colors.textLight} />
         {lockedNiveau && (
-          <Text style={styles.hint}>
-            Seules les classes de niveau « {lockedNiveau} » sont sélectionnables (cours communs).
-          </Text>
+          <Text style={styles.hint}>Seules les classes de niveau « {lockedNiveau} » sont sélectionnables.</Text>
         )}
 
-        <ScrollView style={styles.listBox} nestedScrollEnabled keyboardShouldPersistTaps="handled">
-          {shown.length === 0 ? (
-            <Text style={styles.muted}>Aucune matière.</Text>
-          ) : shown.map((m) => {
-            const on = selected.includes(m.id);
-            const disabled = lockedNiveau && m.niveau !== lockedNiveau;
+        <View style={styles.acc}>
+          {filieres.map((f) => {
+            const n = countIn(f);
+            const open = !!expanded[f.id];
             return (
-              <TouchableOpacity key={m.id} disabled={disabled}
-                style={[styles.optRow, disabled && styles.optRowDisabled]} onPress={() => toggle(m.id)}>
-                <View style={[styles.check, on && styles.checkOn]}>
-                  {on && <Text style={styles.checkMark}>✓</Text>}
-                </View>
-                <View style={[styles.dot, { backgroundColor: m.filiere.couleur || colorForFiliere(m.filiere.code) }]} />
-                <Text style={styles.optText} numberOfLines={1}>
-                  {m.filiere.code} · {m.niveau} · {m.nom}
-                </Text>
-              </TouchableOpacity>
+              <View key={f.id} style={styles.accItem}>
+                <TouchableOpacity style={styles.accHead} onPress={() => toggleFiliere(f.id)}>
+                  <View style={styles.accHeadLeft}>
+                    <View style={[styles.dot, { backgroundColor: f.couleur || colorForFiliere(f.code) }]} />
+                    <Text style={styles.accHeadNom} numberOfLines={1}>{f.code} · {f.nom}</Text>
+                  </View>
+                  <View style={styles.accHeadRight}>
+                    {n > 0 && <View style={styles.accCount}><Text style={styles.accCountTxt}>{n}</Text></View>}
+                    <Text style={styles.accChev}>{open ? '▾' : '▸'}</Text>
+                  </View>
+                </TouchableOpacity>
+
+                {open && (f.niveaux || []).map((niv) => {
+                  const disabled = lockedNiveau && niv.nom !== lockedNiveau;
+                  return (
+                    <View key={niv.id} style={[styles.accNiv, disabled && styles.accDisabled]}>
+                      <Text style={styles.accNivTitle}>{niv.nom}</Text>
+                      {(niv.matieres || []).map((m) => {
+                        const on = selected.includes(m.id);
+                        return (
+                          <TouchableOpacity key={m.id} style={styles.matRow} disabled={disabled}
+                                            onPress={() => toggle(m.id)}>
+                            <View style={[styles.check, on && styles.checkOn]}>
+                              {on && <Text style={styles.checkMark}>✓</Text>}
+                            </View>
+                            <Text style={styles.matTxt} numberOfLines={1}>{m.nom}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                      {(niv.matieres || []).length === 0 && <Text style={styles.muted}>Aucune matière.</Text>}
+                    </View>
+                  );
+                })}
+              </View>
             );
           })}
-        </ScrollView>
+        </View>
 
         <Text style={styles.label}>Fichier</Text>
         <TouchableOpacity style={styles.fileBtn} onPress={pickFile}>
@@ -138,7 +142,7 @@ export default function AdminPublishScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -147,23 +151,30 @@ const styles = StyleSheet.create({
   content: { padding: 16 },
   title: { fontSize: 20, fontWeight: '900', color: colors.navy, marginBottom: 6 },
   label: { fontSize: 13, fontWeight: '700', color: colors.navy, marginTop: 14, marginBottom: 4 },
+  hint: { fontSize: 11.5, color: colors.textMuted, fontStyle: 'italic', marginBottom: 4 },
   input: {
     backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm,
     paddingHorizontal: 12, paddingVertical: 10, color: colors.text, fontSize: 15,
   },
-  listBox: {
-    borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, marginTop: 8,
-    backgroundColor: colors.surface, maxHeight: 320,
-  },
-  muted: { color: colors.textMuted, padding: 14 },
-  hint: { fontSize: 11.5, color: colors.textMuted, marginTop: 6, fontStyle: 'italic' },
-  optRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 11, borderBottomWidth: 1, borderBottomColor: '#EEF1F4' },
-  optRowDisabled: { opacity: 0.32 },
+  acc: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, marginTop: 8, overflow: 'hidden' },
+  accItem: { borderBottomWidth: 1, borderBottomColor: '#EEF1F4' },
+  accHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, backgroundColor: colors.surface },
+  accHeadLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  accHeadRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  accHeadNom: { fontWeight: '800', color: colors.navy, flex: 1 },
+  dot: { width: 12, height: 12, borderRadius: 6 },
+  accCount: { backgroundColor: colors.red, borderRadius: 999, minWidth: 20, height: 20, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
+  accCountTxt: { color: '#fff', fontWeight: '800', fontSize: 11 },
+  accChev: { color: colors.textMuted, fontSize: 12 },
+  accNiv: { paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#F5F7FA', borderTopWidth: 1, borderTopColor: '#E6EAF0' },
+  accDisabled: { opacity: 0.4 },
+  accNivTitle: { fontSize: 11.5, fontWeight: '800', color: colors.navy, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
+  matRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7 },
   check: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
   checkOn: { backgroundColor: colors.red, borderColor: colors.red },
   checkMark: { color: '#fff', fontWeight: '900', fontSize: 13 },
-  dot: { width: 12, height: 12, borderRadius: 6 },
-  optText: { flex: 1, color: colors.text },
+  matTxt: { flex: 1, color: colors.text },
+  muted: { color: colors.textMuted, fontSize: 13 },
   fileBtn: { borderWidth: 1.5, borderColor: colors.navy, borderStyle: 'dashed', borderRadius: radius.sm, padding: 14, alignItems: 'center' },
   fileBtnText: { color: colors.navy, fontWeight: '700' },
   publish: { backgroundColor: colors.red, borderRadius: radius.sm, paddingVertical: 14, alignItems: 'center', marginTop: 22 },

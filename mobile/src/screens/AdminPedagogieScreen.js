@@ -101,7 +101,7 @@ export default function AdminPedagogieScreen() {
                   </View>
                   <Text style={styles.rowText} numberOfLines={1}>{f.nom}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => delFiliere(f)}><Text style={styles.x}>✕</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.xBtn} onPress={() => delFiliere(f)}><Text style={styles.x}>✕</Text></TouchableOpacity>
               </View>
             ))}
             <View style={styles.addCard}>
@@ -128,9 +128,9 @@ export default function AdminPedagogieScreen() {
             {niveaux.map((n) => (
               <View key={n.id} style={styles.row}>
                 <TouchableOpacity style={styles.rowMain} onPress={() => setSelN(n)}>
-                  <Text style={styles.rowText}>{n.nom}</Text>
+                  <Text style={styles.rowText} numberOfLines={1}>{n.nom}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => delNiveau(n)}><Text style={styles.x}>✕</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.xBtn} onPress={() => delNiveau(n)}><Text style={styles.x}>✕</Text></TouchableOpacity>
               </View>
             ))}
             <View style={styles.addCard}>
@@ -148,8 +148,8 @@ export default function AdminPedagogieScreen() {
             <Text style={styles.title}>Matières — {selF.code} · {selN.nom}</Text>
             {matieres.map((m) => (
               <View key={m.id} style={styles.row}>
-                <Text style={[styles.rowText, { flex: 1 }]}>{m.nom}</Text>
-                <TouchableOpacity onPress={() => delMatiere(m)}><Text style={styles.x}>✕</Text></TouchableOpacity>
+                <Text style={[styles.rowText, { flex: 1 }]} numberOfLines={2}>{m.nom}</Text>
+                <TouchableOpacity style={styles.xBtn} onPress={() => delMatiere(m)}><Text style={styles.x}>✕</Text></TouchableOpacity>
               </View>
             ))}
             <View style={styles.addCard}>
@@ -175,11 +175,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.sm,
     paddingHorizontal: 12, paddingVertical: 12, marginBottom: 8, borderWidth: 1, borderColor: colors.border, gap: 10,
   },
-  rowMain: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  rowText: { color: colors.navy, fontWeight: '600' },
+  rowMain: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 },
+  rowText: { color: colors.navy, fontWeight: '600', flex: 1, flexShrink: 1 },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   badgeText: { color: '#fff', fontWeight: '800', fontSize: 11 },
-  x: { color: colors.red, fontWeight: '800', fontSize: 16, paddingHorizontal: 6 },
+  x: { color: colors.red, fontWeight: '800', fontSize: 16 },
+  xBtn: { width: 34, height: 34, borderRadius: 8, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   addCard: { backgroundColor: '#F3F3F3', borderRadius: radius.md, padding: 14, marginTop: 8 },
   addTitle: { fontWeight: '800', color: colors.navy, marginBottom: 8 },
   input: {

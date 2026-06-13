@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import client from '../../api/client';
 import Badge from '../../components/Badge';
 
@@ -11,6 +11,17 @@ export default function PedagogiePage() {
   const [newF, setNewF] = useState({ code: '', nom: '', couleur: '#C0392B' });
   const [newN, setNewN] = useState('');
   const [newM, setNewM] = useState('');
+
+  const niveauxRef = useRef(null);
+  const matieresRef = useRef(null);
+  // Sur mobile (colonnes empilées), on défile vers la section suivante au clic.
+  const scrollToNext = (ref) => {
+    if (window.innerWidth <= 860) {
+      setTimeout(() => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+    }
+  };
+  const pickFiliere = (f) => { setSelF(f); setSelN(null); scrollToNext(niveauxRef); };
+  const pickNiveau = (n) => { setSelN(n); scrollToNext(matieresRef); };
 
   const load = useCallback(async () => {
     const { data } = await client.get('/filieres');
@@ -77,13 +88,13 @@ export default function PedagogiePage() {
       <div className="page-title">Gestion pédagogique</div>
       <p className="muted">Filière → Niveau → Matière. Sélectionnez un élément pour gérer le niveau inférieur.</p>
 
-      <div className="row" style={{ alignItems: 'flex-start', gap: 16 }}>
+      <div className="peda-cols">
         {/* Filières */}
-        <div className="card" style={{ flex: 1 }}>
+        <div className="card">
           <h3>Filières</h3>
           {filieres.map((f) => (
             <div key={f.id} className={'nav-item' + (selF?.id === f.id ? ' active' : '')}
-                 onClick={() => { setSelF(f); setSelN(null); }} style={{ justifyContent: 'space-between' }}>
+                 onClick={() => pickFiliere(f)} style={{ justifyContent: 'space-between' }}>
               <span><Badge code={f.code} couleur={f.couleur} /> {f.nom}</span>
               <span onClick={(e) => { e.stopPropagation(); delFiliere(f.id); }} style={{ color: 'var(--red)' }}>✕</span>
             </div>
@@ -101,13 +112,13 @@ export default function PedagogiePage() {
         </div>
 
         {/* Niveaux */}
-        <div className="card" style={{ flex: 1 }}>
+        <div className="card" ref={niveauxRef} style={{ scrollMarginTop: 80 }}>
           <h3>Niveaux {selF ? `· ${selF.code}` : ''}</h3>
           {!selF ? <div className="muted">Sélectionnez une filière.</div> : (
             <>
               {niveaux.map((n) => (
                 <div key={n.id} className={'nav-item' + (selN?.id === n.id ? ' active' : '')}
-                     onClick={() => setSelN(n)} style={{ justifyContent: 'space-between' }}>
+                     onClick={() => pickNiveau(n)} style={{ justifyContent: 'space-between' }}>
                   <span>{n.nom}</span>
                   <span onClick={(e) => { e.stopPropagation(); delNiveau(n.id); }} style={{ color: 'var(--red)' }}>✕</span>
                 </div>
@@ -121,7 +132,7 @@ export default function PedagogiePage() {
         </div>
 
         {/* Matières */}
-        <div className="card" style={{ flex: 1 }}>
+        <div className="card" ref={matieresRef} style={{ scrollMarginTop: 80 }}>
           <h3>Matières {selN ? `· ${selN.nom}` : ''}</h3>
           {!selN ? <div className="muted">Sélectionnez un niveau.</div> : (
             <>

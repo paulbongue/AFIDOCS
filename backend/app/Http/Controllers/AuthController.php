@@ -33,6 +33,11 @@ class AuthController extends Controller
         $deviceName = $credentials['device_name'] ?? $request->userAgent() ?? 'mobile';
         $token = $user->createToken($deviceName)->plainTextToken;
 
+        // Limite a 3 appareils connectes : on ne garde que les 3 jetons les plus
+        // recents (le plus ancien est deconnecte au-dela).
+        $keep = $user->tokens()->orderByDesc('id')->take(3)->pluck('id');
+        $user->tokens()->whereNotIn('id', $keep)->delete();
+
         $user->load('filiere', 'niveau');
 
         return response()->json([
@@ -59,6 +64,22 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Deconnecte.']);
+    }
+
+    /**
+     * Deconnecte tous les AUTRES appareils (revoque tous les jetons sauf celui
+     * de la requete en cours).
+     */
+    public function logoutOtherDevices(Request $request): JsonResponse
+    {
+        $current = $request->user()->currentAccessToken();
+        $count = $request->user()->tokens()->where('id', '!=', $current->id)->count();
+        $request->user()->tokens()->where('id', '!=', $current->id)->delete();
+
+        return response()->json([
+            'message' => 'Deconnecte des autres appareils.',
+            'revoked' => $count,
+        ]);
     }
 
     /**

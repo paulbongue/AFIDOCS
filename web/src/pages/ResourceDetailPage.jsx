@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import client from '../api/client';
+import client, { recordActivity } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import Badge from '../components/Badge';
 import { labelForType, formatSize, colorForFiliere, initials } from '../theme';
@@ -28,6 +28,11 @@ export default function ResourceDetailPage() {
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Trace une consultation (une fois par ressource ouverte) — hors admin.
+  useEffect(() => {
+    if (user && user.role !== 'admin') recordActivity('view', Number(id));
+  }, [id, user]);
 
   function startEdit() {
     setETitre(res.titre || '');
@@ -119,7 +124,10 @@ export default function ResourceDetailPage() {
           <button className="btn btn-ghost" onClick={() => setShowPreview((s) => !s)}>
             👁 {showPreview ? "Masquer l'aperçu" : 'Aperçu'}
           </button>
-          <a className="btn btn-red" href={res.url_fichier} download>⬇ Télécharger</a>
+          {user?.role !== 'admin' && (
+            <a className="btn btn-red" href={res.url_fichier} download
+               onClick={() => recordActivity('download', res.id)}>⬇ Télécharger</a>
+          )}
           {canEdit && !editing && (
             <button className="btn btn-ghost" onClick={startEdit}>✏ Modifier</button>
           )}

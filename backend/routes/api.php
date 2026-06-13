@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActiviteController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClasseController;
 use App\Http\Controllers\CommentaireController;
@@ -32,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/logout-others', [AuthController::class, 'logoutOtherDevices']);
     Route::post('/me/password', [AuthController::class, 'updatePassword']);
     Route::post('/me/push-token', [AuthController::class, 'updatePushToken']);
 
@@ -46,6 +48,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Ressources : consultation TOUTES FILIERES (acces libre).
     Route::get('/ressources', [RessourceController::class, 'index']);
     Route::get('/ressources/{ressource}', [RessourceController::class, 'show']);
+
+    // Journal d'activité : consultation/aperçu + téléchargement (origine via X-Platform).
+    Route::post('/activites', [ActiviteController::class, 'store']);
 
     // Commentaires inter-filieres.
     Route::get('/ressources/{ressource}/commentaires', [CommentaireController::class, 'index']);
@@ -63,6 +68,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // --- Admin : gestion + moderation ---------------------------------------
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         Route::get('/stats', [DashboardController::class, 'stats']);
+
+        // Suivi d'activité : fréquence par jour + rapport téléchargeable (web/mobile)
+        Route::get('/activity', [ActiviteController::class, 'daily']);
+        Route::get('/activity/report', [ActiviteController::class, 'report']);
 
         // Centre de contrôle : délégués par classe (niveau)
         Route::get('/classes', [ClasseController::class, 'index']);

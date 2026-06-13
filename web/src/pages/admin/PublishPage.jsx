@@ -2,12 +2,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import client from '../../api/client';
 import Badge from '../../components/Badge';
 
-// Publication par l'ADMIN : on peut viser PLUSIEURS matières/filières à la fois
-// (utile quand des classes partagent un même cours).
+// Publication ADMIN simplifiée : on déplie une filière, puis on coche des
+// matières par niveau. Choix multiple, avec verrou de niveau (seules les classes
+// d'un même niveau peuvent recevoir un même cours).
 export default function AdminPublishPage() {
   const [filieres, setFilieres] = useState([]);
-  const [selected, setSelected] = useState([]);   // liste de matiere_id
-  const [q, setQ] = useState('');
+  const [expanded, setExpanded] = useState({});   // { filiereId: bool }
+  const [selected, setSelected] = useState([]);    // matiere_id[]
   const [titre, setTitre] = useState('');
   const [description, setDescription] = useState('');
   const [file, setFile] = useState(null);
@@ -18,36 +19,25 @@ export default function AdminPublishPage() {
     client.get('/filieres').then(({ data }) => setFilieres(data.data || []));
   }, []);
 
-  // Liste plate de toutes les matières, étiquetées « Filière · Niveau · Matière ».
-  const matieres = useMemo(() => {
-    const out = [];
-    for (const f of filieres) {
-      for (const n of f.niveaux || []) {
-        for (const m of n.matieres || []) {
-          out.push({ id: m.id, nom: m.nom, niveau: n.nom, filiere: f });
-        }
-      }
+  // Index matiere_id -> { niveauNom } pour gérer le verrou de niveau.
+  const matInfo = useMemo(() => {
+    const m = {};
+    for (const f of filieres) for (const n of f.niveaux || []) for (const mat of n.matieres || []) {
+      m[mat.id] = { niveauNom: n.nom };
     }
-    return out;
+    return m;
   }, [filieres]);
 
-  const shown = useMemo(() => {
-    if (!q) return matieres;
-    const s = q.toLowerCase();
-    return matieres.filter((m) =>
-      `${m.filiere.code} ${m.filiere.nom} ${m.niveau} ${m.nom}`.toLowerCase().includes(s));
-  }, [matieres, q]);
-
-  // Verrou de niveau : après une 1re matière, on ne peut ajouter que des classes
-  // du MÊME niveau (seules elles partagent un cours commun).
-  const lockedNiveau = useMemo(() => {
-    if (selected.length === 0) return null;
-    return matieres.find((m) => m.id === selected[0])?.niveau || null;
-  }, [selected, matieres]);
+  const lockedNiveau = selected.length ? matInfo[selected[0]]?.niveauNom : null;
 
   function toggle(id) {
-    setSelected((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+    setSelected((p) => p.includes(id) ? p.filter((x) => x !== id) : [...p, id]);
   }
+  function toggleFiliere(fid) {
+    setExpanded((e) => ({ ...e, [fid]: !e[fid] }));
+  }
+  const countIn = (f) => (f.niveaux || []).reduce((s, n) =>
+    s + (n.matieres || []).filter((m) => selected.includes(m.id)).length, 0);
 
   async function submit(e) {
     e.preventDefault();
@@ -65,7 +55,7 @@ export default function AdminPublishPage() {
       fd.append('fichier', file);
       const { data } = await client.post('/admin/ressources', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       setMsg({ type: 'ok', text: `Ressource publiée dans ${data.count || selected.length} classe(s).` });
-      setTitre(''); setDescription(''); setFile(null); setSelected([]); setQ('');
+      setTitre(''); setDescription(''); setFile(null); setSelected([]);
       e.target.reset?.();
     } catch (err) {
       setMsg({ type: 'err', text: err?.response?.data?.message || 'Publication impossible.' });
@@ -77,7 +67,7 @@ export default function AdminPublishPage() {
   return (
     <div>
       <div className="page-title">Publier une ressource (admin)</div>
-      <form className="card" style={{ maxWidth: 720 }} onSubmit={submit}>
+      <form className="card" style={{ maxWidth: 760 }} onSubmit={submit}>
         <label className="field">Titre</label>
         <input className="input" value={titre} onChange={(e) => setTitre(e.target.value)} placeholder="Titre de la ressource" />
 
@@ -85,32 +75,49 @@ export default function AdminPublishPage() {
         <textarea className="input" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} />
 
         <label className="field">
-          Filières / classes destinataires {selected.length > 0 && `— ${selected.length} sélectionnée(s)`}
+          Destinataires {selected.length > 0 && `— ${selected.length} matière(s) sélectionnée(s)`}
         </label>
-        <input className="input" value={q} onChange={(e) => setQ(e.target.value)}
-               placeholder="Filtrer par filière, niveau ou matière…" />
         {lockedNiveau && (
-          <div style={{ fontSize: 12.5, color: 'var(--text-muted)', fontStyle: 'italic', marginTop: 6 }}>
+          <div className="muted" style={{ fontSize: 12.5, fontStyle: 'italic', marginBottom: 6 }}>
             Seules les classes de niveau « {lockedNiveau} » sont sélectionnables (cours communs).
           </div>
         )}
 
-        <div style={{ maxHeight: 260, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 10, marginTop: 8 }}>
-          {shown.length === 0 ? (
-            <div className="empty" style={{ border: 'none' }}>Aucune matière.</div>
-          ) : shown.map((m) => {
-            const disabled = lockedNiveau && m.niveau !== lockedNiveau;
+        <div className="acc">
+          {filieres.map((f) => {
+            const n = countIn(f);
             return (
-              <label key={m.id} className="spread"
-                     style={{ padding: '9px 12px', borderBottom: '1px solid #EEF1F4',
-                              cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.4 : 1 }}>
-                <span className="row" style={{ gap: 8 }}>
-                  <input type="checkbox" disabled={disabled}
-                         checked={selected.includes(m.id)} onChange={() => toggle(m.id)} />
-                  <Badge code={m.filiere.code} couleur={m.filiere.couleur} />
-                  <span>{m.niveau} · {m.nom}</span>
-                </span>
-              </label>
+              <div key={f.id} className="acc-item">
+                <button type="button" className="acc-head" onClick={() => toggleFiliere(f.id)}>
+                  <span className="acc-head-left">
+                    <Badge code={f.code} couleur={f.couleur} />
+                    <span className="acc-head-nom">{f.nom}</span>
+                  </span>
+                  <span className="acc-head-right">
+                    {n > 0 && <span className="acc-count">{n}</span>}
+                    <span className="acc-chev">{expanded[f.id] ? '▾' : '▸'}</span>
+                  </span>
+                </button>
+
+                {expanded[f.id] && (f.niveaux || []).map((niv) => {
+                  const disabled = lockedNiveau && niv.nom !== lockedNiveau;
+                  return (
+                    <div key={niv.id} className={'acc-niveau' + (disabled ? ' is-disabled' : '')}>
+                      <div className="acc-niveau-title">{niv.nom}</div>
+                      <div className="acc-mats">
+                        {(niv.matieres || []).map((m) => (
+                          <label key={m.id} className={'acc-mat' + (disabled ? ' is-disabled' : '')}>
+                            <input type="checkbox" checked={selected.includes(m.id)} disabled={disabled}
+                                   onChange={() => toggle(m.id)} />
+                            <span>{m.nom}</span>
+                          </label>
+                        ))}
+                        {(niv.matieres || []).length === 0 && <span className="muted" style={{ fontSize: 13 }}>Aucune matière.</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             );
           })}
         </div>

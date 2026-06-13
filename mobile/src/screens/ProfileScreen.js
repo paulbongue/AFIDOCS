@@ -50,6 +50,16 @@ export default function ProfileScreen() {
     } finally { setPwdBusy(false); }
   }
 
+  async function logoutOtherDevices() {
+    if (!isOnline) return Alert.alert('Hors-ligne', 'Connecte-toi à internet.');
+    try {
+      const { data } = await client.post('/logout-others');
+      Alert.alert('Terminé', `Déconnecté de ${data.revoked ?? 0} autre(s) appareil(s).`);
+    } catch (_) {
+      Alert.alert('Erreur', 'Action impossible.');
+    }
+  }
+
   useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
 
   async function handleSync() {
@@ -117,17 +127,26 @@ export default function ProfileScreen() {
         {/* Sécurité — changement de mot de passe */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Sécurité — changer mon mot de passe</Text>
-          <TextInput style={styles.input} placeholder="Mot de passe actuel" placeholderTextColor={colors.textLight}
-                     secureTextEntry value={pwd.current_password}
-                     onChangeText={(t) => setPwd({ ...pwd, current_password: t })} />
-          <TextInput style={styles.input} placeholder="Nouveau mot de passe" placeholderTextColor={colors.textLight}
-                     secureTextEntry value={pwd.password}
-                     onChangeText={(t) => setPwd({ ...pwd, password: t })} />
-          <TextInput style={styles.input} placeholder="Confirmer le nouveau mot de passe" placeholderTextColor={colors.textLight}
-                     secureTextEntry value={pwd.password_confirmation}
-                     onChangeText={(t) => setPwd({ ...pwd, password_confirmation: t })} />
+          <PwdField placeholder="Mot de passe actuel" value={pwd.current_password}
+                    onChangeText={(t) => setPwd({ ...pwd, current_password: t })} />
+          <PwdField placeholder="Nouveau mot de passe" value={pwd.password}
+                    onChangeText={(t) => setPwd({ ...pwd, password: t })} />
+          <PwdField placeholder="Confirmer le nouveau mot de passe" value={pwd.password_confirmation}
+                    onChangeText={(t) => setPwd({ ...pwd, password_confirmation: t })} />
           <TouchableOpacity style={styles.btnRed} onPress={changePassword} disabled={pwdBusy} activeOpacity={0.85}>
             {pwdBusy ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>Mettre à jour</Text>}
+          </TouchableOpacity>
+        </View>
+
+        {/* Appareils connectés */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Appareils connectés</Text>
+          <Text style={styles.deviceNote}>
+            Un compte peut être connecté sur 3 appareils au maximum. Au-delà, le plus ancien est
+            déconnecté. Tu peux aussi déconnecter manuellement les autres.
+          </Text>
+          <TouchableOpacity style={styles.btnOutline} onPress={logoutOtherDevices} activeOpacity={0.85}>
+            <Text style={styles.btnOutlineText}>Déconnecter les autres appareils</Text>
           </TouchableOpacity>
         </View>
 
@@ -144,6 +163,21 @@ function Row({ label, value, valueColor }) {
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
       <Text style={[styles.rowValue, valueColor && { color: valueColor }]}>{value}</Text>
+    </View>
+  );
+}
+
+// Champ mot de passe avec bouton œil (afficher / masquer).
+function PwdField({ placeholder, value, onChangeText }) {
+  const [show, setShow] = useState(false);
+  return (
+    <View style={styles.pwdWrap}>
+      <TextInput style={[styles.input, { marginTop: 0, paddingRight: 46 }]} placeholder={placeholder}
+                 placeholderTextColor={colors.textLight} secureTextEntry={!show}
+                 value={value} onChangeText={onChangeText} autoCapitalize="none" />
+      <TouchableOpacity style={styles.pwdEye} onPress={() => setShow((s) => !s)}>
+        <Text style={{ fontSize: 16 }}>{show ? '🙈' : '👁'}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -170,6 +204,11 @@ const styles = StyleSheet.create({
   rowValue: { color: colors.text, fontSize: 14, fontWeight: '600', flexShrink: 1, textAlign: 'right' },
   btnRed: { backgroundColor: colors.red, borderRadius: radius.sm, paddingVertical: 13, alignItems: 'center', marginTop: 14 },
   btnRedText: { color: '#fff', fontWeight: '800', fontSize: 15 },
+  btnOutline: { borderWidth: 1.5, borderColor: colors.navy, borderRadius: radius.sm, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
+  btnOutlineText: { color: colors.navy, fontWeight: '700', fontSize: 14 },
+  deviceNote: { color: colors.textMuted, fontSize: 13, lineHeight: 19, marginTop: 4 },
+  pwdWrap: { position: 'relative', marginTop: 10 },
+  pwdEye: { position: 'absolute', right: 4, top: 0, bottom: 0, justifyContent: 'center', paddingHorizontal: 10 },
   btnLogout: { paddingVertical: 16, alignItems: 'center', marginTop: 8 },
   btnLogoutText: { color: colors.red, fontWeight: '800', fontSize: 15 },
 });

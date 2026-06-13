@@ -4,6 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import OfflineBanner from '../components/OfflineBanner';
 import StatCard from '../components/StatCard';
+import AdminActivity from '../components/AdminActivity';
 import client from '../api/client';
 import { colors, radius } from '../theme';
 
@@ -55,6 +56,8 @@ export default function AdminScreen({ navigation }) {
             <Text style={styles.rChevron}>›</Text>
           </TouchableOpacity>
         ))}
+
+        <AdminActivity />
       </ScrollView>
     </View>
   );

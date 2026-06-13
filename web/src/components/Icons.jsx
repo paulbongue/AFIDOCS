@@ -86,3 +86,31 @@ export const IconCap = (p) => (
     <path d="M22 10v6" /><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
   </Ico>
 );
+
+export const IconBell = (p) => (
+  <Ico {...p}>
+    <path d="M10.27 21a2 2 0 0 0 3.46 0" />
+    <path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33" />
+  </Ico>
+);
+
+export const IconDownload = (p) => (
+  <Ico {...p}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" />
+  </Ico>
+);
+
+export const IconEye = (p) => (
+  <Ico {...p}>
+    <path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0" />
+    <circle cx="12" cy="12" r="3" />
+  </Ico>
+);
+
+export const IconLock = (p) => (
+  <Ico {...p}>
+    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </Ico>
+);

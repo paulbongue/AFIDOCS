@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Filiere;
 use App\Models\Niveau;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -20,18 +22,44 @@ class UserController extends Controller
     }
 
     /**
-     * Creation de compte par l'Admin. Pour un Delegue, filiere_id est obligatoire.
+     * Creation de compte par l'Admin. Saisie prenom + nom ; l'identifiant de
+     * connexion (email) est GENERE automatiquement a partir du prenom, du nom,
+     * de la filiere et du niveau. Pour un Delegue, la classe est obligatoire.
      */
     public function store(Request $request): JsonResponse
     {
+        // Email vide => null (declenche la generation automatique).
+        if ($request->input('email') === '') {
+            $request->merge(['email' => null]);
+        }
+
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email'],
+            'prenom' => ['nullable', 'string', 'max:120'],
+            'nom' => ['nullable', 'string', 'max:120'],
+            'name' => ['nullable', 'string', 'max:255'],   // compat : nom complet (mobile)
+            'email' => ['nullable', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
             'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_DELEGUE, User::ROLE_ETUDIANT])],
             'filiere_id' => ['nullable', 'integer', 'exists:filieres,id'],
             'niveau_id' => ['nullable', 'integer', 'exists:niveaux,id'],
         ]);
+
+        // Prenom + nom, avec repli sur un "nom complet" si seul `name` est fourni.
+        $prenom = trim($data['prenom'] ?? '');
+        $nom = trim($data['nom'] ?? '');
+        if ($prenom === '' || $nom === '') {
+            $full = trim($data['name'] ?? '');
+            if ($full === '') {
+                return response()->json([
+                    'message' => 'Le prenom et le nom sont requis.',
+                    'errors' => ['nom' => ['Prenom et nom obligatoires.']],
+                ], 422);
+            }
+            $parts = preg_split('/\s+/', $full, 2);
+            $prenom = $prenom !== '' ? $prenom : ($parts[0] ?? $full);
+            $nom = $nom !== '' ? $nom : ($parts[1] ?? '');
+        }
+        $fullName = trim($prenom.' '.$nom);
 
         // Regle metier : un Delegue est propre a une CLASSE (niveau).
         if ($data['role'] === User::ROLE_DELEGUE && empty($data['niveau_id'])) {
@@ -42,13 +70,58 @@ class UserController extends Controller
         }
 
         // La filiere est deduite de la classe (niveau) lorsqu'elle est fournie.
-        if (! empty($data['niveau_id'])) {
-            $data['filiere_id'] = Niveau::findOrFail($data['niveau_id'])->filiere_id;
-        }
+        $niveau = ! empty($data['niveau_id']) ? Niveau::with('filiere')->find($data['niveau_id']) : null;
+        $filiere = $niveau?->filiere
+            ?? (! empty($data['filiere_id']) ? Filiere::find($data['filiere_id']) : null);
 
-        $user = User::create($data);
+        $email = $data['email'] ?? $this->generateEmail($prenom, $nom, $filiere, $niveau);
+
+        $user = User::create([
+            'name' => $fullName,
+            'email' => $email,
+            'password' => $data['password'],
+            'role' => $data['role'],
+            'filiere_id' => $filiere?->id,
+            'niveau_id' => $niveau?->id,
+        ]);
 
         return response()->json(['data' => $user->load('filiere', 'niveau')], 201);
+    }
+
+    /**
+     * Genere un identifiant de connexion unique : prenom.nom[.filiere][.niveau]@afi.sn
+     * (accents/espaces retires), avec suffixe numerique en cas de doublon.
+     */
+    private function generateEmail(string $prenom, string $nom, ?Filiere $filiere, ?Niveau $niveau): string
+    {
+        $slug = fn ($s) => Str::of($s)->ascii()->lower()->replaceMatches('/[^a-z0-9]+/', '')->value();
+        $base = $slug($prenom).'.'.$slug($nom);
+
+        // Candidats du plus simple au plus precis.
+        $candidates = [$base];
+        if ($filiere) {
+            $candidates[] = $base.'.'.$slug($filiere->code);
+        }
+        if ($filiere && $niveau) {
+            $candidates[] = $base.'.'.$slug($filiere->code).'.'.$slug($niveau->nom);
+        }
+
+        foreach ($candidates as $stem) {
+            $email = $stem.'@afi.sn';
+            if (! User::where('email', $email)->exists()) {
+                return $email;
+            }
+        }
+
+        // Sinon, suffixe numerique sur le candidat le plus precis.
+        $stem = end($candidates);
+        $i = 2;
+        do {
+            $email = $stem.$i.'@afi.sn';
+            $i++;
+        } while (User::where('email', $email)->exists());
+
+        return $email;
     }
 
     public function update(Request $request, User $user): JsonResponse

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import Badge from '../../components/Badge';
+import Pagination, { usePagination } from '../../components/Pagination';
 import { labelForType, formatSize } from '../../theme';
 
 // Modération a posteriori : suppression de toute ressource (et accès au détail
@@ -30,6 +31,8 @@ export default function ModerationPage() {
     await load();
   }
 
+  const pg = usePagination(ressources, 10);
+
   return (
     <div>
       <div className="page-title">Modération</div>
@@ -47,7 +50,7 @@ export default function ModerationPage() {
             <tr><td colSpan={7} className="muted" style={{ textAlign: 'center' }}>Chargement…</td></tr>
           ) : ressources.length === 0 ? (
             <tr><td colSpan={7} className="muted" style={{ textAlign: 'center' }}>Aucune ressource.</td></tr>
-          ) : ressources.map((r) => {
+          ) : pg.pageItems.map((r) => {
             const f = r.matiere?.niveau?.filiere;
             return (
               <tr key={r.id}>
@@ -63,6 +66,8 @@ export default function ModerationPage() {
           })}
         </tbody>
       </table>
+
+      <Pagination {...pg} />
     </div>
   );
 }

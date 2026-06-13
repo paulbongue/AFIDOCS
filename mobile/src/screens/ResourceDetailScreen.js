@@ -10,7 +10,7 @@ import OfflineBanner from '../components/OfflineBanner';
 import Avatar from '../components/Avatar';
 import { useNetwork } from '../context/NetworkContext';
 import { useAuth } from '../context/AuthContext';
-import client from '../api/client';
+import client, { recordActivity } from '../api/client';
 import * as dbApi from '../db/database';
 import { downloadRessource, removeDownload, reachableFileUrl } from '../services/sync';
 import { colors, radius, labelForType, formatSize } from '../theme';
@@ -53,11 +53,17 @@ export default function ResourceDetailScreen({ route, navigation }) {
 
   useEffect(() => { load(); }, [load]);
 
+  // Trace une consultation (une fois par ressource ouverte, en ligne) — hors admin.
+  useEffect(() => {
+    if (isOnline && user && user.role !== 'admin') recordActivity('view', Number(id));
+  }, [id, isOnline, user]);
+
   async function handleDownload() {
     if (!isOnline) return Alert.alert('Hors-ligne', 'Connecte-toi à internet pour télécharger.');
     setDownloading(true);
     try {
       await downloadRessource(user?.id, ressource);
+      recordActivity('download', Number(id));
       setRessource(await dbApi.getRessource(id, user?.id));
       Alert.alert('Téléchargé', 'Ressource disponible hors-ligne.');
     } catch (e) {
@@ -76,12 +82,15 @@ export default function ResourceDetailScreen({ route, navigation }) {
   // Aperçu IN-APP : visionneuse intégrée (fichier local si déjà téléchargé,
   // sinon depuis le serveur).
   function handlePreview() {
-    const src = ressource.local_uri || reachableFileUrl(ressource.url_fichier);
-    if (!src) return Alert.alert('Indisponible', 'Aucun fichier à prévisualiser.');
+    const remote = reachableFileUrl(ressource.url_fichier);
+    if (!ressource.local_uri && !remote) return Alert.alert('Indisponible', 'Aucun fichier à prévisualiser.');
     if (!ressource.local_uri && !isOnline) {
       return Alert.alert('Hors-ligne', "Connecte-toi à internet, ou télécharge le fichier pour l'aperçu hors-ligne.");
     }
-    navigation.navigate('RessourcePreview', { url: src, type: ressource.type_fichier, titre: ressource.titre });
+    navigation.navigate('RessourcePreview', {
+      remoteUrl: remote, localUri: ressource.local_uri,
+      type: ressource.type_fichier, titre: ressource.titre,
+    });
   }
 
   async function handleRemove() {
@@ -192,14 +201,16 @@ export default function ResourceDetailScreen({ route, navigation }) {
           {!!ressource.description && <Text style={styles.description}>{ressource.description}</Text>}
 
           <View style={styles.actions}>
-            {isOffline ? (
-              <TouchableOpacity style={styles.btnRed} onPress={handleOpen} activeOpacity={0.85}>
-                <Text style={styles.btnRedText}>📂  Ouvrir le fichier</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity style={styles.btnRed} onPress={handleDownload} disabled={downloading} activeOpacity={0.85}>
-                {downloading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>⬇  Télécharger</Text>}
-              </TouchableOpacity>
+            {user?.role !== 'admin' && (
+              isOffline ? (
+                <TouchableOpacity style={styles.btnRed} onPress={handleOpen} activeOpacity={0.85}>
+                  <Text style={styles.btnRedText}>📂  Ouvrir le fichier</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity style={styles.btnRed} onPress={handleDownload} disabled={downloading} activeOpacity={0.85}>
+                  {downloading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>⬇  Télécharger</Text>}
+                </TouchableOpacity>
+              )
             )}
 
             <TouchableOpacity style={styles.btnOutline} onPress={handlePreview} activeOpacity={0.85}>

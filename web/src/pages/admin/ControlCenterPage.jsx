@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import client from '../../api/client';
 import Badge from '../../components/Badge';
+import Pagination, { usePagination } from '../../components/Pagination';
 
 // Centre de contrôle : désigner / révoquer le délégué de chaque CLASSE (niveau).
 export default function ControlCenterPage() {
@@ -64,6 +65,7 @@ export default function ControlCenterPage() {
 
   const filieres = [...new Map(classes.filter((c) => c.filiere).map((c) => [c.filiere.code, c.filiere])).values()];
   const shown = filtreFiliere ? classes.filter((c) => c.filiere?.code === filtreFiliere) : classes;
+  const pg = usePagination(shown, 10);
 
   if (loading) return <div className="empty">Chargement…</div>;
 
@@ -110,7 +112,7 @@ export default function ControlCenterPage() {
           <tr><th>Classe</th><th>Délégué actuel</th><th>Désigner un délégué</th><th>Élèves</th></tr>
         </thead>
         <tbody>
-          {shown.map((c) => {
+          {pg.pageItems.map((c) => {
             const current = c.delegues?.[0];
             // Uniquement les élèves de CETTE classe (même niveau).
             const elevesClasse = candidats.filter((u) => String(u.niveau_id) === String(c.niveau_id));
@@ -185,6 +187,8 @@ export default function ControlCenterPage() {
           })}
         </tbody>
       </table>
+
+      <Pagination {...pg} />
     </div>
   );
 }

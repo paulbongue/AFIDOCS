@@ -13,6 +13,7 @@ export default function LoginScreen() {
   const { isOnline } = useNetwork();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleLogin() {
@@ -63,14 +64,20 @@ export default function LoginScreen() {
           />
 
           <Text style={styles.label}>Mot de passe</Text>
-          <TextInput
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            placeholder="••••••••"
-            placeholderTextColor={colors.textLight}
-            secureTextEntry
-          />
+          <View style={styles.pwdWrap}>
+            <TextInput
+              style={[styles.input, { paddingRight: 46 }]}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="••••••••"
+              placeholderTextColor={colors.textLight}
+              secureTextEntry={!showPwd}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity style={styles.pwdEye} onPress={() => setShowPwd((s) => !s)}>
+              <Text style={{ fontSize: 16 }}>{showPwd ? '🙈' : '👁'}</Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading} activeOpacity={0.85}>
             {loading
@@ -99,6 +106,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.text,
     backgroundColor: '#fff',
   },
+  pwdWrap: { position: 'relative' },
+  pwdEye: { position: 'absolute', right: 4, top: 0, bottom: 0, justifyContent: 'center', paddingHorizontal: 10 },
   button: {
     backgroundColor: colors.red, borderRadius: radius.sm, paddingVertical: 14,
     alignItems: 'center', marginTop: 22,

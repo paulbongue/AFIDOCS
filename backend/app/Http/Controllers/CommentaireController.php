@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Activite;
 use App\Models\Commentaire;
 use App\Models\Ressource;
 use App\Models\User;
@@ -42,6 +43,18 @@ class CommentaireController extends Controller
         ]);
 
         $commentaire->load('auteur:id,name,role');
+
+        // Trace l'activité « commentaire » (origine web/mobile via X-Platform).
+        try {
+            Activite::create([
+                'type' => Activite::TYPE_COMMENT,
+                'plateforme' => Activite::normalisePlateforme($request->header('X-Platform')),
+                'user_id' => $request->user()->id,
+                'ressource_id' => $ressource->id,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Trace activite commentaire echouee : '.$e->getMessage());
+        }
 
         // --- Notifier l'auteur de la ressource (délégué) + les admins --------
         // (in-app + email + push), en excluant l'auteur du commentaire.

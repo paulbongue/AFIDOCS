@@ -10,6 +10,8 @@ const client = axios.create({
   timeout: REQUEST_TIMEOUT,
   headers: {
     Accept: 'application/json',
+    // X-Platform : origine des actions pour le suivi d'activité (web | mobile).
+    'X-Platform': 'mobile',
   },
 });
 
@@ -17,6 +19,12 @@ let inMemoryToken = null;
 
 export function setAuthToken(token) {
   inMemoryToken = token;
+}
+
+// Enregistre une action (consultation/aperçu ou téléchargement) sans bloquer l'UI.
+// Sans effet hors-ligne (l'appel échoue silencieusement).
+export function recordActivity(type, ressourceId) {
+  client.post('/activites', { type, ressource_id: ressourceId }).catch(() => {});
 }
 
 client.interceptors.request.use(async (config) => {

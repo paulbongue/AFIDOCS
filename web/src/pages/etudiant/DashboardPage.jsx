@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import ResourceListItem from '../../components/ResourceListItem';
+import StatCard from '../../components/StatCard';
+import { IconBook, IconCap, IconLayers } from '../../components/Icons';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -29,13 +31,16 @@ export default function DashboardPage() {
       <div className="page-title">Bonjour, {prenom}</div>
 
       <div className="stats-row">
-        <div className="stat-card"><div className="value">{stats.ressources}</div><div className="label">Ressources disponibles</div></div>
-        <div className="stat-card"><div className="value">{stats.filieres}</div><div className="label">Filières</div></div>
-        <div className="stat-card"><div className="value">{stats.matieres}</div><div className="label">Matières</div></div>
+        <StatCard icon={IconBook} value={stats.ressources} label="Ressources disponibles" tone="navy" />
+        <StatCard icon={IconCap} value={stats.filieres} label="Filières" tone="red" />
+        <StatCard icon={IconLayers} value={stats.matieres} label="Matières" tone="blue" />
       </div>
 
-      <h3 className="mt" style={{ marginTop: 28 }}>Ressources récentes</h3>
-      <div className="mt">
+      <div className="section-head">
+        <h3>Ressources récentes</h3>
+        <span className="see-all" style={{ cursor: 'pointer' }} onClick={() => navigate('/etudiant/ressources')}>Voir tout →</span>
+      </div>
+      <div>
         {recents.map((r) => (
           <ResourceListItem key={r.id} ressource={r}
             onOpen={() => navigate(`/etudiant/ressources/${r.id}`)} />

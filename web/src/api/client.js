@@ -5,9 +5,15 @@ export const TOKEN_KEY = 'afi_web_token';
 
 const client = axios.create({
   baseURL: API_URL,
-  headers: { Accept: 'application/json' },
+  // X-Platform : origine des actions pour le suivi d'activité (web | mobile).
+  headers: { Accept: 'application/json', 'X-Platform': 'web' },
   withCredentials: false,
 });
+
+// Enregistre une action (consultation/aperçu ou téléchargement) sans bloquer l'UI.
+export function recordActivity(type, ressourceId) {
+  client.post('/activites', { type, ressource_id: ressourceId }).catch(() => {});
+}
 
 // Injecte le token Sanctum stocké dans le localStorage.
 client.interceptors.request.use((config) => {
