@@ -6,8 +6,12 @@ use App\Models\Post;
 use App\Models\PostComment;
 use App\Models\Schedule;
 use App\Models\User;
+use App\Notifications\AnnoncePubliee;
+use App\Services\ExpoPushService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -107,7 +111,45 @@ class FeedController extends Controller
             'commentaires.auteur:id,name,role',
         ]);
 
+        $this->notifyAnnonce($post, $user, $data['target_filiere_ids'] ?? [], $data['target_niveau_id'] ?? null);
+
         return response()->json(['data' => $post], 201);
+    }
+
+    /**
+     * Notifie les destinataires d'une annonce : tout le monde si aucune filière
+     * n'est ciblée, sinon les utilisateurs des filières (et niveau) ciblés.
+     */
+    private function notifyAnnonce(Post $post, User $author, array $filiereIds, $niveauId): void
+    {
+        try {
+            $query = User::where('id', '!=', $author->id);
+            if (! empty($filiereIds)) {
+                $query->whereIn('filiere_id', $filiereIds);
+                if ($niveauId) {
+                    $query->where('niveau_id', $niveauId);
+                }
+            }
+            $recipients = $query->get();
+            if ($recipients->isEmpty()) {
+                return;
+            }
+
+            $extrait = $post->contenu
+                ? mb_strimwidth($post->contenu, 0, 80, '…')
+                : 'a partagé une photo';
+            $message = "{$author->name} — annonce : {$extrait}";
+
+            Notification::send($recipients, new AnnoncePubliee($post, $message));
+            ExpoPushService::send(
+                $recipients->pluck('expo_push_token')->all(),
+                'Nouvelle annonce',
+                $message,
+                ['post_id' => $post->id, 'link' => 'annonces']
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Notification annonce echouee : '.$e->getMessage());
+        }
     }
 
     /** Suppression : l'admin modère tout ; l'auteur supprime sa publication. */

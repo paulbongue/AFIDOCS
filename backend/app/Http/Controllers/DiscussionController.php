@@ -6,8 +6,12 @@ use App\Models\ClassMessage;
 use App\Models\Niveau;
 use App\Models\Schedule;
 use App\Models\User;
+use App\Notifications\MessageClasse;
+use App\Services\ExpoPushService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -95,7 +99,39 @@ class DiscussionController extends Controller
         ]);
         $message->load('auteur:id,name,role');
 
+        $this->notifyClass($niveau, $request->user(), $data['contenu']);
+
         return response()->json(['data' => $message], 201);
+    }
+
+    /**
+     * Notifie les membres de la classe (étudiants + délégué) d'un nouveau message,
+     * en excluant l'auteur. Cloche in-app + push.
+     */
+    private function notifyClass(Niveau $niveau, User $author, string $contenu): void
+    {
+        try {
+            $recipients = User::where('id', '!=', $author->id)
+                ->whereIn('role', [User::ROLE_ETUDIANT, User::ROLE_DELEGUE])
+                ->where('niveau_id', $niveau->id)
+                ->get();
+            if ($recipients->isEmpty()) {
+                return;
+            }
+
+            $extrait = mb_strimwidth($contenu, 0, 80, '…');
+            $message = "{$author->name} (classe) : {$extrait}";
+
+            Notification::send($recipients, new MessageClasse($niveau->id, $message));
+            ExpoPushService::send(
+                $recipients->pluck('expo_push_token')->all(),
+                'Nouveau message — votre classe',
+                $message,
+                ['niveau_id' => $niveau->id, 'link' => 'classe']
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Notification message classe echouee : '.$e->getMessage());
+        }
     }
 
     /**

@@ -36,6 +36,8 @@ export default function NotificationsScreen({ navigation }) {
         screen: 'RessourceDetail',
         params: { id: n.data.ressource_id, titre: n.data.titre },
       });
+    } else if (n.data?.link === 'annonces' || n.data?.link === 'classe') {
+      navigation.navigate('Échanges');
     }
   }
 

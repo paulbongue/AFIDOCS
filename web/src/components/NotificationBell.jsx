@@ -49,6 +49,7 @@ export default function NotificationBell() {
     setOpen(false);
     if (!n.read) { try { await client.post(`/notifications/${n.id}/read`); } catch (_) {} }
     if (n.data?.ressource_id) navigate(`${base}/ressources/${n.data.ressource_id}`);
+    else if (n.data?.link) navigate(`${base}/${n.data.link}`);
     load();
   }
 
