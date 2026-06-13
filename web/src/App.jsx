@@ -7,6 +7,8 @@ import LoginPage from './pages/LoginPage';
 import LandingPage from './pages/LandingPage';
 import ProfilePage from './pages/ProfilePage';
 import ResourceDetailPage from './pages/ResourceDetailPage';
+import ClassDiscussionPage from './pages/ClassDiscussionPage';
+import FeedPage from './pages/FeedPage';
 
 import StudentLayout from './layouts/StudentLayout';
 import DelegueLayout from './layouts/DelegueLayout';
@@ -33,9 +35,9 @@ function Home() {
   const { user, loading } = useAuth();
   if (loading) return <div className="empty">Chargement…</div>;
   if (!user) return <LandingPage />;
-  if (user.role === 'admin') return <Navigate to="/admin/ressources" replace />;
-  if (user.role === 'delegue') return <Navigate to="/delegue/ressources" replace />;
-  return <Navigate to="/etudiant/ressources" replace />;
+  if (user.role === 'admin') return <Navigate to="/admin" replace />;
+  if (user.role === 'delegue') return <Navigate to="/delegue" replace />;
+  return <Navigate to="/etudiant" replace />;
 }
 
 export default function App() {
@@ -53,6 +55,8 @@ export default function App() {
         <Route path="ressources" element={<ResourcesPage />} />
         <Route path="ressources/:id" element={<ResourceDetailPage />} />
         <Route path="recherche" element={<SearchPage />} />
+        <Route path="classe" element={<ClassDiscussionPage />} />
+        <Route path="annonces" element={<FeedPage />} />
         <Route path="profil" element={<ProfilePage />} />
       </Route>
 
@@ -66,6 +70,8 @@ export default function App() {
         <Route path="mes-ressources" element={<MyResourcesPage />} />
         <Route path="ressources" element={<ResourcesPage />} />
         <Route path="ressources/:id" element={<ResourceDetailPage />} />
+        <Route path="classe" element={<ClassDiscussionPage />} />
+        <Route path="annonces" element={<FeedPage />} />
         <Route path="profil" element={<ProfilePage />} />
       </Route>
 
@@ -81,6 +87,7 @@ export default function App() {
         <Route path="pedagogie" element={<PedagogiePage />} />
         <Route path="utilisateurs" element={<UsersPage />} />
         <Route path="moderation" element={<ModerationPage />} />
+        <Route path="annonces" element={<FeedPage />} />
         <Route path="ressources/:id" element={<ResourceDetailPage />} />
         <Route path="profil" element={<ProfilePage />} />
       </Route>

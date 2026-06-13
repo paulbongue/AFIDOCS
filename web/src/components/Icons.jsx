@@ -114,3 +114,23 @@ export const IconLock = (p) => (
     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
   </Ico>
 );
+
+export const IconChat = (p) => (
+  <Ico {...p}>
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </Ico>
+);
+
+export const IconMegaphone = (p) => (
+  <Ico {...p}>
+    <path d="m3 11 18-5v12L3 14v-3z" />
+    <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
+  </Ico>
+);
+
+export const IconPin = (p) => (
+  <Ico {...p}>
+    <line x1="12" x2="12" y1="17" y2="22" />
+    <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z" />
+  </Ico>
+);

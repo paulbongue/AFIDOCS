@@ -17,6 +17,7 @@ import ResourceDetailScreen from '../screens/ResourceDetailScreen';
 import PreviewScreen from '../screens/PreviewScreen';
 import DownloadsScreen from '../screens/DownloadsScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
+import ExchangesScreen from '../screens/ExchangesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import PublishScreen from '../screens/PublishScreen';
 import MyResourcesScreen from '../screens/MyResourcesScreen';
@@ -152,6 +153,11 @@ function MainTabs() {
           options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon emoji="⚙️" color={color} focused={focused} /> }}
         />
       )}
+      <Tab.Screen
+        name="Échanges"
+        component={ExchangesScreen}
+        options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="💬" color={color} focused={focused} /> }}
+      />
       {role !== 'admin' && (
         <Tab.Screen
           name="Hors-ligne"

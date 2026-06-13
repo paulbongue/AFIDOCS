@@ -5,6 +5,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClasseController;
 use App\Http\Controllers\CommentaireController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DiscussionController;
+use App\Http\Controllers\FeedController;
 use App\Http\Controllers\FiliereController;
 use App\Http\Controllers\MatiereController;
 use App\Http\Controllers\NotificationController;
@@ -51,6 +53,22 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Journal d'activité : consultation/aperçu + téléchargement (origine via X-Platform).
     Route::post('/activites', [ActiviteController::class, 'store']);
+
+    // --- Espace de discussion d'une CLASSE (étudiants + délégué ; admin exclu) ---
+    Route::get('/classes/{niveau}/discussion', [DiscussionController::class, 'index']);
+    Route::post('/classes/{niveau}/messages', [DiscussionController::class, 'storeMessage']);
+    Route::delete('/class-messages/{message}', [DiscussionController::class, 'destroyMessage']);
+    Route::post('/classes/{niveau}/schedule', [DiscussionController::class, 'upsertSchedule']);
+    Route::delete('/classes/{niveau}/schedule', [DiscussionController::class, 'destroySchedule']);
+
+    // --- Espace commun / Annonces (tous ; publication admin+délégué) ------------
+    Route::get('/feed', [FeedController::class, 'index']);
+    Route::post('/feed/posts', [FeedController::class, 'storePost']);
+    Route::delete('/feed/posts/{post}', [FeedController::class, 'destroyPost']);
+    Route::post('/feed/posts/{post}/comments', [FeedController::class, 'storeComment']);
+    Route::delete('/feed/comments/{comment}', [FeedController::class, 'destroyComment']);
+    Route::post('/feed/schedule', [FeedController::class, 'upsertSchedule']);
+    Route::delete('/feed/schedule', [FeedController::class, 'destroySchedule']);
 
     // Commentaires inter-filieres.
     Route::get('/ressources/{ressource}/commentaires', [CommentaireController::class, 'index']);

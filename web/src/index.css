@@ -440,6 +440,54 @@ img { max-width: 100%; height: auto; }
 .pager-ellipsis { color: var(--muted); padding: 0 2px; }
 .pager .btn { min-height: 36px; padding: 8px 14px; }
 
+/* ---- Espaces de discussion (classe + annonces) --------------------------- */
+.disc-wrap { max-width: 820px; }
+
+/* Bloc épinglé (emploi du temps) : reste en haut au défilement */
+.pinned { position: sticky; top: 8px; z-index: 5; background: var(--surface);
+  border: 1px solid var(--border); border-left: 4px solid var(--red);
+  border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--sh-sm); }
+.pinned-head { display: flex; align-items: center; gap: 8px; color: var(--navy);
+  font-size: 15px; margin-bottom: 8px; }
+.pinned-head svg { color: var(--red); }
+.pinned-body { display: flex; flex-direction: column; gap: 6px; }
+.pinned-edit { display: flex; flex-direction: column; gap: 8px; margin-top: 12px;
+  padding-top: 12px; border-top: 1px dashed var(--border); }
+
+/* Étiquette de rôle / pastille de ciblage */
+.role-chip { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
+  font-size: 11px; font-weight: 700; text-transform: capitalize; }
+.tgt-chip { padding: 4px 12px; border-radius: 999px; border: 1.5px solid var(--navy);
+  font-weight: 800; font-size: 12px; cursor: pointer; background: transparent; }
+.tgt-chip.on { border-color: transparent; color: #fff; cursor: default; }
+
+/* Fil de discussion (chat) */
+.chat { display: flex; flex-direction: column; gap: 12px; }
+.chat-msg { display: flex; gap: 10px; align-items: flex-start; }
+.chat-msg.mine { flex-direction: row-reverse; }
+.chat-bubble { background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 10px 12px; max-width: 76%; box-shadow: var(--sh-sm); position: relative; }
+.chat-msg.mine .chat-bubble { background: var(--salmon); border-color: var(--salmon-strong); }
+.chat-meta { display: flex; align-items: center; font-size: 13px; color: var(--navy); margin-bottom: 2px; }
+.chat-del { background: none; border: none; color: var(--red); font-size: 11px; font-weight: 700;
+  cursor: pointer; padding: 4px 0 0; }
+
+/* Publications (annonces) */
+.post-composer textarea { resize: vertical; }
+.post-img-prev { margin-top: 10px; }
+.post-img-prev img { max-height: 220px; border-radius: var(--radius); display: block; margin-bottom: 6px; }
+.post-img { margin-top: 10px; }
+.post-img img { width: 100%; border-radius: var(--radius); display: block; }
+.post-comments { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.post-comment { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+.pc-body { flex: 1; font-size: 14px; }
+.pc-body b { color: var(--navy); margin-right: 6px; }
+.pc-del { background: none; border: none; color: var(--muted); font-size: 18px; line-height: 1;
+  cursor: pointer; padding: 0 4px; }
+.pc-del:hover { color: var(--red); }
+.avatar.sm { width: 28px; height: 28px; font-size: 11px; }
+
 /* ---- Finitions : fluidité & confort d'usage ------------------------------ */
 html { scroll-behavior: smooth; }
 

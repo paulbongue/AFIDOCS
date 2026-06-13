@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import DashboardShell from '../components/DashboardShell';
-import { IconDashboard, IconBook, IconUpload, IconSliders, IconLayers, IconUsers, IconShield, IconUser } from '../components/Icons';
+import { IconDashboard, IconBook, IconUpload, IconSliders, IconLayers, IconUsers, IconShield, IconUser, IconMegaphone } from '../components/Icons';
 
 const link = ({ isActive }) => 'nav-item' + (isActive ? ' active' : '');
 
@@ -16,6 +16,9 @@ export default function AdminLayout() {
       <NavLink to="/admin/pedagogie" className={link}><IconLayers /><span>Gestion pédagogique</span></NavLink>
       <NavLink to="/admin/utilisateurs" className={link}><IconUsers /><span>Utilisateurs</span></NavLink>
       <NavLink to="/admin/moderation" className={link}><IconShield /><span>Modération</span></NavLink>
+
+      <div className="group-title">ÉCHANGES</div>
+      <NavLink to="/admin/annonces" className={link}><IconMegaphone /><span>Annonces</span></NavLink>
 
       <div className="group-title">MON COMPTE</div>
       <NavLink to="/admin/profil" className={link}><IconUser /><span>Profil</span></NavLink>
