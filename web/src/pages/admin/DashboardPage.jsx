@@ -46,7 +46,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="stats-row" style={{ marginTop: 16, gridTemplateColumns: 'repeat(4, 1fr)' }}>
+      <div className="stats-row" style={{ marginTop: 16 }}>
         <StatCard icon={IconBook} value={t.ressources} label="Ressources" tone="navy" />
         <StatCard icon={IconUsers} value={t.utilisateurs} label="Utilisateurs" tone="blue" />
         <StatCard icon={IconBell} value={t.commentaires} label="Commentaires" tone="orange" />

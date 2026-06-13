@@ -112,7 +112,7 @@ h3 { font-size: 16px; font-weight: 800; }
 .stat-card:hover { box-shadow: var(--sh-md); transform: translateY(-1px); }
 .stat-card .value { font-size: 32px; font-weight: 900; color: var(--navy); letter-spacing: -.02em; }
 .stat-card .label { font-size: 13px; color: var(--muted); font-weight: 600; margin-top: 2px; }
-.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
 
 /* Carte stat avec pastille d'icône (StatCard) */
 .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
