@@ -14,6 +14,10 @@
 
 import Constants from 'expo-constants';
 
+// Serveur de PRODUCTION : utilisé par l'APK autonome (qui n'a pas de Metro pour
+// déduire l'IP du PC). En dev (Expo Go), on garde la détection automatique.
+const PROD_API_URL = 'https://afidocs.duckdns.org/api';
+
 const FALLBACK_IP = '192.168.1.10';
 const API_PORT = 8000;
 
@@ -36,9 +40,12 @@ function inferHost() {
   return null;
 }
 
-const host = inferHost() || FALLBACK_IP;
+const host = inferHost();
 
-export const API_URL = `http://${host}:${API_PORT}/api`;
+// Dev (Metro détecté) -> serveur local du PC ; sinon (APK autonome) -> production.
+export const API_URL = host
+  ? `http://${host}:${API_PORT}/api`
+  : (__DEV__ ? `http://${FALLBACK_IP}:${API_PORT}/api` : PROD_API_URL);
 
 // Durée (ms) au-delà de laquelle une requête est considérée en échec.
 export const REQUEST_TIMEOUT = 10000;

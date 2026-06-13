@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "backgroundColor": "#14213D",
+    "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/logo-afi.png",
       "resizeMode": "contain",
@@ -21,6 +22,10 @@
     "android": {
       "package": "sn.afi.docs",
       "softwareKeyboardLayoutMode": "pan",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#14213D"
+      },
       "permissions": [
         "INTERNET"
       ]
