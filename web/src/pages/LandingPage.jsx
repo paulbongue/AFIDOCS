@@ -13,13 +13,19 @@ const FEATURES = [
   { icon: IconUsers, t: 'Délégués & administration', d: 'Les délégués publient pour leur classe ; l’administration garde le contrôle.' },
 ];
 
-const FILIERES = ['MAI', 'BAF', 'GSE', 'TL', 'MMC', 'QHSE', 'GRH', 'DWMD', 'GL', 'SRT', 'MJF', 'LEA'];
+// Grands domaines stables (la liste précise des filières peut évoluer en cours d'usage).
+const DOMAINES = [
+  'Gestion & Management',
+  'Informatique & Réseaux',
+  'Banque, Finance & Assurance',
+  'Industrie & QHSE',
+  'Communication & Langues',
+];
 
 const STATS = [
-  { v: '12', l: 'Filières' },
-  { v: 'L3 · M1 · M2', l: 'Niveaux' },
+  { v: 'Plusieurs', l: 'Filières' },
   { v: 'PDF · Word · PPT…', l: 'Tous formats' },
-  { v: '100%', l: 'Hors-ligne' },
+  { v: 'Hors-ligne', l: 'Cours téléchargés' },
 ];
 
 export default function LandingPage() {
@@ -76,11 +82,11 @@ export default function LandingPage() {
 
       <section className="lp-section lp-filieres">
         <div className="lp-section-head">
-          <h2>Nos filières</h2>
-          <p className="muted">Les 12 filières de l'AFI, chacune avec ses classes et ses matières.</p>
+          <h2>Nos domaines de formation</h2>
+          <p className="muted">Les filières de l'AFI couvrent plusieurs grands domaines, chacun avec ses classes et ses matières.</p>
         </div>
         <div className="lp-chips">
-          {FILIERES.map((f) => <span key={f} className="lp-chip">{f}</span>)}
+          {DOMAINES.map((d) => <span key={d} className="lp-chip">{d}</span>)}
         </div>
       </section>
 

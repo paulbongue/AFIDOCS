@@ -11,10 +11,10 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Déjà connecté → atterrit directement sur la liste des ressources.
+  // Déjà connecté → atterrit sur le tableau de bord / la page d'accueil de l'espace.
   if (user) {
-    const home = user.role === 'admin' ? '/admin/ressources'
-      : user.role === 'delegue' ? '/delegue/ressources' : '/etudiant/ressources';
+    const home = user.role === 'admin' ? '/admin'
+      : user.role === 'delegue' ? '/delegue' : '/etudiant';
     return <Navigate to={home} replace />;
   }
 
@@ -24,8 +24,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const u = await login(email.trim().toLowerCase(), password);
-      const home = u.role === 'admin' ? '/admin/ressources'
-        : u.role === 'delegue' ? '/delegue/ressources' : '/etudiant/ressources';
+      const home = u.role === 'admin' ? '/admin'
+        : u.role === 'delegue' ? '/delegue' : '/etudiant';
       navigate(home, { replace: true });
     } catch (err) {
       setError(err?.response?.data?.message
