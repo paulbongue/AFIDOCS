@@ -106,6 +106,19 @@ function AdminStack() {
   );
 }
 
+function ExchangesStack() {
+  return (
+    <Stack.Navigator screenOptions={({ navigation }) => redHeader(navigation)}>
+      <Stack.Screen name="EchangesHome" component={ExchangesScreen} />
+      <Stack.Screen
+        name="EchangesPreview"
+        component={PreviewScreen}
+        options={({ navigation }) => redHeader(navigation, { back: true })}
+      />
+    </Stack.Navigator>
+  );
+}
+
 function MainTabs() {
   const { unread } = useNotifications();
   const { user } = useAuth();
@@ -150,8 +163,8 @@ function MainTabs() {
       )}
       <Tab.Screen
         name="Échanges"
-        component={ExchangesScreen}
-        options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="💬" color={color} focused={focused} /> }}
+        component={ExchangesStack}
+        options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon emoji="💬" color={color} focused={focused} /> }}
       />
       {role !== 'admin' && (
         <Tab.Screen

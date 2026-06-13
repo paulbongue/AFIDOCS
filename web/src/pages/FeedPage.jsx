@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { initials, labelForType, formatSize, colorForFiliere } from '../theme';
+import { initials, colorForFiliere } from '../theme';
 import { IconPin } from '../components/Icons';
+import SchedulePreview from '../components/SchedulePreview';
 
 // Espace commun (interfilière) : annonces des admins/délégués + commentaires.
 export default function FeedPage() {
@@ -134,12 +135,7 @@ export default function FeedPage() {
         {schedule ? (
           <div className="pinned-body">
             {schedule.description && <p className="muted" style={{ margin: '4px 0' }}>{schedule.description}</p>}
-            {schedule.url_fichier && (
-              <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                <a className="btn btn-red" href={schedule.url_fichier} target="_blank" rel="noreferrer">📅 Ouvrir l'emploi du temps</a>
-                <span className="muted">{labelForType(schedule.type_fichier)} · {formatSize(schedule.taille_fichier)}</span>
-              </div>
-            )}
+            <SchedulePreview schedule={schedule} />
           </div>
         ) : (
           <div className="muted">Aucun emploi du temps publié.</div>

@@ -137,7 +137,7 @@ class DiscussionController extends Controller
             'niveau_id' => $niveau->id,
         ]);
 
-        $schedule->titre = $data['titre'] ?? $schedule->titre ?? 'Emploi du temps du semestre';
+        $schedule->titre = $data['titre'] ?? $schedule->titre ?? 'Emploi du temps';
         $schedule->description = $data['description'] ?? $schedule->description;
         $schedule->updated_by = $request->user()->id;
 

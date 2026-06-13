@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity,
   ActivityIndicator, Alert, Linking, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 
 import Avatar from './Avatar';
@@ -16,6 +16,7 @@ import { colors, radius, labelForType, formatSize } from '../theme';
 export default function ClassDiscussion() {
   const { user } = useAuth();
   const { isOnline } = useNetwork();
+  const navigation = useNavigation();
   const niveauId = user?.niveau_id;
 
   const [data, setData] = useState(null);
@@ -113,12 +114,14 @@ export default function ClassDiscussion() {
 
         {/* Emploi du temps épinglé */}
         <View style={styles.pinned}>
-          <Text style={styles.pinnedHead}>📌 {schedule?.titre || 'Emploi du temps du semestre'}</Text>
+          <Text style={styles.pinnedHead}>📌 {schedule?.titre || 'Emploi du temps'}</Text>
           {schedule ? (
             <>
               {!!schedule.description && <Text style={styles.muted}>{schedule.description}</Text>}
               {!!schedule.url_fichier && (
-                <TouchableOpacity style={styles.btnRed} onPress={() => Linking.openURL(schedule.url_fichier)}>
+                <TouchableOpacity style={styles.btnRed} onPress={() => navigation.navigate('EchangesPreview', {
+                  remoteUrl: schedule.url_fichier, type: schedule.type_fichier, titre: schedule.titre || 'Emploi du temps',
+                })}>
                   <Text style={styles.btnRedText}>📅 Ouvrir l'emploi du temps</Text>
                 </TouchableOpacity>
               )}
