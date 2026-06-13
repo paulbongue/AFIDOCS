@@ -36,8 +36,16 @@ export default function NotificationsScreen({ navigation }) {
         screen: 'RessourceDetail',
         params: { id: n.data.ressource_id, titre: n.data.titre },
       });
-    } else if (n.data?.link === 'annonces' || n.data?.link === 'classe') {
-      navigation.navigate('Échanges');
+    } else if (n.data?.link === 'annonces') {
+      navigation.navigate('Échanges', {
+        screen: 'EchangesHome',
+        params: { tab: 'annonces', focusPost: n.data.post_id, ts: Date.now() },
+      });
+    } else if (n.data?.link === 'classe') {
+      navigation.navigate('Échanges', {
+        screen: 'EchangesHome',
+        params: { tab: 'classe', focusMsg: n.data.message_id, ts: Date.now() },
+      });
     }
   }
 

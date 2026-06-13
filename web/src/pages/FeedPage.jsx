@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { initials, colorForFiliere } from '../theme';
@@ -8,6 +9,9 @@ import SchedulePreview from '../components/SchedulePreview';
 // Espace commun (interfilière) : annonces des admins/délégués + commentaires.
 export default function FeedPage() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const focusPost = searchParams.get('post');
+  const [highlight, setHighlight] = useState(null);
   const [data, setData] = useState(null);
   const [err, setErr] = useState(null);
   const [filieres, setFilieres] = useState([]);
@@ -43,6 +47,17 @@ export default function FeedPage() {
     load();
     client.get('/filieres').then(({ data }) => setFilieres(data.data || [])).catch(() => {});
   }, [load]);
+
+  // Notification ciblée : défile jusqu'à la publication et la met en surbrillance.
+  useEffect(() => {
+    if (!data || !focusPost) return;
+    const el = document.getElementById(`post-${focusPost}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setHighlight(String(focusPost));
+    const t = setTimeout(() => setHighlight(null), 2600);
+    return () => clearTimeout(t);
+  }, [data, focusPost]);
 
   if (err) {
     return (
@@ -207,7 +222,8 @@ export default function FeedPage() {
 
       {posts.length === 0 && <div className="empty">Aucune publication pour le moment.</div>}
       {posts.map((p) => (
-        <div key={p.id} className="card post mt">
+        <div key={p.id} id={`post-${p.id}`}
+             className={'card post mt' + (highlight === String(p.id) ? ' flash' : '')}>
           <div className="spread">
             <div className="row">
               <span className="avatar">{initials(p.auteur?.name)}</span>

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, Image,
   ActivityIndicator, Alert, Linking, KeyboardAvoidingView, Platform,
@@ -13,7 +13,7 @@ import client from '../api/client';
 import { colors, radius, colorForFiliere, labelForType, formatSize } from '../theme';
 
 // Espace commun (interfilière) : annonces des admins/délégués + commentaires.
-export default function Feed() {
+export default function Feed({ focusPost, focusTs }) {
   const { user } = useAuth();
   const { isOnline } = useNetwork();
   const navigation = useNavigation();
@@ -21,6 +21,15 @@ export default function Feed() {
   const [data, setData] = useState(null);
   const [err, setErr] = useState(null);
   const [filieres, setFilieres] = useState([]);
+  const [highlightId, setHighlightId] = useState(null);
+
+  // Arrivée depuis une notification : surligne la publication ciblée.
+  useEffect(() => {
+    if (!focusPost) return;
+    setHighlightId(Number(focusPost));
+    const t = setTimeout(() => setHighlightId(null), 2600);
+    return () => clearTimeout(t);
+  }, [focusPost, focusTs]);
 
   const [text, setText] = useState('');
   const [image, setImage] = useState(null);
@@ -237,7 +246,7 @@ export default function Feed() {
 
         {posts.length === 0 && <Text style={styles.muted}>Aucune publication pour le moment.</Text>}
         {posts.map((p) => (
-          <View key={p.id} style={styles.post}>
+          <View key={p.id} style={[styles.post, highlightId === p.id && styles.postHi]}>
             <View style={styles.postHead}>
               <Avatar name={p.auteur?.name} size={36} bg={colors.navy} />
               <View style={{ flex: 1 }}>
@@ -325,6 +334,7 @@ const styles = StyleSheet.create({
   photoBtn: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, paddingHorizontal: 14, paddingVertical: 11 },
   photoBtnText: { color: colors.navy, fontWeight: '700' },
   post: { backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, borderWidth: 1, borderColor: colors.border, marginBottom: 14 },
+  postHi: { borderColor: colors.red, borderWidth: 2 },
   postHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   postAuthor: { fontWeight: '800', color: colors.navy, fontSize: 14 },
   postDate: { color: colors.textLight, fontSize: 12 },

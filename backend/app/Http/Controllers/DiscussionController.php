@@ -69,6 +69,13 @@ class DiscussionController extends Controller
             ->where('niveau_id', $niveau->id)
             ->first();
 
+        // Liste des membres de la classe (transparence : permet de repérer
+        // tout compte ajouté). Étudiants + délégué du niveau.
+        $members = User::where('niveau_id', $niveau->id)
+            ->whereIn('role', [User::ROLE_ETUDIANT, User::ROLE_DELEGUE])
+            ->orderBy('name')
+            ->get(['id', 'name', 'role', 'created_at']);
+
         $niveau->loadMissing('filiere:id,code,nom,couleur');
 
         return response()->json([
@@ -80,6 +87,8 @@ class DiscussionController extends Controller
             'is_moderator' => $this->isModerator($request, $niveau),
             'schedule' => $schedule,
             'messages' => $messages,
+            'members' => $members,
+            'members_count' => $members->count(),
             'ttl_days' => self::TTL_DAYS,
         ]);
     }
@@ -99,19 +108,19 @@ class DiscussionController extends Controller
         ]);
         $message->load('auteur:id,name,role');
 
-        $this->notifyClass($niveau, $request->user(), $data['contenu']);
+        $this->notifyClass($niveau, $message);
 
         return response()->json(['data' => $message], 201);
     }
 
     /**
      * Notifie les membres de la classe (étudiants + délégué) d'un nouveau message,
-     * en excluant l'auteur. Cloche in-app + push.
+     * en excluant l'auteur. Cloche in-app + push, avec l'id du message ciblé.
      */
-    private function notifyClass(Niveau $niveau, User $author, string $contenu): void
+    private function notifyClass(Niveau $niveau, ClassMessage $msg): void
     {
         try {
-            $recipients = User::where('id', '!=', $author->id)
+            $recipients = User::where('id', '!=', $msg->user_id)
                 ->whereIn('role', [User::ROLE_ETUDIANT, User::ROLE_DELEGUE])
                 ->where('niveau_id', $niveau->id)
                 ->get();
@@ -119,15 +128,16 @@ class DiscussionController extends Controller
                 return;
             }
 
-            $extrait = mb_strimwidth($contenu, 0, 80, '…');
-            $message = "{$author->name} (classe) : {$extrait}";
+            $extrait = mb_strimwidth($msg->contenu, 0, 80, '…');
+            $authorName = $msg->auteur?->name ?? 'Un membre';
+            $message = "{$authorName} (classe) : {$extrait}";
 
-            Notification::send($recipients, new MessageClasse($niveau->id, $message));
+            Notification::send($recipients, new MessageClasse($niveau->id, $msg->id, $message));
             ExpoPushService::send(
                 $recipients->pluck('expo_push_token')->all(),
                 'Nouveau message — votre classe',
                 $message,
-                ['niveau_id' => $niveau->id, 'link' => 'classe']
+                ['niveau_id' => $niveau->id, 'message_id' => $msg->id, 'link' => 'classe']
             );
         } catch (\Throwable $e) {
             Log::warning('Notification message classe echouee : '.$e->getMessage());

@@ -1,14 +1,19 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { initials } from '../theme';
-import { IconPin } from '../components/Icons';
+import { IconPin, IconUsers } from '../components/Icons';
 import SchedulePreview from '../components/SchedulePreview';
 
 // Espace de discussion de la classe de l'utilisateur (son niveau).
 export default function ClassDiscussionPage() {
   const { user } = useAuth();
   const niveauId = user?.niveau_id;
+  const [searchParams] = useSearchParams();
+  const focusMsg = searchParams.get('msg');
+  const [highlight, setHighlight] = useState(null);
+  const [showMembers, setShowMembers] = useState(false);
 
   const [data, setData] = useState(null);
   const [err, setErr] = useState(null);
@@ -34,6 +39,17 @@ export default function ClassDiscussionPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Notification ciblée : défile jusqu'au message et le met en surbrillance.
+  useEffect(() => {
+    if (!data || !focusMsg) return;
+    const el = document.getElementById(`msg-${focusMsg}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setHighlight(String(focusMsg));
+    const t = setTimeout(() => setHighlight(null), 2600);
+    return () => clearTimeout(t);
+  }, [data, focusMsg]);
+
   if (!niveauId) {
     return <div className="empty">Aucune classe ne vous est associée. Contactez l'administration.</div>;
   }
@@ -49,7 +65,7 @@ export default function ClassDiscussionPage() {
   }
   if (!data) return <div className="empty">Chargement…</div>;
 
-  const { schedule, messages, is_moderator, classe, ttl_days } = data;
+  const { schedule, messages, is_moderator, classe, ttl_days, members = [], members_count = 0 } = data;
 
   async function send(e) {
     e.preventDefault();
@@ -90,9 +106,39 @@ export default function ClassDiscussionPage() {
 
   return (
     <div className="disc-wrap">
-      <div className="page-title">Ma classe — {classe?.filiere?.code} · {classe?.niveau}</div>
+      <div className="spread" style={{ flexWrap: 'wrap', gap: 10 }}>
+        <div className="page-title" style={{ marginBottom: 0 }}>Ma classe — {classe?.filiere?.code} · {classe?.niveau}</div>
+        <button className="btn btn-ghost" onClick={() => setShowMembers((s) => !s)}>
+          <IconUsers size={16} /> {members_count} membre{members_count > 1 ? 's' : ''}
+        </button>
+      </div>
 
-      {/* Emploi du temps du semestre — épinglé (reste visible au défilement) */}
+      {showMembers && (
+        <div className="card mt members-card">
+          <div className="spread" style={{ marginBottom: 8 }}>
+            <b>Membres de la classe ({members_count})</b>
+            <span className="muted" style={{ fontSize: 12 }}>Vérifiez qu'aucun compte inconnu n'a été ajouté.</span>
+          </div>
+          {members.map((mb) => (
+            <div key={mb.id} className="member-row">
+              <span className="avatar sm">{initials(mb.name)}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <b>{mb.name}</b>
+                {mb.role === 'delegue' && <span className="role-chip">délégué</span>}
+                {mb.id === user.id && <span className="role-chip">vous</span>}
+              </div>
+              {mb.created_at && (
+                <span className="muted" style={{ fontSize: 12 }}>
+                  ajouté le {new Date(mb.created_at).toLocaleDateString('fr-FR')}
+                </span>
+              )}
+            </div>
+          ))}
+          {members.length === 0 && <div className="muted">Aucun membre listé.</div>}
+        </div>
+      )}
+
+      {/* Emploi du temps — épinglé (reste visible au défilement) */}
       <div className="pinned">
         <div className="pinned-head"><IconPin size={16} /><b>{schedule?.titre || 'Emploi du temps'}</b></div>
         {schedule ? (
@@ -126,7 +172,8 @@ export default function ClassDiscussionPage() {
           const mine = m.user_id === user.id;
           const canDel = mine || is_moderator;
           return (
-            <div key={m.id} className={'chat-msg' + (mine ? ' mine' : '')}>
+            <div key={m.id} id={`msg-${m.id}`}
+                 className={'chat-msg' + (mine ? ' mine' : '') + (highlight === String(m.id) ? ' flash' : '')}>
               <span className="avatar">{initials(m.auteur?.name)}</span>
               <div className="chat-bubble">
                 <div className="chat-meta">

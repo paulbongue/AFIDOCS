@@ -488,6 +488,20 @@ img { max-width: 100%; height: auto; }
 .pc-del:hover { color: var(--red); }
 .avatar.sm { width: 28px; height: 28px; font-size: 11px; }
 
+/* Surbrillance temporaire quand on arrive depuis une notification */
+@keyframes flashHi {
+  0%, 45% { outline-color: var(--red); }
+  100% { outline-color: transparent; }
+}
+.flash { outline: 3px solid transparent; outline-offset: 3px; border-radius: var(--radius);
+  animation: flashHi 2.6s ease-out; }
+
+/* Liste des membres de la classe */
+.members-card { padding: 14px 16px; }
+.member-row { display: flex; align-items: center; gap: 10px; padding: 9px 0;
+  border-bottom: 1px solid var(--border); }
+.member-row:last-child { border-bottom: none; }
+
 /* ---- Finitions : fluidité & confort d'usage ------------------------------ */
 html { scroll-behavior: smooth; }
 

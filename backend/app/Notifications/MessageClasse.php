@@ -13,6 +13,7 @@ class MessageClasse extends Notification
 {
     public function __construct(
         public int $niveauId,
+        public int $messageId,
         public string $message,
     ) {}
 
@@ -26,6 +27,7 @@ class MessageClasse extends Notification
         return [
             'kind' => 'message',
             'niveau_id' => $this->niveauId,
+            'message_id' => $this->messageId,
             'link' => 'classe',
             'message' => $this->message,
         ];

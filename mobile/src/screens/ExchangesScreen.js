@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
@@ -8,10 +8,22 @@ import { colors } from '../theme';
 
 // Espaces d'échange : bascule entre la discussion de classe et les annonces.
 // L'admin n'a pas accès aux espaces de classe (uniquement les annonces).
-export default function ExchangesScreen() {
+export default function ExchangesScreen({ route }) {
   const { user } = useAuth();
   const canClass = user?.role !== 'admin';
-  const [tab, setTab] = useState(canClass ? 'classe' : 'annonces');
+  const wanted = route?.params?.tab;
+  const [tab, setTab] = useState(wanted === 'annonces' || !canClass ? 'annonces' : (wanted || 'classe'));
+
+  // Arrivée depuis une notification : sélectionne le bon onglet.
+  useEffect(() => {
+    if (route?.params?.tab) {
+      setTab(route.params.tab === 'annonces' || !canClass ? 'annonces' : 'classe');
+    }
+  }, [route?.params?.tab, route?.params?.ts, canClass]);
+
+  const focusPost = route?.params?.focusPost;
+  const focusMsg = route?.params?.focusMsg;
+  const ts = route?.params?.ts;
 
   return (
     <View style={styles.flex}>
@@ -26,7 +38,9 @@ export default function ExchangesScreen() {
         </TouchableOpacity>
       </View>
 
-      {tab === 'classe' && canClass ? <ClassDiscussion /> : <Feed />}
+      {tab === 'classe' && canClass
+        ? <ClassDiscussion focusMsg={focusMsg} focusTs={ts} />
+        : <Feed focusPost={focusPost} focusTs={ts} />}
     </View>
   );
 }
