@@ -10,6 +10,7 @@ export default function ResourceDetailPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [res, setRes] = useState(null);
+  const [notFound, setNotFound] = useState(false);
   const [comment, setComment] = useState('');
   const [busy, setBusy] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -23,8 +24,13 @@ export default function ResourceDetailPage() {
   const [editMsg, setEditMsg] = useState(null);
 
   const load = useCallback(async () => {
-    const { data } = await client.get(`/ressources/${id}`);
-    setRes(data.data);
+    try {
+      const { data } = await client.get(`/ressources/${id}`);
+      setRes(data.data);
+      setNotFound(false);
+    } catch (e) {
+      if (e?.response?.status === 404) setNotFound(true);
+    }
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
@@ -79,6 +85,16 @@ export default function ResourceDetailPage() {
     await load();
   }
 
+  if (notFound) {
+    return (
+      <div className="empty">
+        Cette ressource a été supprimée.
+        <div style={{ marginTop: 12 }}>
+          <button className="btn btn-red" onClick={() => navigate(-1)}>← Retour</button>
+        </div>
+      </div>
+    );
+  }
   if (!res) return <div className="empty">Chargement…</div>;
 
   const f = res.matiere?.niveau?.filiere;

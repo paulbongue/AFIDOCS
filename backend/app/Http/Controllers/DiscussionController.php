@@ -10,6 +10,7 @@ use App\Notifications\MessageClasse;
 use App\Services\ExpoPushService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -159,7 +160,11 @@ class DiscussionController extends Controller
 
         abort_unless($canDelete, 403, "Vous ne pouvez supprimer que vos propres messages.");
 
+        $messageId = $message->id;
         $message->delete();
+
+        // Retire la notification pointant vers ce message supprimé.
+        DB::table('notifications')->where('data->message_id', $messageId)->delete();
 
         return response()->json(['message' => 'Message supprimé.']);
     }

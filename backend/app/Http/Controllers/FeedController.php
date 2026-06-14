@@ -10,6 +10,7 @@ use App\Notifications\AnnoncePubliee;
 use App\Services\ExpoPushService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -162,7 +163,12 @@ class FeedController extends Controller
         if ($post->image) {
             Storage::disk('public')->delete($post->image);
         }
+
+        $postId = $post->id;
         $post->delete();
+
+        // Retire les notifications d'annonce devenues caduques (évite le lien mort).
+        DB::table('notifications')->where('data->post_id', $postId)->delete();
 
         return response()->json(['message' => 'Publication supprimée.']);
     }

@@ -6,6 +6,7 @@ use App\Models\Matiere;
 use App\Models\Ressource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class RessourceController extends Controller
@@ -253,7 +254,13 @@ class RessourceController extends Controller
         if ($ressource->chemin_fichier) {
             Storage::disk('public')->delete($ressource->chemin_fichier);
         }
+
+        $ressourceId = $ressource->id;
         $ressource->delete();
+
+        // Les notifications pointant vers cette ressource (publication, commentaire)
+        // deviennent caduques : on les retire pour tous les utilisateurs.
+        DB::table('notifications')->where('data->ressource_id', $ressourceId)->delete();
 
         return response()->json(['message' => 'Ressource supprimee.']);
     }

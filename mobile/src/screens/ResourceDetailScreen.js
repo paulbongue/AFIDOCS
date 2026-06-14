@@ -21,6 +21,7 @@ export default function ResourceDetailScreen({ route, navigation }) {
   const { user } = useAuth();
 
   const [ressource, setRessource] = useState(null);
+  const [notFound, setNotFound] = useState(false);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [busy, setBusy] = useState(false);
@@ -35,7 +36,8 @@ export default function ResourceDetailScreen({ route, navigation }) {
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
-    setRessource(await dbApi.getRessource(id, user?.id));
+    const local = await dbApi.getRessource(id, user?.id);
+    setRessource(local);
     setComments(await dbApi.getComments(id));
 
     if (isOnline) {
@@ -47,7 +49,11 @@ export default function ResourceDetailScreen({ route, navigation }) {
         await dbApi.saveComments(id, r.commentaires || []);
         setRessource(await dbApi.getRessource(id, user?.id));
         setComments(await dbApi.getComments(id));
-      } catch (_) { /* cache */ }
+        setNotFound(false);
+      } catch (e) {
+        // Ressource supprimée côté serveur et absente du cache → introuvable.
+        if (e?.response?.status === 404 && !local) setNotFound(true);
+      }
     }
   }, [id, isOnline]);
 
@@ -161,6 +167,18 @@ export default function ResourceDetailScreen({ route, navigation }) {
     ]);
   }
 
+  if (notFound) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ color: colors.textMuted, textAlign: 'center', marginBottom: 16 }}>
+          Cette ressource a été supprimée.
+        </Text>
+        <TouchableOpacity style={styles.btnRed} onPress={() => navigation.goBack()}>
+          <Text style={styles.btnRedText}>← Retour</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
   if (!ressource) {
     return <View style={styles.center}><ActivityIndicator size="large" color={colors.red} /></View>;
   }
