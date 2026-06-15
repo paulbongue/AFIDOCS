@@ -80,6 +80,23 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section className="lp-section lp-download">
+        <div className="lp-download-card">
+          <h2>📱 Application Android</h2>
+          <p>
+            Installez l'application pour consulter vos cours <b>même hors connexion</b>,
+            recevoir les notifications et lire vos documents (PDF, images) directement dans l'app.
+          </p>
+          <a className="btn btn-red" href="/AFI-DOCS.apk" download>⬇ Télécharger l'application (Android)</a>
+          <div className="lp-download-steps">
+            <span>1. Téléchargez le fichier <b>.apk</b> sur votre téléphone.</span>
+            <span>2. Ouvrez-le, puis autorisez « installer des applications inconnues » si demandé.</span>
+            <span>3. Installez, puis connectez-vous avec votre compte AFI.</span>
+          </div>
+          <p className="lp-download-note">Compatible Android uniquement. Version iOS non disponible pour le moment.</p>
+        </div>
+      </section>
+
       <section className="lp-section lp-filieres">
         <div className="lp-section-head">
           <h2>Nos domaines de formation</h2>
