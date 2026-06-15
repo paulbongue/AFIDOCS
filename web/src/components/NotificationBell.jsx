@@ -60,6 +60,11 @@ export default function NotificationBell() {
     load();
   }
 
+  async function deleteNotif(id) {
+    try { await client.delete(`/notifications/${id}`); } catch (_) {}
+    load();
+  }
+
   return (
     <div className="bell" ref={ref}>
       <button className="bell-btn" onClick={() => setOpen((o) => !o)} title="Notifications">
@@ -75,9 +80,13 @@ export default function NotificationBell() {
           {items.length === 0 ? (
             <div className="bell-empty">Aucune notification.</div>
           ) : items.map((n) => (
-            <div key={n.id} className={'bell-item' + (n.read ? '' : ' unread')} onClick={() => openNotif(n)}>
-              <div>{n.data?.message || 'Notification'}</div>
-              {n.data?.matiere && <div className="bell-time">{n.data.matiere}</div>}
+            <div key={n.id} className={'bell-item' + (n.read ? '' : ' unread')}>
+              <div className="bell-item-main" onClick={() => openNotif(n)}>
+                <div>{n.data?.message || 'Notification'}</div>
+                {n.data?.matiere && <div className="bell-time">{n.data.matiere}</div>}
+              </div>
+              <button className="bell-del" title="Supprimer"
+                      onClick={(e) => { e.stopPropagation(); deleteNotif(n.id); }}>✕</button>
             </div>
           ))}
         </div>

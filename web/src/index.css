@@ -358,11 +358,16 @@ table.tbl tr:last-child td { border-bottom: none; }
   padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 15px; }
 .bell-link { background: none; border: none; color: var(--red); font-weight: 700; cursor: pointer; font-size: 12px; }
 .bell-empty { padding: 26px; text-align: center; color: var(--muted); }
-.bell-item { padding: 13px 16px; border-bottom: 1px solid #F0F2F5; cursor: pointer; font-size: 14px;
+.bell-item { display: flex; align-items: flex-start; gap: 8px;
+  padding: 11px 12px 11px 16px; border-bottom: 1px solid #F0F2F5; font-size: 14px;
   transition: background var(--t); }
 .bell-item:hover { background: var(--surface-2); }
 .bell-item.unread { background: #FCEEEA; }
 .bell-item.unread:hover { background: #FBE4DD; }
+.bell-item-main { flex: 1; min-width: 0; cursor: pointer; }
+.bell-del { flex: 0 0 auto; border: none; background: none; color: var(--light); cursor: pointer;
+  font-size: 13px; line-height: 1; padding: 5px 7px; border-radius: 7px; transition: background var(--t), color var(--t); }
+.bell-del:hover { background: var(--surface); color: var(--red); }
 .bell-time { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
 /* Bouton hamburger : caché sur desktop, affiché en mobile (media query) */

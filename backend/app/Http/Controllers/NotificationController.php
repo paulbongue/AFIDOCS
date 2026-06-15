@@ -43,4 +43,14 @@ class NotificationController extends Controller
 
         return response()->json(['message' => 'Toutes les notifications sont lues.']);
     }
+
+    /**
+     * Supprime une notification de l'utilisateur connecté.
+     */
+    public function destroy(Request $request, string $id): JsonResponse
+    {
+        $request->user()->notifications()->where('id', $id)->delete();
+
+        return response()->json(['message' => 'Notification supprimée.']);
+    }
 }

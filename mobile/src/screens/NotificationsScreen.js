@@ -54,6 +54,11 @@ export default function NotificationsScreen({ navigation }) {
     await load();
   }
 
+  async function remove(n) {
+    try { await client.delete(`/notifications/${n.id}`); } catch (_) {}
+    await load();
+  }
+
   const hasUnread = items.some((i) => !i.read);
 
   return (
@@ -71,13 +76,16 @@ export default function NotificationsScreen({ navigation }) {
         keyExtractor={(i) => String(i.id)}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         renderItem={({ item }) => (
-          <TouchableOpacity style={[styles.item, !item.read && styles.unread]} onPress={() => open(item)}>
+          <View style={[styles.item, !item.read && styles.unread]}>
             <Text style={styles.dot}>{item.read ? '' : '●'}</Text>
-            <View style={{ flex: 1 }}>
+            <TouchableOpacity style={{ flex: 1 }} onPress={() => open(item)} activeOpacity={0.7}>
               <Text style={styles.msg}>{item.data?.message || 'Notification'}</Text>
               {item.data?.matiere ? <Text style={styles.sub}>{item.data.matiere}</Text> : null}
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => remove(item)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Text style={styles.del}>✕</Text>
+            </TouchableOpacity>
+          </View>
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -104,6 +112,7 @@ const styles = StyleSheet.create({
   },
   unread: { backgroundColor: '#FCEEEA', borderColor: '#F1C9BD' },
   dot: { color: colors.red, fontSize: 12, width: 12 },
+  del: { color: colors.textLight, fontSize: 16, paddingHorizontal: 4, paddingTop: 2 },
   msg: { color: colors.navy, fontWeight: '700', fontSize: 14 },
   sub: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
