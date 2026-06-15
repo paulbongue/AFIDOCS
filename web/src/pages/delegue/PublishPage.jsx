@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import client from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
+import FilePicker from '../../components/FilePicker';
 
 // Publication directe par le délégué — la CLASSE (filière + niveau) est
 // PRÉ-SÉLECTIONNÉE et VERROUILLÉE. Le délégué ne publie que dans les matières
@@ -88,8 +89,9 @@ export default function PublishPage() {
         <textarea className="input" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
 
         <label className="field">Fichier (PDF, DOCX, PPTX, XLSX, image, vidéo — max 50 Mo)</label>
-        <input className="input" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)}
-               accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.mp4" />
+        <FilePicker file={file} onChange={setFile}
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.mp4"
+                    hint="PDF, Word, PPT, Excel, image, vidéo — max 50 Mo" />
 
         {msg && (
           <div style={{ marginTop: 12, color: msg.type === 'ok' ? 'var(--success)' : 'var(--red)' }}>{msg.text}</div>

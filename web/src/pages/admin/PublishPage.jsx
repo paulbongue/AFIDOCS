@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import client from '../../api/client';
 import Badge from '../../components/Badge';
+import FilePicker from '../../components/FilePicker';
 
 // Publication ADMIN simplifiée : on déplie une filière, puis on coche des
 // matières par niveau. Choix multiple, avec verrou de niveau (seules les classes
@@ -123,7 +124,7 @@ export default function AdminPublishPage() {
         </div>
 
         <label className="field">Fichier (tout type, max 50 Mo)</label>
-        <input className="input" type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+        <FilePicker file={file} onChange={setFile} hint="PDF, Word, PPT, Excel, image, vidéo — max 50 Mo" />
 
         {msg && <div style={{ marginTop: 12, color: msg.type === 'ok' ? 'var(--success)' : 'var(--red)' }}>{msg.text}</div>}
         <button className="btn btn-red mt" disabled={busy}>

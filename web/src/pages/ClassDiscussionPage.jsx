@@ -106,15 +106,15 @@ export default function ClassDiscussionPage() {
 
   return (
     <div className="disc-wrap">
-      <div className="spread" style={{ flexWrap: 'wrap', gap: 10 }}>
-        <div className="page-title" style={{ marginBottom: 0 }}>Ma classe — {classe?.filiere?.code} · {classe?.niveau}</div>
+      <div className="disc-head">
+        <div className="page-title">Ma classe — {classe?.filiere?.code} · {classe?.niveau}</div>
         <button className="btn btn-ghost" onClick={() => setShowMembers((s) => !s)}>
           <IconUsers size={16} /> {members_count} membre{members_count > 1 ? 's' : ''}
         </button>
       </div>
 
       {showMembers && (
-        <div className="card mt members-card">
+        <div className="card members-card">
           <div className="spread" style={{ marginBottom: 8 }}>
             <b>Membres de la classe ({members_count})</b>
             <span className="muted" style={{ fontSize: 12 }}>Vérifiez qu'aucun compte inconnu n'a été ajouté.</span>
