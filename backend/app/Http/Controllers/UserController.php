@@ -5,8 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Filiere;
 use App\Models\Niveau;
 use App\Models\User;
+use App\Notifications\NouveauMembre;
+use App\Services\ExpoPushService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -85,7 +89,40 @@ class UserController extends Controller
             'niveau_id' => $niveau?->id,
         ]);
 
+        // Prévient les membres de la classe qu'un nouvel utilisateur les a rejoints.
+        if ($niveau && in_array($user->role, [User::ROLE_ETUDIANT, User::ROLE_DELEGUE], true)) {
+            $this->notifyNewMember($user, $niveau);
+        }
+
         return response()->json(['data' => $user->load('filiere', 'niveau')], 201);
+    }
+
+    /**
+     * Notifie les membres existants d'une classe (étudiants + délégué) qu'un
+     * nouvel utilisateur vient d'y être ajouté. Cloche in-app + push.
+     */
+    private function notifyNewMember(User $newUser, Niveau $niveau): void
+    {
+        try {
+            $recipients = User::where('id', '!=', $newUser->id)
+                ->whereIn('role', [User::ROLE_ETUDIANT, User::ROLE_DELEGUE])
+                ->where('niveau_id', $niveau->id)
+                ->get();
+            if ($recipients->isEmpty()) {
+                return;
+            }
+
+            $message = "{$newUser->name} a rejoint votre classe.";
+            Notification::send($recipients, new NouveauMembre($niveau->id, $newUser->name, $message));
+            ExpoPushService::send(
+                $recipients->pluck('expo_push_token')->all(),
+                'Nouveau membre dans votre classe',
+                $message,
+                ['niveau_id' => $niveau->id, 'link' => 'classe']
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Notification nouveau membre echouee : '.$e->getMessage());
+        }
     }
 
     /**

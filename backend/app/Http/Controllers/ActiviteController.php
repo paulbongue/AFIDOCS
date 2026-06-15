@@ -133,32 +133,36 @@ class ActiviteController extends Controller
             // BOM UTF-8 : accents corrects à l'ouverture dans Excel.
             fwrite($out, "\xEF\xBB\xBF");
 
-            $sep = static function ($out) { fputcsv($out, []); };
+            // Séparateur ';' : Excel (configuration française) ouvre directement
+            // chaque valeur dans sa propre colonne (la virgule, elle, resterait
+            // collée dans une seule colonne).
+            $put = function (array $row = []) use ($out) {
+                fputcsv($out, $row, ';');
+            };
 
-            fputcsv($out, ['RAPPORT D\'ACTIVITÉ — AFI-DOCS']);
-            fputcsv($out, ['Période', $from->toDateString().' au '.$to->toDateString()]);
-            fputcsv($out, ['Généré le', now()->toDateTimeString()]);
-            $sep($out);
+            $put(['RAPPORT D\'ACTIVITÉ — AFI-DOCS']);
+            $put(['Période', $from->toDateString().' au '.$to->toDateString()]);
+            $put(['Généré le', now()->toDateTimeString()]);
+            $put();
 
             // --- Synthèse séparant web et mobile -----------------------------
-            fputcsv($out, ['SYNTHÈSE PAR PLATEFORME']);
-            fputcsv($out, ['Plateforme', 'Téléchargements', 'Consultations', 'Commentaires', 'Total']);
-            foreach (['web' => 'EN LIGNE (Web)', 'mobile' => 'MOBILE'] as $plat => $libelle) {
+            $put(['SYNTHÈSE PAR PLATEFORME']);
+            $put(['Plateforme', 'Téléchargements', 'Consultations', 'Commentaires', 'Total']);
+            foreach (['web' => 'En ligne (Web)', 'mobile' => 'Mobile'] as $plat => $libelle) {
                 $t = $totaux[$plat];
-                $total = $t['download'] + $t['view'] + $t['comment'];
-                fputcsv($out, [$libelle, $t['download'], $t['view'], $t['comment'], $total]);
+                $put([$libelle, $t['download'], $t['view'], $t['comment'], $t['download'] + $t['view'] + $t['comment']]);
             }
             $gt = [
                 'download' => $totaux['web']['download'] + $totaux['mobile']['download'],
                 'view' => $totaux['web']['view'] + $totaux['mobile']['view'],
                 'comment' => $totaux['web']['comment'] + $totaux['mobile']['comment'],
             ];
-            fputcsv($out, ['TOTAL GÉNÉRAL', $gt['download'], $gt['view'], $gt['comment'], $gt['download'] + $gt['view'] + $gt['comment']]);
-            $sep($out);
+            $put(['TOTAL GÉNÉRAL', $gt['download'], $gt['view'], $gt['comment'], $gt['download'] + $gt['view'] + $gt['comment']]);
+            $put();
 
             // --- Détail journalier : colonnes web puis mobile ----------------
-            fputcsv($out, ['DÉTAIL PAR JOUR']);
-            fputcsv($out, [
+            $put(['DÉTAIL PAR JOUR']);
+            $put([
                 'Date',
                 'Web — Téléch.', 'Web — Consult.', 'Web — Comment.',
                 'Mobile — Téléch.', 'Mobile — Consult.', 'Mobile — Comment.',
@@ -169,8 +173,7 @@ class ActiviteController extends Controller
                 $m = $plats['mobile'] ?? [];
                 $wv = [(int) ($w['download'] ?? 0), (int) ($w['view'] ?? 0), (int) ($w['comment'] ?? 0)];
                 $mv = [(int) ($m['download'] ?? 0), (int) ($m['view'] ?? 0), (int) ($m['comment'] ?? 0)];
-                $totalJour = array_sum($wv) + array_sum($mv);
-                fputcsv($out, array_merge([$jour], $wv, $mv, [$totalJour]));
+                $put(array_merge([$jour], $wv, $mv, [array_sum($wv) + array_sum($mv)]));
             }
 
             fclose($out);
