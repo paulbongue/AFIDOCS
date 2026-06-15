@@ -18,10 +18,16 @@ export default function AdminPublishScreen() {
   const [description, setDescription] = useState('');
   const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [loadErr, setLoadErr] = useState(false);
 
-  useEffect(() => {
-    client.get('/filieres').then(({ data }) => setFilieres(data.data || [])).catch(() => {});
-  }, []);
+  function loadFilieres() {
+    setLoadErr(false);
+    client.get('/filieres')
+      .then(({ data }) => setFilieres(data.data || []))
+      .catch(() => setLoadErr(true));
+  }
+
+  useEffect(() => { loadFilieres(); }, []);
 
   const matInfo = useMemo(() => {
     const m = {};
@@ -86,6 +92,16 @@ export default function AdminPublishScreen() {
         </Text>
         {lockedNiveau && (
           <Text style={styles.hint}>Seules les classes de niveau « {lockedNiveau} » sont sélectionnables.</Text>
+        )}
+
+        {loadErr && (
+          <View style={styles.loadErr}>
+            <Text style={styles.muted}>Impossible de charger les filières.</Text>
+            <TouchableOpacity onPress={loadFilieres}><Text style={styles.retry}>Réessayer</Text></TouchableOpacity>
+          </View>
+        )}
+        {!loadErr && filieres.length === 0 && (
+          <Text style={[styles.muted, { marginTop: 8 }]}>Chargement des filières…</Text>
         )}
 
         <View style={styles.acc}>
@@ -175,6 +191,8 @@ const styles = StyleSheet.create({
   checkMark: { color: '#fff', fontWeight: '900', fontSize: 13 },
   matTxt: { flex: 1, color: colors.text },
   muted: { color: colors.textMuted, fontSize: 13 },
+  loadErr: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
+  retry: { color: colors.red, fontWeight: '800' },
   fileBtn: { borderWidth: 1.5, borderColor: colors.navy, borderStyle: 'dashed', borderRadius: radius.sm, padding: 14, alignItems: 'center' },
   fileBtnText: { color: colors.navy, fontWeight: '700' },
   publish: { backgroundColor: colors.red, borderRadius: radius.sm, paddingVertical: 14, alignItems: 'center', marginTop: 22 },

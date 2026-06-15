@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } fr
 import { useFocusEffect } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import client from '../api/client';
+import client, { TOKEN_KEY } from '../api/client';
+import { API_URL } from '../config';
 import { useNetwork } from '../context/NetworkContext';
 import { colors, radius } from '../theme';
 
@@ -42,15 +44,18 @@ export default function AdminActivity() {
     try {
       const to = isoDay(0);
       const from = isoDay(-(nbDays - 1));
-      const res = await client.get('/admin/activity/report', {
-        params: { from, to }, responseType: 'text', transformResponse: [(d) => d],
+      const token = await AsyncStorage.getItem(TOKEN_KEY);
+      const url = `${API_URL}/admin/activity/report?from=${from}&to=${to}`;
+      const dest = `${FileSystem.documentDirectory}rapport-activite_${from}_${to}.csv`;
+      // Téléchargement natif direct (gère correctement le fichier streamé + l'auth).
+      const result = await FileSystem.downloadAsync(url, dest, {
+        headers: { Authorization: `Bearer ${token}`, Accept: 'text/csv', 'X-Platform': 'mobile' },
       });
-      const path = `${FileSystem.documentDirectory}rapport-activite_${from}_${to}.csv`;
-      await FileSystem.writeAsStringAsync(path, res.data, { encoding: FileSystem.EncodingType.UTF8 });
+      if (result.status !== 200) throw new Error('HTTP ' + result.status);
       if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(path, { mimeType: 'text/csv', dialogTitle: "Rapport d'activité AFI-DOCS" });
+        await Sharing.shareAsync(result.uri, { mimeType: 'text/csv', dialogTitle: "Rapport d'activité AFI-DOCS" });
       } else {
-        Alert.alert('Rapport enregistré', path);
+        Alert.alert('Rapport enregistré', result.uri);
       }
     } catch (e) {
       Alert.alert('Erreur', 'Génération du rapport impossible.');

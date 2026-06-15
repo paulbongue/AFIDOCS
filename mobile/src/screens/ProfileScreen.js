@@ -111,15 +111,17 @@ export default function ProfileScreen() {
           {user?.niveau && <Row label="Niveau / Classe" value={`${user.filiere?.code || ''} · ${user.niveau.nom}`} />}
         </Section>
 
-        <Section id="sync" title="Synchronisation" open={open} onToggle={toggle}>
-          <Row label="Statut réseau" value={isOnline ? '● En ligne' : '● Hors-ligne'}
-               valueColor={isOnline ? colors.success : colors.offline} />
-          <Row label="Dernière synchro" value={syncLabel} />
-          <Row label="Fichiers hors-ligne" value={String(downloaded)} />
-          <TouchableOpacity style={styles.btnRed} onPress={handleSync} disabled={syncing} activeOpacity={0.85}>
-            {syncing ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>🔄  Synchroniser maintenant</Text>}
-          </TouchableOpacity>
-        </Section>
+        {user?.role !== 'admin' && (
+          <Section id="sync" title="Synchronisation" open={open} onToggle={toggle}>
+            <Row label="Statut réseau" value={isOnline ? '● En ligne' : '● Hors-ligne'}
+                 valueColor={isOnline ? colors.success : colors.offline} />
+            <Row label="Dernière synchro" value={syncLabel} />
+            <Row label="Fichiers hors-ligne" value={String(downloaded)} />
+            <TouchableOpacity style={styles.btnRed} onPress={handleSync} disabled={syncing} activeOpacity={0.85}>
+              {syncing ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>🔄  Synchroniser maintenant</Text>}
+            </TouchableOpacity>
+          </Section>
+        )}
 
         <Section id="security" title="Sécurité — Mot de passe" open={open} onToggle={toggle}>
           <PwdField placeholder="Mot de passe actuel" value={pwd.current_password}
