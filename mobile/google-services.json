@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1055401424505",
+    "project_id": "afi-docs",
+    "storage_bucket": "afi-docs.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1055401424505:android:4381c5e1e10a68abfc86a8",
+        "android_client_info": {
+          "package_name": "sn.afi.docs"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsPoKRXoJE1QxkDEwQJJxzpHZpJkZqDuM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

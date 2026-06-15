@@ -7,6 +7,7 @@ use App\Models\PostComment;
 use App\Models\Schedule;
 use App\Models\User;
 use App\Notifications\AnnoncePubliee;
+use App\Notifications\EmploiDuTempsPublie;
 use App\Services\ExpoPushService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -235,7 +236,33 @@ class FeedController extends Controller
 
         $schedule->save();
 
+        $this->notifySchedule($user);
+
         return response()->json(['data' => $schedule], $schedule->wasRecentlyCreated ? 201 : 200);
+    }
+
+    /**
+     * Prévient tout le monde (sauf l'auteur) qu'un emploi du temps général a été
+     * publié ou mis à jour.
+     */
+    private function notifySchedule(User $author): void
+    {
+        try {
+            $recipients = User::where('id', '!=', $author->id)->get();
+            if ($recipients->isEmpty()) {
+                return;
+            }
+            $message = "L'emploi du temps général a été mis à jour.";
+            Notification::send($recipients, new EmploiDuTempsPublie('annonces', $message));
+            ExpoPushService::send(
+                $recipients->pluck('expo_push_token')->all(),
+                'Emploi du temps mis à jour',
+                $message,
+                ['link' => 'annonces']
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Notification emploi du temps echouee : '.$e->getMessage());
+        }
     }
 
     public function destroySchedule(Request $request): JsonResponse

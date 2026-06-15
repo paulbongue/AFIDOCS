@@ -6,6 +6,7 @@ use App\Models\ClassMessage;
 use App\Models\Niveau;
 use App\Models\Schedule;
 use App\Models\User;
+use App\Notifications\EmploiDuTempsPublie;
 use App\Notifications\MessageClasse;
 use App\Services\ExpoPushService;
 use Illuminate\Http\JsonResponse;
@@ -204,7 +205,36 @@ class DiscussionController extends Controller
 
         $schedule->save();
 
+        $this->notifyScheduleClass($niveau, $request->user());
+
         return response()->json(['data' => $schedule], $schedule->wasRecentlyCreated ? 201 : 200);
+    }
+
+    /**
+     * Prévient les membres de la classe (sauf l'auteur) que l'emploi du temps de
+     * la classe a été publié ou mis à jour.
+     */
+    private function notifyScheduleClass(Niveau $niveau, User $author): void
+    {
+        try {
+            $recipients = User::where('id', '!=', $author->id)
+                ->whereIn('role', [User::ROLE_ETUDIANT, User::ROLE_DELEGUE])
+                ->where('niveau_id', $niveau->id)
+                ->get();
+            if ($recipients->isEmpty()) {
+                return;
+            }
+            $message = "L'emploi du temps de la classe a été mis à jour.";
+            Notification::send($recipients, new EmploiDuTempsPublie('classe', $message));
+            ExpoPushService::send(
+                $recipients->pluck('expo_push_token')->all(),
+                'Emploi du temps de la classe',
+                $message,
+                ['niveau_id' => $niveau->id, 'link' => 'classe']
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Notification emploi classe echouee : '.$e->getMessage());
+        }
     }
 
     public function destroySchedule(Request $request, Niveau $niveau): JsonResponse

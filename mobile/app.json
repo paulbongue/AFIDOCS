@@ -22,6 +22,7 @@
     "android": {
       "package": "sn.afi.docs",
       "versionCode": 2,
+      "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -35,7 +36,19 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-sqlite"
-    ]
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "color": "#C0392B"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a58c92ab-d88b-4518-a5b8-2a736da66c48"
+      }
+    },
+    "owner": "pauldaryll"
   }
 }
