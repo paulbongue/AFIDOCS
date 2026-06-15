@@ -66,8 +66,8 @@ export default function ResourceCard({ ressource, onPress, compact = false }) {
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row', backgroundColor: colors.surface, borderRadius: radius.md,
-    padding: 13, marginHorizontal: 14, marginVertical: 5,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.md,
+    padding: 10, marginHorizontal: 14, marginVertical: 4,
     borderWidth: 1, borderColor: colors.border, ...shadow.soft,
   },
   gridCard: {
@@ -77,15 +77,15 @@ const styles = StyleSheet.create({
   gridTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   gridTitre: { fontSize: 14, fontWeight: '800', color: colors.navy },
   iconBox: {
-    width: 48, height: 48, borderRadius: 12, marginRight: 12,
+    width: 42, height: 42, borderRadius: 11, marginRight: 11,
     alignItems: 'center', justifyContent: 'center',
   },
-  iconGlyph: { color: 'rgba(255,255,255,0.9)', fontSize: 18, marginBottom: -4 },
+  iconGlyph: { color: 'rgba(255,255,255,0.9)', fontSize: 17, marginBottom: -4 },
   iconType: { color: '#fff', fontSize: 8, fontWeight: '800' },
   body: { flex: 1 },
-  titre: { fontSize: 15, fontWeight: '800', color: colors.navy },
-  meta: { fontSize: 12, color: colors.textMuted, marginTop: 3 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 6, flexWrap: 'wrap' },
+  titre: { fontSize: 15, fontWeight: '800', color: colors.navy, lineHeight: 19 },
+  meta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4, flexWrap: 'wrap' },
   sub: { fontSize: 11, color: colors.textLight },
   offline: { fontSize: 11, color: colors.success, fontWeight: '700' },
 });

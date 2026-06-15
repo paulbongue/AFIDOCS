@@ -25,6 +25,8 @@ export default function ProfileScreen() {
   const [syncing, setSyncing] = useState(false);
   const [pwd, setPwd] = useState({ current_password: '', password: '', password_confirmation: '' });
   const [pwdBusy, setPwdBusy] = useState(false);
+  const [open, setOpen] = useState('info'); // section dépliée (une à la fois)
+  const toggle = (id) => setOpen((o) => (o === id ? null : id));
 
   const refresh = useCallback(async () => {
     setLastSync(await getLastSyncAt());
@@ -102,31 +104,24 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Informations personnelles */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Informations personnelles</Text>
+        <Section id="info" title="Informations personnelles" open={open} onToggle={toggle}>
           <Row label="Nom d'utilisateur" value={user?.name} />
           <Row label="Statut" value={ROLE_LABEL[user?.role] || user?.role} />
           {user?.filiere && <Row label="Filière" value={`${user.filiere.code} — ${user.filiere.nom}`} />}
           {user?.niveau && <Row label="Niveau / Classe" value={`${user.filiere?.code || ''} · ${user.niveau.nom}`} />}
-        </View>
+        </Section>
 
-        {/* Synchronisation / hors-ligne */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Synchronisation</Text>
+        <Section id="sync" title="Synchronisation" open={open} onToggle={toggle}>
           <Row label="Statut réseau" value={isOnline ? '● En ligne' : '● Hors-ligne'}
                valueColor={isOnline ? colors.success : colors.offline} />
           <Row label="Dernière synchro" value={syncLabel} />
           <Row label="Fichiers hors-ligne" value={String(downloaded)} />
-
           <TouchableOpacity style={styles.btnRed} onPress={handleSync} disabled={syncing} activeOpacity={0.85}>
             {syncing ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>🔄  Synchroniser maintenant</Text>}
           </TouchableOpacity>
-        </View>
+        </Section>
 
-        {/* Sécurité — changement de mot de passe */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Sécurité — changer mon mot de passe</Text>
+        <Section id="security" title="Sécurité — Mot de passe" open={open} onToggle={toggle}>
           <PwdField placeholder="Mot de passe actuel" value={pwd.current_password}
                     onChangeText={(t) => setPwd({ ...pwd, current_password: t })} />
           <PwdField placeholder="Nouveau mot de passe" value={pwd.password}
@@ -136,11 +131,9 @@ export default function ProfileScreen() {
           <TouchableOpacity style={styles.btnRed} onPress={changePassword} disabled={pwdBusy} activeOpacity={0.85}>
             {pwdBusy ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>Mettre à jour</Text>}
           </TouchableOpacity>
-        </View>
+        </Section>
 
-        {/* Appareils connectés */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Appareils connectés</Text>
+        <Section id="devices" title="Appareils connectés" open={open} onToggle={toggle}>
           <Text style={styles.deviceNote}>
             Un compte peut être connecté sur 3 appareils au maximum. Au-delà, le plus ancien est
             déconnecté. Tu peux aussi déconnecter manuellement les autres.
@@ -148,7 +141,7 @@ export default function ProfileScreen() {
           <TouchableOpacity style={styles.btnOutline} onPress={logoutOtherDevices} activeOpacity={0.85}>
             <Text style={styles.btnOutlineText}>Déconnecter les autres appareils</Text>
           </TouchableOpacity>
-        </View>
+        </Section>
 
         <TouchableOpacity style={styles.btnLogout} onPress={confirmLogout}>
           <Text style={styles.btnLogoutText}>Se déconnecter</Text>
@@ -163,6 +156,21 @@ function Row({ label, value, valueColor }) {
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
       <Text style={[styles.rowValue, valueColor && { color: valueColor }]}>{value}</Text>
+    </View>
+  );
+}
+
+// Section dépliable (accordéon) — composant stable : le contenu (champs mot de
+// passe) ne se remonte pas à chaque frappe.
+function Section({ id, title, open, onToggle, children }) {
+  const isOpen = open === id;
+  return (
+    <View style={styles.section}>
+      <TouchableOpacity style={styles.sectionHead} onPress={() => onToggle(id)} activeOpacity={0.7}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <Text style={styles.sectionChev}>{isOpen ? '▾' : '▸'}</Text>
+      </TouchableOpacity>
+      {isOpen && <View style={styles.sectionBody}>{children}</View>}
     </View>
   );
 }
@@ -195,6 +203,13 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.border, ...shadow.card,
   },
   cardTitle: { fontSize: 15, fontWeight: '800', color: colors.navy, marginBottom: 6 },
+  section: { backgroundColor: colors.surface, borderRadius: radius.md, marginTop: 12,
+    borderWidth: 1, borderColor: colors.border, overflow: 'hidden', ...shadow.soft },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 14, paddingHorizontal: 16 },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: colors.navy, flex: 1 },
+  sectionChev: { fontSize: 14, color: colors.textMuted, marginLeft: 10 },
+  sectionBody: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 2 },
   input: {
     backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm,
     paddingHorizontal: 12, paddingVertical: 10, color: colors.text, fontSize: 14, marginTop: 10,

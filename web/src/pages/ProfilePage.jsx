@@ -6,6 +6,21 @@ import Badge from '../components/Badge';
 import PasswordInput from '../components/PasswordInput';
 import { ROLE_LABEL, initials } from '../theme';
 
+// Section dépliable (composant stable au niveau module : le contenu — dont les
+// champs mot de passe — ne se remonte pas à chaque frappe).
+function Section({ id, title, open, onToggle, children }) {
+  const isOpen = open === id;
+  return (
+    <div className={'collapse' + (isOpen ? ' open' : '')}>
+      <button type="button" className="collapse-head" onClick={() => onToggle(id)} aria-expanded={isOpen}>
+        <span>{title}</span>
+        <span className="collapse-chev">▾</span>
+      </button>
+      {isOpen && <div className="collapse-body">{children}</div>}
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -50,19 +65,6 @@ export default function ProfilePage() {
     navigate('/login', { replace: true });
   }
 
-  function Section({ id, title, children }) {
-    const isOpen = open === id;
-    return (
-      <div className={'collapse' + (isOpen ? ' open' : '')}>
-        <button type="button" className="collapse-head" onClick={() => toggle(id)} aria-expanded={isOpen}>
-          <span>{title}</span>
-          <span className="collapse-chev">▾</span>
-        </button>
-        {isOpen && <div className="collapse-body">{children}</div>}
-      </div>
-    );
-  }
-
   return (
     <div className="profile-wrap">
       <div className="page-title">Profil</div>
@@ -80,7 +82,7 @@ export default function ProfilePage() {
       </div>
 
       <div className="collapse-group">
-        <Section id="info" title="Informations personnelles">
+        <Section id="info" title="Informations personnelles" open={open} onToggle={toggle}>
           <div className="spread"><span className="muted">Nom d'utilisateur</span><b>{user?.name}</b></div>
           <div className="spread mt"><span className="muted">Statut</span><b>{ROLE_LABEL[user?.role] || user?.role}</b></div>
           {user?.filiere && (
@@ -91,7 +93,7 @@ export default function ProfilePage() {
           )}
         </Section>
 
-        <Section id="security" title="Sécurité — Mot de passe">
+        <Section id="security" title="Sécurité — Mot de passe" open={open} onToggle={toggle}>
           <form onSubmit={changePassword}>
             <label className="field">Mot de passe actuel</label>
             <PasswordInput value={pwd.current_password}
@@ -109,7 +111,7 @@ export default function ProfilePage() {
           </form>
         </Section>
 
-        <Section id="devices" title="Appareils connectés">
+        <Section id="devices" title="Appareils connectés" open={open} onToggle={toggle}>
           <p className="muted" style={{ marginTop: 0 }}>
             Un compte peut être connecté sur <b>3 appareils</b> au maximum. Au-delà, l'appareil le plus
             ancien est déconnecté automatiquement. Vous pouvez aussi déconnecter manuellement les autres.

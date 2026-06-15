@@ -6,6 +6,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 
 import ResourceCard from '../components/ResourceCard';
+import SkeletonRows from '../components/Skeleton';
 import OfflineBanner from '../components/OfflineBanner';
 import { useNetwork } from '../context/NetworkContext';
 import { useAuth } from '../context/AuthContext';
@@ -82,7 +83,7 @@ export default function ResourceListScreen({ navigation }) {
   }
 
   if (firstLoad) {
-    return <View style={styles.center}><ActivityIndicator size="large" color={colors.red} /></View>;
+    return <View style={styles.flex}><SkeletonRows /></View>;
   }
 
   const hasClass = !!user?.filiere_id;

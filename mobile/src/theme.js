@@ -22,10 +22,10 @@ export const colors = {
   border: '#DEE2E7',
   borderStrong: '#CBD2DA',
 
-  // Texte
+  // Texte (contrastes alignés sur le web — AA sur fond clair)
   text: '#14213D',
-  textMuted: '#5B6472',
-  textLight: '#98A2B0',
+  textMuted: '#4E5763',   // texte secondaire (~6.3:1)
+  textLight: '#5B6472',   // anciennement #98A2B0 (sous le seuil) → AA (~5.8:1)
 
   // États
   success: '#16A34A',

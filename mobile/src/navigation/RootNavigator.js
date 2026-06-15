@@ -38,7 +38,7 @@ function redHeader(navigation, { back = false } = {}) {
     headerTintColor: '#fff',
     headerShadowVisible: false,
     headerTitleAlign: 'center',
-    headerTitle: () => <Wordmark color="#fff" size={20} />,
+    headerTitle: () => <Wordmark color="#fff" size={18} />,
     headerRight: () => <HeaderAvatar navigation={navigation} />,
   };
 }
