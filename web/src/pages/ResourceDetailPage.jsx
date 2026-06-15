@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client, { recordActivity } from '../api/client';
+import Loader from '../components/Loader';
 import { useAuth } from '../context/AuthContext';
 import Badge from '../components/Badge';
 import { labelForType, formatSize, colorForFiliere, initials } from '../theme';
@@ -95,7 +96,7 @@ export default function ResourceDetailPage() {
       </div>
     );
   }
-  if (!res) return <div className="empty">Chargement…</div>;
+  if (!res) return <Loader />;
 
   const f = res.matiere?.niveau?.filiere;
   const niveau = res.matiere?.niveau;

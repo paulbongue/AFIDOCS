@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import ResourceListItem from '../../components/ResourceListItem';
 import ResourceCard from '../../components/ResourceCard';
 import ViewToggle, { useViewMode } from '../../components/ViewToggle';
+import { SkeletonRows } from '../../components/Loader';
 import { colorForFiliere } from '../../theme';
 
 export default function ResourcesPage() {
@@ -96,7 +97,7 @@ export default function ResourcesPage() {
       {/* Section recommandée (uniquement si l'utilisateur a une classe) */}
       {hasClass && (
         <div className="mt">
-          {recoLoading ? <div className="empty">Chargement…</div>
+          {recoLoading ? <SkeletonRows count={4} />
             : recos.length === 0 ? (
               <div className="empty">
                 Aucune ressource pour votre classe pour l’instant.<br />
@@ -151,7 +152,7 @@ export default function ResourcesPage() {
           })()}
 
           <div className="mt">
-            {loading ? <div className="empty">Chargement…</div>
+            {loading ? <SkeletonRows count={5} />
               : ressources.length === 0 ? <div className="empty">Aucune ressource trouvée.</div>
               : renderList(ressources)}
           </div>

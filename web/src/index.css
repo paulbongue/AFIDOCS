@@ -24,8 +24,8 @@
   --border: #DEE2E7;
   --border-strong: #CBD2DA;
   --text: #14213D;
-  --muted: #5B6472;
-  --light: #98A2B0;
+  --muted: #4E5763;          /* texte secondaire — AA sur blanc (~6.3:1) */
+  --light: #5B6472;          /* anciennement #98A2B0 (sous le seuil) — désormais AA (~5.8:1) */
   --success: #15803D;
   --success-bg: #E7F5EC;
 
@@ -34,7 +34,7 @@
   --radius-sm: 12px;
   --radius-lg: 20px;
   --sidebar-w: 264px;
-  --topbar-h: 68px;
+  --topbar-h: 56px;
   --ring: 0 0 0 3px rgba(20,33,61,.18);
   --ring-red: 0 0 0 3px rgba(192,57,43,.22);
   --sh-sm: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
@@ -75,16 +75,17 @@ h3 { font-size: 16px; font-weight: 800; }
   position: fixed; top: 0; left: 0; right: 0; z-index: 30;
   box-shadow: var(--sh-md);
 }
-.topbar .wordmark { font-weight: 900; font-size: 23px; letter-spacing: 1.5px; white-space: nowrap; }
 .topbar .right { display: flex; align-items: center; gap: 16px; }
+/* Nom de l'app, discret, à côté du logo (plus de gros titre centré redondant) */
+.brand-name { font-weight: 800; font-size: 15px; letter-spacing: .4px; color: #fff; opacity: .9; }
 
 /* ---- Logo AFI·L'UE ------------------------------------------------------- */
 .afi-badge { display: inline-flex; align-items: center; gap: 6px;
   background: var(--red-bright); color: #fff; padding: 5px 9px; border-radius: 6px;
   font-weight: 900; font-size: 14px; }
 .afi-sub { font-size: 9px; font-weight: 700; margin-top: 2px; color: var(--navy); }
-.brand-left { display: flex; align-items: center; }
-.brand-logo { height: 42px; width: auto; display: block; }
+.brand-left { display: flex; align-items: center; gap: 10px; }
+.brand-logo { height: 32px; width: auto; display: block; }
 
 /* ---- Layout (sidebar + contenu) ------------------------------------------ */
 .shell { display: flex; padding-top: var(--topbar-h); min-height: 100vh; }
@@ -101,7 +102,10 @@ h3 { font-size: 16px; font-weight: 800; }
   transition: background var(--t), color var(--t);
 }
 .nav-item:hover { background: var(--surface-2); color: var(--navy); }
-.nav-item.active { background: var(--navy); color: #fff; font-weight: 800; box-shadow: var(--sh-sm); }
+.nav-item.active { background: var(--navy); color: #fff; font-weight: 800; box-shadow: var(--sh-sm);
+  position: relative; }
+.nav-item.active::before { content: ''; position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px; border-radius: 2px; background: var(--red-bright); }
 .content { margin-left: var(--sidebar-w); flex: 1; padding: 30px 38px; max-width: 1200px; }
 
 /* ---- Cartes -------------------------------------------------------------- */
@@ -141,7 +145,7 @@ h3 { font-size: 16px; font-weight: 800; }
 /* Grille de cartes de ressources */
 .res-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
 .res-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 14px; box-shadow: var(--sh-sm); display: flex; flex-direction: column; gap: 10px;
+  padding: 12px 13px; box-shadow: var(--sh-sm); display: flex; flex-direction: column; gap: 8px;
   transition: box-shadow var(--t), transform var(--t); }
 .res-card:hover { box-shadow: var(--sh-md); transform: translateY(-2px); }
 .res-card-top { display: flex; align-items: center; justify-content: space-between; }
@@ -254,15 +258,15 @@ table.tbl tr:last-child td { border-bottom: none; }
 @media (max-width: 860px) { .peda-cols { grid-template-columns: 1fr; } }
 
 /* ---- Ressource (carte / ligne) ------------------------------------------- */
-.res-row { display: flex; gap: 14px; align-items: center; background: #fff;
-  border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px;
+.res-row { display: flex; gap: 12px; align-items: center; background: #fff;
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 8px;
   box-shadow: var(--sh-sm); transition: box-shadow var(--t), transform var(--t), border-color var(--t); }
 .res-row:hover { box-shadow: var(--sh-md); transform: translateY(-1px); border-color: var(--border-strong); }
-.res-icon { width: 46px; height: 46px; border-radius: 12px; flex: 0 0 auto;
+.res-icon { width: 42px; height: 42px; border-radius: 11px; flex: 0 0 auto;
   display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 11px;
   box-shadow: inset 0 -2px 6px rgba(0,0,0,.12); }
-.res-title { font-weight: 800; color: var(--navy); }
-.res-meta { font-size: 13px; color: var(--muted); margin-top: 3px; }
+.res-title { font-weight: 800; color: var(--navy); line-height: 1.25; }
+.res-meta { font-size: 12.5px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
 .breadcrumb { color: var(--red); font-weight: 700; font-size: 14px; margin-bottom: 16px; }
 .breadcrumb .sep { color: var(--light); }
 
@@ -274,6 +278,22 @@ table.tbl tr:last-child td { border-bottom: none; }
 .mt { margin-top: 18px; }
 .empty { color: var(--muted); padding: 40px 20px; text-align: center; background: var(--surface);
   border: 1px dashed var(--border-strong); border-radius: var(--radius); }
+
+/* ---- Chargement : spinner + skeleton ------------------------------------- */
+.loader { display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; padding: 48px 20px; color: var(--muted); font-size: 14px; }
+.spinner { width: 34px; height: 34px; border-radius: 50%;
+  border: 3px solid var(--border); border-top-color: var(--red); animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.skel { position: relative; overflow: hidden; background: var(--surface-2); border-radius: 8px; }
+.skel::after { content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.7), transparent);
+  transform: translateX(-100%); animation: shimmer 1.3s infinite; }
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+.skel-row { display: flex; gap: 12px; align-items: center; background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px 14px; margin-bottom: 8px; }
+.skel-icon { width: 42px; height: 42px; border-radius: 11px; flex: 0 0 auto; }
+.skel-line { height: 12px; }
 .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--navy); color: #fff;
   display: inline-flex; align-items: center; justify-content: center; font-weight: 800; }
 .offline-pill { background: var(--success); }
@@ -357,11 +377,11 @@ table.tbl tr:last-child td { border-bottom: none; }
 
 /* ---- Responsive : tablette & mobile -------------------------------------- */
 @media (max-width: 860px) {
-  :root { --topbar-h: 60px; }
+  :root { --topbar-h: 52px; }
   .topbar { padding: 0 12px; }
-  .topbar .wordmark { font-size: 18px; letter-spacing: 1px; }
-  .brand-left { gap: 10px; }
-  .brand-logo { height: 32px; }
+  .brand-left { gap: 8px; }
+  .brand-logo { height: 28px; }
+  .brand-name { font-size: 14px; }
   .topbar .right { gap: 10px; }
 
   .menu-btn { display: inline-flex; }
@@ -400,7 +420,7 @@ table.tbl tr:last-child td { border-bottom: none; }
 
 @media (max-width: 600px) {
   .topbar .right > span { display: none; }   /* masque le nom à côté de l'avatar */
-  .topbar .wordmark { display: none; }       /* le logo suffit ; évite tout chevauchement */
+  .brand-name { display: none; }             /* le logo suffit ; évite tout chevauchement */
   .stats-row { grid-template-columns: 1fr; }
   .content { padding: 14px 12px; }
   .login-card { padding: 24px; }

@@ -19,9 +19,8 @@ export default function Topbar({ profilePath, onMenu, menuOpen }) {
           </button>
         )}
         <img src="/logo-afi.png" alt="AFI-L'UE" className="brand-logo" />
+        <span className="brand-name">AFI-DOCS</span>
       </div>
-
-      <div className="wordmark">AFI-DOCS</div>
 
       <div className="right">
         <NotificationBell />

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { initials, colorForFiliere } from '../theme';
 import { IconPin } from '../components/Icons';
 import SchedulePreview from '../components/SchedulePreview';
+import Loader from '../components/Loader';
 
 // Espace commun (interfilière) : annonces des admins/délégués + commentaires.
 export default function FeedPage() {
@@ -69,7 +70,7 @@ export default function FeedPage() {
       </div>
     );
   }
-  if (!data) return <div className="empty">Chargement…</div>;
+  if (!data) return <Loader />;
   const { posts, schedule, can_post, is_admin, ttl_days } = data;
 
   function pickImage(e) {

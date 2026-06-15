@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { initials } from '../theme';
 import { IconPin, IconUsers } from '../components/Icons';
 import SchedulePreview from '../components/SchedulePreview';
+import Loader from '../components/Loader';
 
 // Espace de discussion de la classe de l'utilisateur (son niveau).
 export default function ClassDiscussionPage() {
@@ -63,7 +64,7 @@ export default function ClassDiscussionPage() {
       </div>
     );
   }
-  if (!data) return <div className="empty">Chargement…</div>;
+  if (!data) return <Loader />;
 
   const { schedule, messages, is_moderator, classe, ttl_days, members = [], members_count = 0 } = data;
 
