@@ -137,4 +137,19 @@ export default function PedagogiePage() {
           {!selN ? <div className="muted">Sélectionnez un niveau.</div> : (
             <>
               {matieres.map((m) => (
-                <div key={m.id} className="nav-item" style={{ justifyContent: 's
+                <div key={m.id} className="nav-item" style={{ justifyContent: 'space-between', cursor: 'default' }}>
+                  <span>{m.nom}</span>
+                  <span onClick={() => delMatiere(m.id)} style={{ color: 'var(--red)', cursor: 'pointer' }}>✕</span>
+                </div>
+              ))}
+              <form className="row mt" onSubmit={addMatiere}>
+                <input className="input" placeholder="Nom de la matière" value={newM} onChange={(e) => setNewM(e.target.value)} />
+                <button className="btn btn-red">+</button>
+              </form>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

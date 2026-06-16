@@ -145,4 +145,51 @@ class UserController extends Controller
 
         foreach ($candidates as $stem) {
             $email = $stem.'@afi.sn';
-            if (! User::where('email', $email)->exists(
+            if (! User::where('email', $email)->exists()) {
+                return $email;
+            }
+        }
+
+        // Sinon, suffixe numerique sur le candidat le plus precis.
+        $stem = end($candidates);
+        $i = 2;
+        do {
+            $email = $stem.$i.'@afi.sn';
+            $i++;
+        } while (User::where('email', $email)->exists());
+
+        return $email;
+    }
+
+    public function update(Request $request, User $user): JsonResponse
+    {
+        $data = $request->validate([
+            'name' => ['sometimes', 'string', 'max:255'],
+            'email' => ['sometimes', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+            'password' => ['nullable', 'string', 'min:6'],
+            'role' => ['sometimes', Rule::in([User::ROLE_ADMIN, User::ROLE_DELEGUE, User::ROLE_ETUDIANT])],
+            'filiere_id' => ['nullable', 'integer', 'exists:filieres,id'],
+            'niveau_id' => ['nullable', 'integer', 'exists:niveaux,id'],
+        ]);
+
+        if (empty($data['password'])) {
+            unset($data['password']);
+        }
+
+        // La filiere suit la classe (niveau) lorsqu'elle est fournie.
+        if (! empty($data['niveau_id'])) {
+            $data['filiere_id'] = Niveau::findOrFail($data['niveau_id'])->filiere_id;
+        }
+
+        $user->update($data);
+
+        return response()->json(['data' => $user->load('filiere', 'niveau')]);
+    }
+
+    public function destroy(User $user): JsonResponse
+    {
+        $user->delete();
+
+        return response()->json(['message' => 'Utilisateur supprime.']);
+    }
+}

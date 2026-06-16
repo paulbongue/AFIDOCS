@@ -286,4 +286,21 @@ export default function UsersPage() {
               <td>{u.email}</td>
               <td>{ROLE_LABEL[u.role] || u.role}</td>
               <td>
-                {
+                {u.filiere ? <Badge code={u.filiere.code} couleur={u.filiere.couleur} /> : '—'}
+                {u.niveau ? ` · ${u.niveau.nom}` : ''}
+              </td>
+              <td>
+                <div className="row" style={{ gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                  <button className="btn btn-ghost" onClick={() => startEdit(u)}>Modifier</button>
+                  <button className="btn btn-danger" onClick={() => remove(u.id)}>Supprimer</button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <Pagination {...pg} />
+    </div>
+  );
+}

@@ -40,4 +40,18 @@ export default function ExchangesScreen({ route }) {
 
       {tab === 'classe' && canClass
         ? <ClassDiscussion focusMsg={focusMsg} focusTs={ts} />
-        : <Feed focusPost={focusPost} focusTs={t
+        : <Feed focusPost={focusPost} focusTs={ts} />}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1, backgroundColor: colors.background },
+  toggle: { flexDirection: 'row', gap: 8, padding: 12, backgroundColor: colors.surface,
+    borderBottomWidth: 1, borderBottomColor: colors.border },
+  tBtn: { flex: 1, paddingVertical: 9, borderRadius: 20, alignItems: 'center',
+    borderWidth: 1, borderColor: colors.border },
+  tOn: { backgroundColor: colors.red, borderColor: colors.red },
+  tText: { fontWeight: '800', color: colors.textMuted, fontSize: 13 },
+  tTextOn: { color: '#fff' },
+});

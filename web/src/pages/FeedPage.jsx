@@ -243,4 +243,30 @@ export default function FeedPage() {
               {p.filieres.map((f) => (
                 <span key={f.id} className="tgt-chip on" style={{ background: f.couleur || colorForFiliere(f.code) }}>{f.code}</span>
               ))}
-              {p.target_niveau && <span className="tgt-chip on" 
+              {p.target_niveau && <span className="tgt-chip on" style={{ background: 'var(--navy)' }}>{p.target_niveau.nom}</span>}
+            </div>
+          )}
+
+          {p.contenu && <p style={{ marginTop: 10, whiteSpace: 'pre-wrap' }}>{p.contenu}</p>}
+          {p.image_url && <div className="post-img"><img src={p.image_url} alt="publication" /></div>}
+
+          <div className="post-comments">
+            {(p.commentaires || []).map((c) => (
+              <div key={c.id} className="post-comment">
+                <span className="avatar sm">{initials(c.auteur?.name)}</span>
+                <div className="pc-body"><b>{c.auteur?.name}</b> <span>{c.contenu}</span></div>
+                {(is_admin || c.user_id === user.id) && <button className="pc-del" title="Supprimer" onClick={() => removeComment(c.id)}>×</button>}
+              </div>
+            ))}
+            <div className="row mt" style={{ gap: 8 }}>
+              <input className="input" placeholder="Commenter…" value={commentText[p.id] || ''}
+                     onChange={(e) => setCommentText((s) => ({ ...s, [p.id]: e.target.value }))}
+                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); sendComment(p.id); } }} />
+              <button className="btn btn-ghost" onClick={() => sendComment(p.id)}>Envoyer</button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}

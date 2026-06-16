@@ -214,4 +214,25 @@ export default function ResourceDetailPage() {
 
       <div className="mt">
         {(res.commentaires || []).map((c) => (
-   
+          <div key={c.id} className="card" style={{ marginBottom: 10 }}>
+            <div className="spread">
+              <div className="row">
+                <span className="avatar">{initials(c.auteur?.name)}</span>
+                <div>
+                  <b>{c.auteur?.name}</b>
+                  <div>{c.contenu}</div>
+                </div>
+              </div>
+              {(user?.role === 'admin' || c.user_id === user?.id) && (
+                <button className="btn btn-ghost" onClick={() => deleteComment(c.id)}>Supprimer</button>
+              )}
+            </div>
+          </div>
+        ))}
+        {(!res.commentaires || res.commentaires.length === 0) && (
+          <div className="muted">Aucun commentaire pour le moment.</div>
+        )}
+      </div>
+    </div>
+  );
+}

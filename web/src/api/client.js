@@ -12,4 +12,14 @@ const client = axios.create({
 
 // Enregistre une action (consultation/aperçu ou téléchargement) sans bloquer l'UI.
 export function recordActivity(type, ressourceId) {
-  client.post('/activ
+  client.post('/activites', { type, ressource_id: ressourceId }).catch(() => {});
+}
+
+// Injecte le token Sanctum stocké dans le localStorage.
+client.interceptors.request.use((config) => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+export default client;

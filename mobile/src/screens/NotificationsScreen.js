@@ -103,4 +103,19 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   grow: { flexGrow: 1 },
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16 },
-  title: { fontSize: 20, fontW
+  title: { fontSize: 20, fontWeight: '900', color: colors.navy },
+  link: { color: colors.red, fontWeight: '700' },
+  item: {
+    flexDirection: 'row', gap: 10, alignItems: 'flex-start',
+    backgroundColor: colors.surface, borderRadius: radius.md, padding: 14,
+    marginHorizontal: 14, marginVertical: 5, borderWidth: 1, borderColor: colors.border,
+  },
+  unread: { backgroundColor: '#FCEEEA', borderColor: '#F1C9BD' },
+  dot: { color: colors.red, fontSize: 12, width: 12 },
+  del: { color: colors.textLight, fontSize: 16, paddingHorizontal: 4, paddingTop: 2 },
+  msg: { color: colors.navy, fontWeight: '700', fontSize: 14 },
+  sub: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
+  emptyIcon: { fontSize: 44, marginBottom: 10 },
+  emptyText: { color: colors.textMuted },
+});

@@ -358,4 +358,22 @@ const styles = StyleSheet.create({
   editActions: { flexDirection: 'row', gap: 10, marginTop: 14, alignItems: 'center' },
   cancelBtn: { paddingVertical: 12, paddingHorizontal: 16 },
   cancelText: { color: colors.textMuted, fontWeight: '700' },
-  section: { fontSize: 16, fontWeight: '800', color: colors.navy, marginTop: 26, m
+  section: { fontSize: 16, fontWeight: '800', color: colors.navy, marginTop: 26, marginBottom: 12 },
+  commentBox: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  commentInput: {
+    flex: 1, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
+    borderRadius: radius.sm, paddingHorizontal: 12, paddingVertical: 10, color: colors.text, minHeight: 44,
+  },
+  send: { backgroundColor: colors.red, borderRadius: radius.sm, paddingHorizontal: 16, paddingVertical: 12 },
+  sendText: { color: '#fff', fontWeight: '800' },
+  disabled: { opacity: 0.5 },
+  comment: {
+    flexDirection: 'row', gap: 10, backgroundColor: colors.surface, borderRadius: radius.md,
+    padding: 12, marginTop: 10, borderWidth: 1, borderColor: colors.border,
+  },
+  commentBody: { flex: 1 },
+  commentAuthor: { fontWeight: '800', color: colors.navy, fontSize: 13 },
+  commentText: { color: colors.text, marginTop: 3, lineHeight: 20 },
+  commentDelete: { color: colors.red, fontWeight: '700', fontSize: 12, marginTop: 6 },
+  noComment: { color: colors.textMuted, marginTop: 10, fontStyle: 'italic' },
+});

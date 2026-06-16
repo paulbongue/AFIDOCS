@@ -25,4 +25,30 @@
       "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
-        "foregro
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#14213D"
+      },
+      "permissions": [
+        "INTERNET"
+      ]
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "color": "#C0392B"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a58c92ab-d88b-4518-a5b8-2a736da66c48"
+      }
+    },
+    "owner": "pauldaryll"
+  }
+}

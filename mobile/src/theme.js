@@ -93,3 +93,10 @@ export const shadow = {
     elevation: 2,
   },
   soft: {
+    shadowColor: '#101828',
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+  },
+};

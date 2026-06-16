@@ -96,4 +96,8 @@ export default function PublishPage() {
         {msg && (
           <div style={{ marginTop: 12, color: msg.type === 'ok' ? 'var(--success)' : 'var(--red)' }}>{msg.text}</div>
         )}
-        <button className="btn btn-red mt" disable
+        <button className="btn btn-red mt" disabled={busy}>{busy ? 'Publication…' : 'Publier'}</button>
+      </form>
+    </div>
+  );
+}

@@ -218,4 +218,14 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, gap: 12 },
   rowLabel: { color: colors.textMuted, fontSize: 14 },
-  rowValue: { color: colors.text, fontSize: 14, fontWeight: '600', flexShrink: 
+  rowValue: { color: colors.text, fontSize: 14, fontWeight: '600', flexShrink: 1, textAlign: 'right' },
+  btnRed: { backgroundColor: colors.red, borderRadius: radius.sm, paddingVertical: 13, alignItems: 'center', marginTop: 14 },
+  btnRedText: { color: '#fff', fontWeight: '800', fontSize: 15 },
+  btnOutline: { borderWidth: 1.5, borderColor: colors.navy, borderRadius: radius.sm, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
+  btnOutlineText: { color: colors.navy, fontWeight: '700', fontSize: 14 },
+  deviceNote: { color: colors.textMuted, fontSize: 13, lineHeight: 19, marginTop: 4 },
+  pwdWrap: { position: 'relative', marginTop: 10 },
+  pwdEye: { position: 'absolute', right: 4, top: 0, bottom: 0, justifyContent: 'center', paddingHorizontal: 10 },
+  btnLogout: { paddingVertical: 16, alignItems: 'center', marginTop: 8 },
+  btnLogoutText: { color: colors.red, fontWeight: '800', fontSize: 15 },
+});

@@ -183,4 +183,24 @@ function MainTabs() {
       />
       <Tab.Screen
         name="Profil"
-        com
+        component={ProfileScreen}
+        options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="👤" color={color} focused={focused} /> }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+export default function RootNavigator() {
+  const { user } = useAuth();
+
+  return user ? <MainTabs /> : (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+    </Stack.Navigator>
+  );
+}
+
+const styles = StyleSheet.create({
+  tabIcon: { width: 44, height: 30, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  tabIconActive: { backgroundColor: colors.salmon },
+});

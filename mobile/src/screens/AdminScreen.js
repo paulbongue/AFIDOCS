@@ -75,4 +75,6 @@ const styles = StyleSheet.create({
   },
   rIcon: { fontSize: 22 },
   rLabel: { fontSize: 15, fontWeight: '800', color: colors.navy },
-  rSub: { fontSize: 12, color: colors.te
+  rSub: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  rChevron: { fontSize: 22, color: colors.textLight },
+});
