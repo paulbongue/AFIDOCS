@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { initials } from '../theme';
 import { IconPin, IconUsers } from '../components/Icons';
 import SchedulePreview from '../components/SchedulePreview';
+import FilePicker from '../components/FilePicker';
 import Loader from '../components/Loader';
 
 // Espace de discussion de la classe de l'utilisateur (son niveau).
@@ -154,7 +155,7 @@ export default function ClassDiscussionPage() {
         {is_moderator && (
           <form className="pinned-edit" onSubmit={saveSchedule}>
             <input className="input" placeholder="Titre (optionnel)" value={schedTitre} onChange={(e) => setSchedTitre(e.target.value)} />
-            <input className="input" type="file" onChange={(e) => setSchedFile(e.target.files?.[0] || null)} />
+            <FilePicker file={schedFile} onChange={setSchedFile} hint="PDF, image, document…" />
             <div className="row" style={{ gap: 8 }}>
               <button className="btn btn-navy" disabled={schedBusy}>{schedBusy ? '…' : (schedule ? 'Mettre à jour' : 'Publier')}</button>
               {schedule && <button type="button" className="btn btn-ghost" onClick={removeSchedule}>Supprimer</button>}

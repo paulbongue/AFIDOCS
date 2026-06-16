@@ -3,8 +3,9 @@ import { useSearchParams } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { initials, colorForFiliere } from '../theme';
-import { IconPin } from '../components/Icons';
+import { IconPin, IconUpload } from '../components/Icons';
 import SchedulePreview from '../components/SchedulePreview';
+import FilePicker from '../components/FilePicker';
 import Loader from '../components/Loader';
 
 // Espace commun (interfilière) : annonces des admins/délégués + commentaires.
@@ -154,7 +155,10 @@ export default function FeedPage() {
 
   return (
     <div className="disc-wrap">
-      <div className="page-title">Annonces</div>
+      <div className="page-head">
+        <h1 className="page-title">Annonces</h1>
+        <p className="page-sub">Communiquez avec les étudiants et délégués.</p>
+      </div>
 
       {/* Emploi du temps général — épinglé */}
       <div className="pinned">
@@ -171,7 +175,7 @@ export default function FeedPage() {
         {is_admin && (
           <form className="pinned-edit" onSubmit={saveSchedule}>
             <input className="input" placeholder="Titre (optionnel)" value={schedTitre} onChange={(e) => setSchedTitre(e.target.value)} />
-            <input className="input" type="file" onChange={(e) => setSchedFile(e.target.files?.[0] || null)} />
+            <FilePicker file={schedFile} onChange={setSchedFile} hint="PDF, image, document…" />
             <div className="row" style={{ gap: 8 }}>
               <button className="btn btn-navy" disabled={schedBusy}>{schedBusy ? '…' : (schedule ? 'Mettre à jour' : 'Publier')}</button>
               {schedule && <button type="button" className="btn btn-ghost" onClick={removeSchedule}>Supprimer</button>}
@@ -182,6 +186,7 @@ export default function FeedPage() {
 
       {/* Composer (admin + délégué uniquement) */}
       {can_post && (
+        <div className="annonces-grid">
         <form className="card mt post-composer" onSubmit={submitPost}>
           <textarea className="input" rows={3} placeholder="Partager une information…" value={text} onChange={(e) => setText(e.target.value)} />
           {preview && (
@@ -211,12 +216,22 @@ export default function FeedPage() {
           )}
           <div className="row mt" style={{ gap: 8, alignItems: 'center' }}>
             <label className="btn btn-ghost" style={{ cursor: 'pointer' }}>
-              📷 Photo<input type="file" accept="image/*" hidden onChange={pickImage} />
+              <IconUpload size={16} /> Ajouter une photo<input type="file" accept="image/*" hidden onChange={pickImage} />
             </label>
             <button className="btn btn-red" disabled={posting}>{posting ? 'Publication…' : 'Publier'}</button>
           </div>
           {postErr && <div style={{ color: 'var(--red)', marginTop: 10 }}>{postErr}</div>}
         </form>
+        <aside className="tips-card">
+          <h3>Conseils de publication</h3>
+          <ul className="tips-list">
+            <li>Soyez clair et concis.</li>
+            <li>Ciblez les filières concernées.</li>
+            <li>Joignez une image si nécessaire.</li>
+            <li>Les annonces expirent après {ttl_days} jours.</li>
+          </ul>
+        </aside>
+        </div>
       )}
 
       <div className="muted" style={{ margin: '14px 0 8px' }}>Les publications disparaissent après {ttl_days} jours.</div>

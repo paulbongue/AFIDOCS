@@ -6,6 +6,7 @@ import ResourceListItem from '../../components/ResourceListItem';
 import ResourceCard from '../../components/ResourceCard';
 import ViewToggle, { useViewMode } from '../../components/ViewToggle';
 import { SkeletonRows } from '../../components/Loader';
+import { IconSearch } from '../../components/Icons';
 import { colorForFiliere } from '../../theme';
 
 export default function ResourcesPage() {
@@ -83,7 +84,7 @@ export default function ResourcesPage() {
           <ViewToggle value={view} onChange={setView} />
           {hasClass && (
             <button className={'btn ' + (browse ? 'btn-ghost' : 'btn-red')} onClick={() => setBrowse((b) => !b)}>
-              {browse ? '← Revenir à ma classe' : '🔎 Rechercher d’autres ressources'}
+              {browse ? '← Revenir à ma classe' : <><IconSearch size={16} /> Rechercher d’autres ressources</>}
             </button>
           )}
         </div>
@@ -111,8 +112,11 @@ export default function ResourcesPage() {
       {(browse || !hasClass) && (
         <div className="card mt">
           <h3>Explorer toutes les ressources</h3>
-          <input className="input mt" style={{ maxWidth: 420 }} value={search}
-                 onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher une ressource…" />
+          <div className="search-premium mt">
+            <IconSearch size={18} />
+            <input value={search} onChange={(e) => setSearch(e.target.value)}
+                   placeholder="Rechercher une ressource, un auteur, une matière…" />
+          </div>
 
           <div className="row mt" style={{ flexWrap: 'wrap', gap: 8 }}>
             <button className={'btn ' + (!active ? 'btn-red' : 'btn-ghost')}

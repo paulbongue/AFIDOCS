@@ -315,6 +315,25 @@ table.tbl tr:last-child td { border-bottom: none; }
 .page-head { margin-bottom: 22px; }
 .page-head .page-title { margin-bottom: 4px; }
 .page-sub { color: var(--muted); font-size: 15px; margin: 0; }
+
+/* Annonces : 2 colonnes (composer + carte conseils) */
+.annonces-grid { display: grid; grid-template-columns: 1fr 300px; gap: 16px; align-items: start; }
+.annonces-grid .post-composer { margin-top: 0; }
+.tips-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 18px 20px; box-shadow: var(--sh-sm); }
+.tips-card h3 { margin-bottom: 12px; }
+.tips-list { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; line-height: 1.9; }
+@media (max-width: 900px) { .annonces-grid { grid-template-columns: 1fr; } }
+
+/* Recherche premium (champ arrondi + loupe) */
+.search-premium { display: flex; align-items: center; gap: 10px; background: var(--surface);
+  border: 1px solid var(--border-strong); border-radius: 999px; padding: 4px 18px;
+  transition: border-color var(--t), box-shadow var(--t); }
+.search-premium svg { color: var(--muted); flex: 0 0 auto; }
+.search-premium input { flex: 1; border: none; outline: none; background: none; padding: 11px 0;
+  font-size: 15px; color: var(--text); font-family: inherit; }
+.search-premium input::placeholder { color: var(--light); }
+.search-premium:focus-within { border-color: var(--navy); box-shadow: var(--ring); }
 .muted { color: var(--muted); }
 .row { display: flex; gap: 12px; align-items: center; }
 .spread { display: flex; justify-content: space-between; align-items: center; }

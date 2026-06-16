@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client, { recordActivity } from '../api/client';
 import Loader from '../components/Loader';
+import FilePicker from '../components/FilePicker';
 import { useAuth } from '../context/AuthContext';
 import Badge from '../components/Badge';
 import { labelForType, formatSize, colorForFiliere, initials } from '../theme';
@@ -169,7 +170,7 @@ export default function ResourceDetailPage() {
           <textarea className="input" rows={3} value={eDesc} onChange={(e) => setEDesc(e.target.value)} />
 
           <label className="field">Remplacer le fichier (optionnel)</label>
-          <input className="input" type="file" onChange={(e) => setEFile(e.target.files?.[0] || null)} />
+          <FilePicker file={eFile} onChange={setEFile} hint="Remplacer le fichier (optionnel)" />
           <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
             Laisse vide pour conserver le fichier actuel.
           </div>
