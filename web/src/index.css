@@ -91,6 +91,16 @@ h3 { font-size: 16px; font-weight: 800; }
 /* Nom de l'app, discret, à côté du logo (plus de gros titre centré redondant) */
 .brand-name { font-weight: 800; font-size: 15px; letter-spacing: .4px; color: #fff; opacity: .9; }
 
+/* Chip utilisateur (header) : avatar + nom + badge rôle */
+.user-chip { display: inline-flex; align-items: center; gap: 10px; border: none;
+  background: rgba(255,255,255,.12); padding: 5px 12px 5px 5px; border-radius: 999px;
+  color: #fff; transition: background var(--t); }
+.user-chip:hover { background: rgba(255,255,255,.22); }
+.user-chip-av { width: 32px; height: 32px; background: var(--navy); color: #fff; font-size: 13px; }
+.user-chip-name { font-size: 14px; font-weight: 700; color: #fff; }
+.user-chip-role { font-size: 10px; font-weight: 900; letter-spacing: .5px; color: #fff;
+  background: rgba(0,0,0,.18); padding: 3px 7px; border-radius: 999px; }
+
 /* ---- Logo AFI·L'UE ------------------------------------------------------- */
 .afi-badge { display: inline-flex; align-items: center; gap: 6px;
   background: var(--red-bright); color: #fff; padding: 5px 9px; border-radius: 6px;
@@ -114,8 +124,12 @@ h3 { font-size: 16px; font-weight: 800; }
   transition: background var(--t), color var(--t);
 }
 .nav-item:hover { background: var(--surface-2); color: var(--navy); }
-.nav-item.active { background: var(--navy); color: #fff; font-weight: 800; box-shadow: var(--sh-sm); }
+.nav-item.active { background: var(--navy); color: #fff; font-weight: 800; box-shadow: var(--sh-sm);
+  position: relative; }
 .nav-item.active:hover { background: var(--navy); color: #fff; }
+/* Notre signature : trait vertical rouge à gauche de la section active */
+.nav-item.active::before { content: ''; position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px; border-radius: 2px; background: var(--red); }
 .content { margin-left: var(--sidebar-w); flex: 1; padding: 30px 38px; max-width: 1200px; }
 
 /* ---- Cartes -------------------------------------------------------------- */
@@ -145,6 +159,20 @@ h3 { font-size: 16px; font-weight: 800; }
 .tone-orange { background: var(--notif); }
 .tone-purple { background: var(--pdf); }
 .tone-teal { background: var(--image); }
+
+/* Pastille d'icône PÂLE (fond doux + icône colorée) — façon v2026 */
+.stat-ico.soft { color: var(--navy); box-shadow: none; }
+.stat-ico.soft.tone-navy { background: #E7EBF3; color: var(--navy); }
+.stat-ico.soft.tone-red { background: var(--accent-soft); color: var(--red); }
+.stat-ico.soft.tone-blue { background: #E7E9FB; color: var(--docx); }
+.stat-ico.soft.tone-green { background: var(--success-bg); color: var(--download); }
+.stat-ico.soft.tone-orange { background: #FDEBDD; color: var(--notif); }
+.stat-ico.soft.tone-purple { background: #F0E8FC; color: var(--pdf); }
+.stat-ico.soft.tone-teal { background: #E0F2F5; color: var(--image); }
+
+/* Tendance (ex. "+12%") affichée à droite d'une carte stat */
+.stat-trend { margin-left: auto; align-self: flex-start; font-size: 12px; font-weight: 800;
+  color: var(--success); background: var(--success-bg); padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
 
 /* Bascule d'affichage liste / grille */
 .view-toggle { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 999px;
@@ -283,7 +311,10 @@ table.tbl tr:last-child td { border-bottom: none; }
 .breadcrumb .sep { color: var(--light); }
 
 /* ---- Divers -------------------------------------------------------------- */
-.page-title { font-size: 26px; font-weight: 900; letter-spacing: -.02em; margin-bottom: 20px; color: var(--navy); }
+.page-title { font-size: 30px; font-weight: 900; letter-spacing: -.02em; margin-bottom: 20px; color: var(--navy); }
+.page-head { margin-bottom: 22px; }
+.page-head .page-title { margin-bottom: 4px; }
+.page-sub { color: var(--muted); font-size: 15px; margin: 0; }
 .muted { color: var(--muted); }
 .row { display: flex; gap: 12px; align-items: center; }
 .spread { display: flex; justify-content: space-between; align-items: center; }

@@ -21,7 +21,10 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="page-title">Tableau de bord — Administration</div>
+      <div className="page-head">
+        <h1 className="page-title">Tableau de bord</h1>
+        <p className="page-sub">Vue d'ensemble de l'activité de la plateforme — Administration</p>
+      </div>
 
       <div className="quick">
         <div className="quick-title">Actions rapides</div>
@@ -47,9 +50,9 @@ export default function DashboardPage() {
       </div>
 
       <div className="stats-row" style={{ marginTop: 16 }}>
-        <StatCard icon={IconBook} value={t.ressources} label="Ressources" tone="navy" />
-        <StatCard icon={IconUsers} value={t.utilisateurs} label="Utilisateurs" tone="blue" />
-        <StatCard icon={IconBell} value={t.commentaires} label="Commentaires" tone="orange" />
+        <StatCard icon={IconBook} value={t.ressources} label="Ressources" tone="red" />
+        <StatCard icon={IconUsers} value={t.utilisateurs} label="Utilisateurs" tone="orange" />
+        <StatCard icon={IconBell} value={t.commentaires} label="Commentaires" tone="blue" />
         <StatCard icon={IconCap} value={t.filieres} label="Filières" tone="green" />
       </div>
 

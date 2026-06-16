@@ -3,8 +3,8 @@ import { colorForFiliere, labelForType, formatSize } from '../theme';
 
 // Couleurs par type de fichier (badge coloré façon maquette).
 const TYPE_COLORS = {
-  pdf: '#C0392B', docx: '#2D6CDF', pptx: '#E07B39', xlsx: '#1E8E5A',
-  image: '#7C3AED', video: '#0E7490', autre: '#64748B',
+  pdf: '#C9302D', docx: '#2D6CDF', pptx: '#F3680F', xlsx: '#23A136',
+  image: '#8047E1', video: '#0891B2', autre: '#64748B',
 };
 
 // Ligne de ressource (liste) façon AFI-DOCS.

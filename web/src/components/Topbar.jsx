@@ -4,10 +4,13 @@ import { useAuth } from '../context/AuthContext';
 import { initials } from '../theme';
 import NotificationBell from './NotificationBell';
 
-// Barre supérieure rouge : menu hamburger (mobile) + logo + wordmark + avatar.
+const ROLE_LABEL = { admin: 'ADMIN', delegue: 'DÉLÉGUÉ', etudiant: 'ÉTUDIANT' };
+
+// Barre supérieure rouge : menu hamburger (mobile) + logo + wordmark + chip utilisateur.
 export default function Topbar({ profilePath, onMenu, menuOpen }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const role = ROLE_LABEL[user?.role];
 
   return (
     <header className="topbar">
@@ -24,15 +27,10 @@ export default function Topbar({ profilePath, onMenu, menuOpen }) {
 
       <div className="right">
         <NotificationBell />
-        <span style={{ fontSize: 14 }}>{user?.name}</span>
-        <button
-          onClick={() => navigate(profilePath)}
-          title="Mon profil"
-          style={{ border: 'none', background: 'transparent', padding: 0 }}
-        >
-          <span className="avatar" style={{ background: '#fff', color: 'var(--navy)' }}>
-            {initials(user?.name)}
-          </span>
+        <button className="user-chip" onClick={() => navigate(profilePath)} title="Mon profil">
+          <span className="avatar user-chip-av">{initials(user?.name)}</span>
+          <span className="user-chip-name">{user?.name}</span>
+          {role && <span className="user-chip-role">{role}</span>}
         </button>
       </div>
     </header>
