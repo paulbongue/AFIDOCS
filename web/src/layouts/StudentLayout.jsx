@@ -24,12 +24,4 @@ export default function StudentLayout() {
 
       {user?.filiere && (
         <>
-          <div className="group-title">MA FILIÈRE</div>
-          <div className="nav-item" style={{ cursor: 'default' }}>
-            <IconCap /><span>{user.filiere.code}{user.niveau ? ` · ${user.niveau.nom}` : ''}</span>
-          </div>
-        </>
-      )}
-    </DashboardShell>
-  );
-}
+          <

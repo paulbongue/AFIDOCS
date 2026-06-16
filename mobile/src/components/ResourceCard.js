@@ -55,37 +55,4 @@ export default function ResourceCard({ ressource, onPress, compact = false }) {
             <Text style={styles.sub}>{formatSize(ressource.taille_fichier)}</Text>
           )}
           {ressource.commentaires_count > 0 && (
-            <Text style={styles.sub}>💬 {ressource.commentaires_count}</Text>
-          )}
-          {isOffline && <Text style={styles.offline}>● hors-ligne</Text>}
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.md,
-    padding: 10, marginHorizontal: 14, marginVertical: 4,
-    borderWidth: 1, borderColor: colors.border, ...shadow.soft,
-  },
-  gridCard: {
-    flex: 1, backgroundColor: colors.surface, borderRadius: radius.md,
-    padding: 12, margin: 6, borderWidth: 1, borderColor: colors.border, ...shadow.soft,
-  },
-  gridTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  gridTitre: { fontSize: 14, fontWeight: '800', color: colors.navy },
-  iconBox: {
-    width: 42, height: 42, borderRadius: 11, marginRight: 11,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  iconGlyph: { color: 'rgba(255,255,255,0.9)', fontSize: 17, marginBottom: -4 },
-  iconType: { color: '#fff', fontSize: 8, fontWeight: '800' },
-  body: { flex: 1 },
-  titre: { fontSize: 15, fontWeight: '800', color: colors.navy, lineHeight: 19 },
-  meta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4, flexWrap: 'wrap' },
-  sub: { fontSize: 11, color: colors.textLight },
-  offline: { fontSize: 11, color: colors.success, fontWeight: '700' },
-});
+            <Text style={styles.sub}>💬 {re

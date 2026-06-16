@@ -38,18 +38,3 @@ function inferHost() {
     }
   }
   return null;
-}
-
-// IMPORTANT : inferHost() ne doit servir QU'EN DÉVELOPPEMENT (Expo Go / Metro).
-// En build autonome (__DEV__ = false), on force le serveur de production —
-// sinon l'APK peut hériter d'une adresse de build (IP du PC) et TOUS les appels
-// au serveur échouent (écrans qui restent vides).
-const host = __DEV__ ? inferHost() : null;
-
-// Dev (Metro détecté) -> serveur local du PC ; sinon (APK autonome) -> production.
-export const API_URL = __DEV__
-  ? `http://${host || FALLBACK_IP}:${API_PORT}/api`
-  : PROD_API_URL;
-
-// Durée (ms) au-delà de laquelle une requête est considérée en échec.
-export const REQUEST_TIMEOUT = 10000;

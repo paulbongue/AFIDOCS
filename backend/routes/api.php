@@ -116,6 +116,4 @@ Route::middleware('auth:sanctum')->group(function () {
         // edition de n'importe quelle ressource par l'admin
         Route::put('/ressources/{ressource}', [RessourceController::class, 'update']);
         // moderation : suppression de toute ressource par l'admin
-        Route::delete('/ressources/{ressource}', [RessourceController::class, 'destroy']);
-    });
-});
+        Route::de

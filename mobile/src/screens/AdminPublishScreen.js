@@ -187,14 +187,4 @@ const styles = StyleSheet.create({
   accNivTitle: { fontSize: 11.5, fontWeight: '800', color: colors.navy, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
   matRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7 },
   check: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
-  checkOn: { backgroundColor: colors.red, borderColor: colors.red },
-  checkMark: { color: '#fff', fontWeight: '900', fontSize: 13 },
-  matTxt: { flex: 1, color: colors.text },
-  muted: { color: colors.textMuted, fontSize: 13 },
-  loadErr: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
-  retry: { color: colors.red, fontWeight: '800' },
-  fileBtn: { borderWidth: 1.5, borderColor: colors.navy, borderStyle: 'dashed', borderRadius: radius.sm, padding: 14, alignItems: 'center' },
-  fileBtnText: { color: colors.navy, fontWeight: '700' },
-  publish: { backgroundColor: colors.red, borderRadius: radius.sm, paddingVertical: 14, alignItems: 'center', marginTop: 22 },
-  publishText: { color: '#fff', fontWeight: '800', fontSize: 16 },
-});
+  checkOn: { backgroundColor: colors.

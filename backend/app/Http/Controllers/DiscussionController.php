@@ -237,36 +237,4 @@ class DiscussionController extends Controller
         }
     }
 
-    public function destroySchedule(Request $request, Niveau $niveau): JsonResponse
-    {
-        $this->ensureMember($request, $niveau);
-        abort_unless($this->isModerator($request, $niveau), 403, 'Seul le délégué peut supprimer l\'emploi du temps.');
-
-        $schedule = Schedule::where('scope', Schedule::SCOPE_CLASS)
-            ->where('niveau_id', $niveau->id)
-            ->first();
-
-        if ($schedule) {
-            if ($schedule->chemin_fichier) {
-                Storage::disk('public')->delete($schedule->chemin_fichier);
-            }
-            $schedule->delete();
-        }
-
-        return response()->json(['message' => 'Emploi du temps supprimé.']);
-    }
-
-    private function resolveType(string $extension): string
-    {
-        $extension = strtolower($extension);
-
-        return match (true) {
-            $extension === 'pdf' => 'pdf',
-            in_array($extension, ['doc', 'docx', 'odt', 'rtf']) => 'docx',
-            in_array($extension, ['ppt', 'pptx', 'odp']) => 'pptx',
-            in_array($extension, ['xls', 'xlsx', 'ods', 'csv']) => 'xlsx',
-            in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'heic']) => 'image',
-            default => 'autre',
-        };
-    }
-}
+    public function destroySchedule(Request $req

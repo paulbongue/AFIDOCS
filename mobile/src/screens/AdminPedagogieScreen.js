@@ -191,5 +191,4 @@ const styles = StyleSheet.create({
   swatch: { width: 26, height: 26, borderRadius: 13, borderWidth: 2, borderColor: 'transparent' },
   swatchActive: { borderColor: colors.navy },
   add: { backgroundColor: colors.red, borderRadius: radius.sm, paddingVertical: 12, alignItems: 'center' },
-  addText: { color: '#fff', fontWeight: '800' },
-});
+  addText: { col

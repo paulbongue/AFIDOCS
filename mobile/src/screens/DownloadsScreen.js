@@ -112,8 +112,4 @@ const styles = StyleSheet.create({
   tip: { color: colors.textMuted, fontSize: 11, textAlign: 'center', padding: 8 },
   row: { flexDirection: 'row', alignItems: 'center', paddingRight: 14, gap: 6 },
   act: {
-    width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface,
-  },
-  actIcon: { fontSize: 17 },
-});
+    width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyCon
