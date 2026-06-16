@@ -66,4 +66,22 @@ export default function AdminScreen({ navigation }) {
 
         <AdminActivity />
       </ScrollView>
-    <
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1, backgroundColor: colors.background },
+  content: { padding: 16 },
+  kicker: { fontSize: 11, fontWeight: '800', color: colors.textMuted, letterSpacing: 1.5 },
+  title: { fontSize: 22, fontWeight: '900', color: colors.text, marginTop: 1, marginBottom: 14 },
+  statsRow: { flexDirection: 'row', gap: 10 },
+  section: { fontSize: 16, fontWeight: '800', color: colors.text, marginTop: 24, marginBottom: 8 },
+  rubrique: {
+    flexDirection: 'row', alignItems: 'center', gap: 13, backgroundColor: colors.surface,
+    borderRadius: radius.xl, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: colors.border, ...shadow.card,
+  },
+  rIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  rLabel: { fontSize: 15, fontWeight: '800', color: colors.text },
+  rSub: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+});

@@ -112,4 +112,14 @@ const styles = StyleSheet.create({
   grow: { flexGrow: 1 },
   kicker: { fontSize: 11, fontWeight: '800', color: colors.textMuted, letterSpacing: 1.5, paddingHorizontal: 16, paddingTop: 16 },
   title: { fontSize: 22, fontWeight: '900', color: colors.text, paddingHorizontal: 16, marginTop: 1, marginBottom: 14 },
-  statsRow:
+  statsRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 14, marginBottom: 6 },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
+  emptyCircle: { width: 86, height: 86, borderRadius: 43, backgroundColor: '#E3F4E7', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  emptyTitle: { color: colors.text, fontWeight: '800', fontSize: 16, marginBottom: 6 },
+  emptyText: { color: colors.textMuted, textAlign: 'center', lineHeight: 20 },
+  row: { flexDirection: 'row', alignItems: 'center', paddingRight: 14, gap: 6 },
+  act: {
+    width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface,
+  },
+});

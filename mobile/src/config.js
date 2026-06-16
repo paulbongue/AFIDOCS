@@ -33,4 +33,32 @@ function inferHost() {
   const candidates = [
     Constants?.expoConfig?.hostUri,
     Constants?.expoGoConfig?.debuggerHost,
-    Const
+    Constants?.manifest?.debuggerHost,
+    Constants?.manifest?.hostUri,
+    Constants?.manifest2?.extra?.expoClient?.hostUri,
+  ];
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.length) {
+      const host = c.split(':')[0];
+      // On ignore localhost (cas du navigateur) au profit du fallback réseau.
+      if (host && host !== 'localhost' && host !== '127.0.0.1') return host;
+    }
+  }
+  return null;
+}
+
+// IMPORTANT : inferHost() ne doit servir QU'EN DÉVELOPPEMENT (Expo Go / Metro).
+// En build autonome (__DEV__ = false), on force le serveur de production —
+// sinon l'APK peut hériter d'une adresse de build (IP du PC) et TOUS les appels
+// au serveur échouent (écrans qui restent vides).
+const host = __DEV__ ? inferHost() : null;
+
+// APK autonome -> production. En dev : prod si USE_PROD_IN_DEV, sinon backend local.
+export const API_URL = !__DEV__
+  ? PROD_API_URL
+  : USE_PROD_IN_DEV
+    ? PROD_API_URL
+    : `http://${host || FALLBACK_IP}:${API_PORT}/api`;
+
+// Durée (ms) au-delà de laquelle une requête est considérée en échec.
+export const REQUEST_TIMEOUT = 10000;

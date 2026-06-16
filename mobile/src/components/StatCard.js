@@ -21,4 +21,13 @@ const styles = StyleSheet.create({
   card: {
     flex: 1, backgroundColor: colors.surface, borderRadius: radius.xxl,
     paddingVertical: 14, paddingHorizontal: 12,
-    borderWidth: 1, borderColor: colo
+    borderWidth: 1, borderColor: colors.border, ...shadow.card,
+  },
+  iconCircle: {
+    width: 36, height: 36, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 10,
+  },
+  icon: { fontSize: 17 },
+  value: { fontSize: 24, fontWeight: '900', color: colors.text },
+  label: { fontSize: 11, color: colors.textMuted, marginTop: 2, fontWeight: '600' },
+});

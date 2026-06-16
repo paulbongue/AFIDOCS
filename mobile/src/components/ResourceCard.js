@@ -60,3 +60,50 @@ export default function ResourceCard({ ressource, onPress, compact = false }) {
             <Text style={styles.sub}>{formatSize(ressource.taille_fichier)}</Text>
           )}
           {ressource.commentaires_count > 0 && (
+            <View style={styles.cmtRow}>
+              <Icon name="message-circle" size={12} color={colors.textLight} />
+              <Text style={styles.sub}>{ressource.commentaires_count}</Text>
+            </View>
+          )}
+          {isOffline && <Text style={styles.offline}>● hors-ligne</Text>}
+        </View>
+      </View>
+
+      <TouchableOpacity style={styles.dlBtn} onPress={onPress} activeOpacity={0.7}>
+        <Icon name="download" size={17} color={colors.textMuted} />
+      </TouchableOpacity>
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface,
+    borderRadius: radius.xxl, padding: 12, marginHorizontal: 14, marginVertical: 5,
+    borderWidth: 1, borderColor: colors.border, ...shadow.card,
+  },
+  gridCard: {
+    flex: 1, backgroundColor: colors.surface, borderRadius: radius.xxl,
+    padding: 12, margin: 6, borderWidth: 1, borderColor: colors.border, ...shadow.card,
+  },
+  gridTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  gridTitre: { fontSize: 14, fontWeight: '800', color: colors.text },
+  iconBox: {
+    width: 44, height: 44, borderRadius: 13, marginRight: 12,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  iconGlyph: { color: 'rgba(255,255,255,0.9)', fontSize: 17, marginBottom: -4 },
+  iconType: { color: '#fff', fontSize: 8, fontWeight: '800' },
+  body: { flex: 1 },
+  titre: { fontSize: 15, fontWeight: '800', color: colors.text, lineHeight: 19 },
+  meta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4, flexWrap: 'wrap' },
+  sub: { fontSize: 11, color: colors.textLight },
+  cmtRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  offline: { fontSize: 11, color: colors.success, fontWeight: '700' },
+  dlBtn: {
+    width: 40, height: 40, borderRadius: 20, marginLeft: 10,
+    backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center',
+  },
+  dlGlyph: { fontSize: 16, color: colors.textMuted },
+});

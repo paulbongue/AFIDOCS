@@ -61,4 +61,5 @@ const MAP = {
 
 export default function Icon({ name, size = 22, color = colors.text, strokeWidth = 2, fill }) {
   const Cmp = MAP[name] || FileText;
-  return <Cmp size={size} color={color} strokeWidth={strokeWidth} fill={fi
+  return <Cmp size={size} color={color} strokeWidth={strokeWidth} fill={fill || 'none'} />;
+}

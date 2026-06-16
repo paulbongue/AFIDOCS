@@ -107,4 +107,25 @@ export default function ProfilePage() {
             {msg && (
               <div style={{ marginTop: 12, color: msg.type === 'ok' ? 'var(--success)' : 'var(--red)' }}>{msg.text}</div>
             )}
-      
+            <button className="btn btn-red mt" disabled={busy}>{busy ? 'Enregistrement…' : 'Mettre à jour'}</button>
+          </form>
+        </Section>
+
+        <Section id="devices" title="Appareils connectés" open={open} onToggle={toggle}>
+          <p className="muted" style={{ marginTop: 0 }}>
+            Un compte peut être connecté sur <b>3 appareils</b> au maximum. Au-delà, l'appareil le plus
+            ancien est déconnecté automatiquement. Vous pouvez aussi déconnecter manuellement les autres.
+          </p>
+          {msg && (
+            <div style={{ marginTop: 8, color: msg.type === 'ok' ? 'var(--success)' : 'var(--red)' }}>{msg.text}</div>
+          )}
+          <button type="button" className="btn btn-ghost mt" onClick={logoutOthers}>
+            Déconnecter les autres appareils
+          </button>
+        </Section>
+      </div>
+
+      <button className="btn btn-danger mt" onClick={handleLogout}>Se déconnecter</button>
+    </div>
+  );
+}

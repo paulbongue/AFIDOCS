@@ -215,4 +215,9 @@ const styles = StyleSheet.create({
   fileBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     borderWidth: 1.5, borderColor: colors.brandDark, borderStyle: 'dashed',
-    borderRadius: radius
+    borderRadius: radius.md, padding: 14,
+  },
+  fileBtnText: { color: colors.brandDark, fontWeight: '700' },
+  publish: { backgroundColor: colors.brand, borderRadius: radius.md, paddingVertical: 14, alignItems: 'center', marginTop: 22 },
+  publishText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+});

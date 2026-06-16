@@ -222,4 +222,83 @@ function Section({ id, icon, tint, tintBg, title, subtitle, open, onToggle, chil
           {!!subtitle && <Text style={styles.sectionSub}>{subtitle}</Text>}
         </View>
         <View style={{ transform: [{ rotate: isOpen ? '90deg' : '0deg' }] }}>
-     
+          <Icon name="chevron" size={20} color={colors.textLight} />
+        </View>
+      </TouchableOpacity>
+      {isOpen && <View style={styles.sectionBody}>{children}</View>}
+    </View>
+  );
+}
+
+// Champ mot de passe avec bouton œil (afficher / masquer).
+function PwdField({ placeholder, value, onChangeText }) {
+  const [show, setShow] = useState(false);
+  return (
+    <View style={styles.pwdWrap}>
+      <TextInput style={[styles.input, { marginTop: 0, paddingRight: 46 }]} placeholder={placeholder}
+                 placeholderTextColor={colors.textLight} secureTextEntry={!show}
+                 value={value} onChangeText={onChangeText} autoCapitalize="none" />
+      <TouchableOpacity style={styles.pwdEye} onPress={() => setShow((s) => !s)}>
+        <Icon name={show ? 'eye-off' : 'eye'} size={18} color={colors.textMuted} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1, backgroundColor: colors.background },
+  content: { padding: 16, paddingBottom: 24 },
+  idCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    backgroundColor: colors.surface, borderRadius: radius.xxl, padding: 16,
+    borderWidth: 1, borderColor: colors.border, ...shadow.card,
+  },
+  avatarWrap: { position: 'relative' },
+  onlineDot: {
+    position: 'absolute', right: -1, bottom: -1, width: 16, height: 16, borderRadius: 8,
+    backgroundColor: colors.success, borderWidth: 3, borderColor: colors.surface,
+  },
+  name: { fontSize: 19, fontWeight: '900', color: colors.text },
+  emailRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
+  email: { fontSize: 13, color: colors.textMuted, flex: 1 },
+  rolerow: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 8 },
+  roleBadge: { fontSize: 12, color: colors.text, fontWeight: '700', backgroundColor: colors.muted,
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, overflow: 'hidden' },
+  statsRow: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.surface, borderRadius: radius.xxl, paddingVertical: 16, marginTop: 12,
+    borderWidth: 1, borderColor: colors.border, ...shadow.card,
+  },
+  statCell: { flex: 1, alignItems: 'center' },
+  statDivider: { width: 1, height: 28, backgroundColor: colors.border },
+  statVal: { fontSize: 20, fontWeight: '900', color: colors.text },
+  statLbl: { fontSize: 11, color: colors.textMuted, marginTop: 2, fontWeight: '600' },
+  groupKicker: { fontSize: 11, fontWeight: '800', color: colors.textMuted, letterSpacing: 1.2,
+    marginTop: 22, marginBottom: 8, marginLeft: 4 },
+  section: { backgroundColor: colors.surface, borderRadius: radius.xl, marginBottom: 10,
+    borderWidth: 1, borderColor: colors.border, overflow: 'hidden', ...shadow.card },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13, paddingHorizontal: 14 },
+  sectionIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: colors.text },
+  sectionSub: { fontSize: 12, color: colors.textMuted, marginTop: 1 },
+  sectionBody: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 2 },
+  input: {
+    backgroundColor: colors.muted, borderRadius: radius.md,
+    paddingHorizontal: 14, paddingVertical: 11, color: colors.text, fontSize: 14, marginTop: 10,
+  },
+  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, gap: 12 },
+  rowLabel: { color: colors.textMuted, fontSize: 14 },
+  rowValue: { color: colors.text, fontSize: 14, fontWeight: '600', flexShrink: 1, textAlign: 'right' },
+  btnRed: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: colors.brand, borderRadius: radius.md, paddingVertical: 13, marginTop: 14 },
+  btnRedText: { color: '#fff', fontWeight: '800', fontSize: 15 },
+  btnOutline: { borderWidth: 1.5, borderColor: colors.brandDark, borderRadius: radius.md, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
+  btnOutlineText: { color: colors.brandDark, fontWeight: '700', fontSize: 14 },
+  deviceNote: { color: colors.textMuted, fontSize: 13, lineHeight: 19, marginTop: 4 },
+  pwdWrap: { position: 'relative', marginTop: 10 },
+  pwdEye: { position: 'absolute', right: 4, top: 0, bottom: 0, justifyContent: 'center', paddingHorizontal: 10 },
+  btnLogout: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: colors.brandSoft, borderRadius: radius.md, paddingVertical: 15, marginTop: 14 },
+  btnLogoutText: { color: colors.brand, fontWeight: '800', fontSize: 15 },
+  version: { textAlign: 'center', color: colors.textLight, fontSize: 12, marginTop: 18 },
+});

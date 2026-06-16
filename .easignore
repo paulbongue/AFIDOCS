@@ -1,0 +1,12 @@
+# Fichiers à NE PAS envoyer au build mobile EAS (monorepo).
+# Le backend Laravel contient un lien symbolique (storage) que Windows ne peut
+# pas recréer → erreur EPERM. On exclut backend/ et web/ : le build mobile n'en
+# a pas besoin.
+
+backend/
+web/
+
+# Divers
+*.apk
+PROMPT-refonte-mobile.md
+.git/

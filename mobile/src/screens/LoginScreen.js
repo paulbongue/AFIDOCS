@@ -115,4 +115,5 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: '#fff', fontWeight: '800', fontSize: 16, letterSpacing: 0.3 },
   offline: { color: colors.red, fontSize: 12, textAlign: 'center', marginTop: 12 },
-  hint: { color: 'rgba(255,255,255,0.6)', fontSize: 12, textAl
+  hint: { color: 'rgba(255,255,255,0.6)', fontSize: 12, textAlign: 'center', marginTop: 24, lineHeight: 18 },
+});

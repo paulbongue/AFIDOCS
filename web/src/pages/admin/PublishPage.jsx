@@ -128,4 +128,9 @@ export default function AdminPublishPage() {
 
         {msg && <div style={{ marginTop: 12, color: msg.type === 'ok' ? 'var(--success)' : 'var(--red)' }}>{msg.text}</div>}
         <button className="btn btn-red mt" disabled={busy}>
-          {busy ? 'Publication…' : `Publier${selected.length > 1 ? ` (${selected.length} class
+          {busy ? 'Publication…' : `Publier${selected.length > 1 ? ` (${selected.length} classes)` : ''}`}
+        </button>
+      </form>
+    </div>
+  );
+}

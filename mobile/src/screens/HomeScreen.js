@@ -110,4 +110,28 @@ export default function HomeScreen({ navigation }) {
         {recents.length === 0 ? (
           <Text style={styles.empty}>
             {isOnline
-              ? 'Aucune resso
+              ? 'Aucune ressource pour le moment.'
+              : 'Aucune ressource en cache. Connecte-toi pour synchroniser.'}
+          </Text>
+        ) : (
+          recents.map((item) => (
+            <ResourceCard key={String(item.id)} ressource={item} onPress={() => openDetail(item)} />
+          ))
+        )}
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1, backgroundColor: colors.background },
+  content: { paddingTop: space.lg, paddingBottom: space.xl },
+  kicker: { fontSize: 11, fontWeight: '800', color: colors.textMuted, letterSpacing: 1.5, paddingHorizontal: 16 },
+  hello: { fontSize: 24, fontWeight: '900', color: colors.text, paddingHorizontal: 16, marginTop: 2, marginBottom: 16 },
+  statsRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 14 },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginTop: 24, marginBottom: 8 },
+  section: { fontSize: 17, fontWeight: '800', color: colors.text },
+  sectionSub: { fontSize: 12, color: colors.textMuted, marginTop: 1 },
+  seeAll: { fontSize: 13, fontWeight: '700', color: colors.brand },
+  empty: { color: colors.textMuted, paddingHorizontal: 16, marginTop: 8, lineHeight: 20 },
+});

@@ -215,4 +215,63 @@ export default function ClassDiscussion({ focusMsg, focusTs }) {
         <View style={styles.inputWrap}>
           <TextInput style={styles.input} value={text} onChangeText={setText}
                      placeholder="Écrire un message…" placeholderTextColor={colors.textLight} multiline />
- 
+        </View>
+        <TouchableOpacity style={[styles.send, busy && styles.disabled]} onPress={send} disabled={busy}>
+          {busy ? <ActivityIndicator color="#fff" size="small" /> : <Icon name="send" size={20} color="#fff" />}
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 30 },
+  content: { padding: 14, paddingBottom: 20 },
+  title: { fontSize: 19, fontWeight: '900', color: colors.text, flex: 1 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  membersBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
+  membersBtnText: { color: colors.text, fontWeight: '800', fontSize: 13 },
+  membersCard: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 14,
+    borderWidth: 1, borderColor: colors.border, marginBottom: 12, ...shadow.card },
+  membersTitle: { fontWeight: '800', color: colors.text, fontSize: 14 },
+  membersHint: { color: colors.textMuted, fontSize: 12, marginBottom: 8 },
+  memberRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7,
+    borderTopWidth: 1, borderTopColor: colors.border },
+  memberName: { flex: 1, color: colors.text, fontWeight: '600', fontSize: 14 },
+  memberDate: { color: colors.textLight, fontSize: 11 },
+  pinned: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 14,
+    borderWidth: 1, borderColor: colors.border, borderLeftWidth: 4, borderLeftColor: colors.brand, ...shadow.card },
+  pinnedHeadRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 6 },
+  pinnedHead: { fontSize: 15, fontWeight: '800', color: colors.text },
+  muted: { color: colors.textMuted, fontSize: 14 },
+  metaSmall: { color: colors.textLight, fontSize: 12, marginTop: 6 },
+  btnRed: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.brand, borderRadius: radius.md, paddingVertical: 12, marginTop: 10 },
+  btnRedText: { color: '#fff', fontWeight: '800' },
+  btnNavy: { backgroundColor: colors.brandDark, borderRadius: radius.md, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center' },
+  btnNavyText: { color: '#fff', fontWeight: '700' },
+  modRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 12,
+    paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border },
+  removeLink: { color: colors.brand, fontWeight: '700' },
+  hint: { color: colors.textMuted, fontSize: 13, marginVertical: 14 },
+  msgRow: { flexDirection: 'row', gap: 8, marginBottom: 12, alignItems: 'flex-end' },
+  msgRowMine: { flexDirection: 'row-reverse' },
+  bubble: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 18, padding: 11, maxWidth: '80%' },
+  bubbleMine: { backgroundColor: colors.brandSoft, borderColor: 'transparent' },
+  bubbleHi: { borderColor: colors.brand, borderWidth: 2 },
+  msgHead: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 },
+  msgAuthor: { fontSize: 12, fontWeight: '800', color: colors.text },
+  roleBadge: { fontSize: 9, fontWeight: '900', color: colors.brand, backgroundColor: colors.brandSoft,
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, overflow: 'hidden', letterSpacing: 0.5 },
+  msgText: { fontSize: 15, color: colors.text },
+  msgDelRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5 },
+  msgDel: { color: colors.brand, fontSize: 11, fontWeight: '700' },
+  composer: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, padding: 10,
+    borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface },
+  inputWrap: { flex: 1, backgroundColor: colors.muted, borderRadius: 22, paddingHorizontal: 16, justifyContent: 'center' },
+  input: { fontSize: 15, paddingVertical: 11, color: colors.text, maxHeight: 110 },
+  send: { backgroundColor: colors.brand, width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
+  disabled: { opacity: 0.5 },
+});

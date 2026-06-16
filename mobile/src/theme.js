@@ -86,4 +86,43 @@ export function labelForType(type) {
   return map[type] || 'Fichier';
 }
 
-// Couleur du badge selon le TYPE d
+// Couleur du badge selon le TYPE de fichier (façon maquette : PDF violet, DOCX bleu…).
+export function colorForType(type) {
+  switch (type) {
+    case 'pdf': return colors.filePdf;
+    case 'docx': return colors.fileDocx;
+    case 'pptx': return colors.filePptx;
+    case 'xlsx': return colors.fileXlsx;
+    case 'image': return colors.fileImage;
+    case 'video': return colors.filePptx;
+    default: return colors.navy;
+  }
+}
+
+export function formatSize(bytes) {
+  if (!bytes && bytes !== 0) return '';
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+}
+
+// Espacements et rayons cohérents (look "carte" des maquettes).
+export const radius = { sm: 10, md: 12, lg: 16, xl: 20, xxl: 24, pill: 999 };
+export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 };
+
+export const shadow = {
+  card: {
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  soft: {
+    shadowColor: '#101828',
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+  },
+};

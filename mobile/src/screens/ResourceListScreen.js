@@ -215,4 +215,62 @@ export default function ResourceListScreen({ navigation }) {
         ListHeaderComponent={header}
         renderItem={({ item }) => (
           <ResourceCard ressource={item} compact={view === 'grid'}
-            onPress={() => navigation.navigate('Res
+            onPress={() => navigation.navigate('RessourceDetail', { id: item.id, titre: item.titre })} />
+        )}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>
+              {showBrowseUI
+                ? (isOnline ? 'Aucune ressource trouvée.' : 'Aucune ressource en cache.')
+                : 'Aucune ressource pour votre classe pour l’instant.\nTouchez « Autres ressources » pour explorer.'}
+            </Text>
+          </View>
+        }
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: 16, paddingBottom: 8 },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: colors.text },
+  headerSub: { fontSize: 12, color: colors.textMuted, marginTop: 2, fontWeight: '600' },
+  browseBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.brand, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
+  browseBtnAlt: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border },
+  browseText: { color: '#fff', fontWeight: '700', fontSize: 12 },
+  browseTextAlt: { color: colors.text },
+  classLine: { color: colors.textMuted, paddingHorizontal: 16, marginBottom: 4, fontWeight: '600' },
+  searchWrap: { paddingHorizontal: 14, paddingTop: 6, paddingBottom: 6 },
+  searchField: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 14, paddingHorizontal: 14, paddingVertical: 4,
+  },
+  search: { flex: 1, paddingVertical: 8, fontSize: 15, color: colors.text },
+  chips: { paddingHorizontal: 12, gap: 8, paddingBottom: 6 },
+  chip: { borderWidth: 1.5, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
+  chipText: { fontWeight: '700', fontSize: 12 },
+  chipN: { borderWidth: 1, borderColor: colors.border, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: '#fff' },
+  chipNActive: { backgroundColor: colors.brandDark, borderColor: colors.brandDark },
+  chipNText: { fontWeight: '700', fontSize: 12, color: colors.text },
+  chipNTextActive: { color: '#fff' },
+  filiereTitle: { fontSize: 15, fontWeight: '800', color: colors.text, paddingHorizontal: 16, paddingTop: 2, paddingBottom: 4 },
+  delegRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, marginTop: 8 },
+  pubBtn: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: colors.brand, borderRadius: 12, paddingVertical: 11, paddingHorizontal: 16 },
+  pubBtnText: { color: '#fff', fontWeight: '800', fontSize: 13 },
+  pubBtnAlt: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingVertical: 11, paddingHorizontal: 16 },
+  pubBtnAltText: { color: colors.text, fontWeight: '800', fontSize: 13 },
+  viewToggle: { flexDirection: 'row', alignSelf: 'flex-start', marginHorizontal: 16, marginTop: 6, marginBottom: 2,
+    borderWidth: 1, borderColor: colors.border, borderRadius: 20, overflow: 'hidden', backgroundColor: colors.surface },
+  vtBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8 },
+  vtBtnActive: { backgroundColor: colors.brand },
+  vtText: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
+  vtTextActive: { color: '#fff' },
+  gridWrap: { paddingHorizontal: 8, gap: 0 },
+  syncing: { textAlign: 'center', color: colors.textMuted, fontSize: 12, paddingVertical: 4 },
+  empty: { alignItems: 'center', justifyContent: 'center', padding: 40 },
+  emptyText: { color: colors.textMuted, textAlign: 'center', lineHeight: 20 },
+});

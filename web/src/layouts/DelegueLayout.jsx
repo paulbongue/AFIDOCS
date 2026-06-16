@@ -25,4 +25,12 @@ export default function DelegueLayout() {
 
       {user?.filiere && (
         <>
-          <
+          <div className="group-title">MA CLASSE</div>
+          <div className="nav-item" style={{ cursor: 'default' }}>
+            <IconCap /><span>{user.filiere.code}{user.niveau ? ` · ${user.niveau.nom}` : ''}</span>
+          </div>
+        </>
+      )}
+    </DashboardShell>
+  );
+}

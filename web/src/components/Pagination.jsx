@@ -32,4 +32,17 @@ export default function Pagination({ page, setPage, totalPages, total, perPage }
   return (
     <div className="pager">
       <span className="pager-info">{from}–{to} sur {total}</span>
-      <div className="pager-bt
+      <div className="pager-btns">
+        <button className="btn btn-ghost" disabled={page <= 1} onClick={() => setPage(page - 1)}>← Précédent</button>
+        <div className="pager-nums">
+          {pageList(page, totalPages).map((p, i) => (
+            p === '…'
+              ? <span key={`e${i}`} className="pager-ellipsis">…</span>
+              : <button key={p} className={'pager-num' + (p === page ? ' active' : '')} onClick={() => setPage(p)}>{p}</button>
+          ))}
+        </div>
+        <button className="btn btn-ghost" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Suivant →</button>
+      </div>
+    </div>
+  );
+}

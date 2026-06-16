@@ -190,4 +190,6 @@ const styles = StyleSheet.create({
   palette: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 },
   swatch: { width: 26, height: 26, borderRadius: 13, borderWidth: 2, borderColor: 'transparent' },
   swatchActive: { borderColor: colors.brandDark },
-  add: { backgroundColor: colors.brand, borderRadius: radius.md, paddingVertic
+  add: { backgroundColor: colors.brand, borderRadius: radius.md, paddingVertical: 12, alignItems: 'center' },
+  addText: { color: '#fff', fontWeight: '800' },
+});

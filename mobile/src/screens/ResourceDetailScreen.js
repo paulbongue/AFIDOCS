@@ -353,4 +353,36 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.border, ...shadow.card,
   },
   editTitle: { fontSize: 16, fontWeight: '900', color: colors.text, marginBottom: 8 },
-  editLbl: { fontSize: 13, fontWeight: '700', color: colors.text, ma
+  editLbl: { fontSize: 13, fontWeight: '700', color: colors.text, marginTop: 10, marginBottom: 4 },
+  editInput: {
+    backgroundColor: colors.muted, borderRadius: radius.md,
+    paddingHorizontal: 14, paddingVertical: 11, color: colors.text, fontSize: 15,
+  },
+  fileBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderWidth: 1.5, borderColor: colors.brandDark, borderStyle: 'dashed', borderRadius: radius.md,
+    padding: 12, marginTop: 12,
+  },
+  fileBtnText: { color: colors.brandDark, fontWeight: '700' },
+  editActions: { flexDirection: 'row', gap: 10, marginTop: 14, alignItems: 'center' },
+  cancelBtn: { paddingVertical: 12, paddingHorizontal: 16 },
+  cancelText: { color: colors.textMuted, fontWeight: '700' },
+  section: { fontSize: 16, fontWeight: '800', color: colors.text, marginTop: 26, marginBottom: 12 },
+  commentBox: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  commentInput: {
+    flex: 1, backgroundColor: colors.muted,
+    borderRadius: 22, paddingHorizontal: 16, paddingVertical: 11, color: colors.text, minHeight: 44,
+  },
+  send: { backgroundColor: colors.brand, width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
+  sendText: { color: '#fff', fontWeight: '800' },
+  disabled: { opacity: 0.5 },
+  comment: {
+    flexDirection: 'row', gap: 10, backgroundColor: colors.surface, borderRadius: radius.lg,
+    padding: 12, marginTop: 10, borderWidth: 1, borderColor: colors.border, ...shadow.card,
+  },
+  commentBody: { flex: 1 },
+  commentAuthor: { fontWeight: '800', color: colors.text, fontSize: 13 },
+  commentText: { color: colors.text, marginTop: 3, lineHeight: 20 },
+  commentDelete: { color: colors.brand, fontWeight: '700', fontSize: 12, marginTop: 6 },
+  noComment: { color: colors.textMuted, marginTop: 10, fontStyle: 'italic' },
+});

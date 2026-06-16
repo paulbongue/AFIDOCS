@@ -103,4 +103,72 @@ export default function NotificationsScreen({ navigation }) {
           <Text style={styles.title}>Notifications</Text>
         </View>
         {hasUnread && (
-          <TouchableOpacity style={styles.markAll} onPress={markAll} activeOpacity={0.7}
+          <TouchableOpacity style={styles.markAll} onPress={markAll} activeOpacity={0.7}>
+            <Icon name="check-all" size={16} color={colors.brand} />
+            <Text style={styles.link}>Tout marquer lu</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <FlatList
+        data={items}
+        keyExtractor={(i) => String(i.id)}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        renderItem={({ item }) => {
+          const cat = categoryOf(item.data);
+          return (
+            <View style={styles.item}>
+              <View style={[styles.iconCircle, { backgroundColor: cat.bg }]}>
+                <Icon name={cat.icon} size={18} color={cat.color} />
+              </View>
+              <TouchableOpacity style={{ flex: 1 }} onPress={() => open(item)} activeOpacity={0.7}>
+                <View style={styles.titleRow}>
+                  <Text style={styles.itemTitle} numberOfLines={1}>{cat.label}</Text>
+                  {!item.read && <View style={styles.unreadDot} />}
+                </View>
+                <Text style={styles.msg} numberOfLines={2}>{item.data?.message || 'Notification'}</Text>
+                <Text style={styles.time}>{timeAgo(item.created_at)}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.delBtn} onPress={() => remove(item)}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Icon name="close" size={16} color={colors.textLight} />
+              </TouchableOpacity>
+            </View>
+          );
+        }}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <View style={styles.emptyCircle}><Icon name="bell" size={30} color={colors.textMuted} /></View>
+            <Text style={styles.emptyText}>Aucune notification pour le moment.</Text>
+          </View>
+        }
+        contentContainerStyle={[{ paddingBottom: 16 }, items.length === 0 && styles.grow]}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1, backgroundColor: colors.background },
+  grow: { flexGrow: 1 },
+  head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, paddingBottom: 10 },
+  kicker: { fontSize: 11, fontWeight: '800', color: colors.textMuted, letterSpacing: 1.5 },
+  title: { fontSize: 22, fontWeight: '900', color: colors.text, marginTop: 1 },
+  markAll: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  link: { color: colors.brand, fontWeight: '700', fontSize: 13 },
+  item: {
+    flexDirection: 'row', gap: 12, alignItems: 'flex-start',
+    backgroundColor: colors.surface, borderRadius: radius.xl, padding: 14,
+    marginHorizontal: 14, marginVertical: 5, borderWidth: 1, borderColor: colors.border, ...shadow.card,
+  },
+  iconCircle: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  itemTitle: { color: colors.text, fontWeight: '800', fontSize: 14, flexShrink: 1 },
+  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.brand },
+  msg: { color: colors.textMuted, fontSize: 13, marginTop: 2, lineHeight: 18 },
+  time: { color: colors.textLight, fontSize: 11, marginTop: 5 },
+  delBtn: { padding: 2 },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
+  emptyCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  emptyText: { color: colors.textMuted },
+});

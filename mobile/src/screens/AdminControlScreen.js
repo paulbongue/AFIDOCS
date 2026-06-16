@@ -164,4 +164,12 @@ const styles = StyleSheet.create({
   chevronWrap: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   chevronCount: { color: colors.textMuted, fontWeight: '700', fontSize: 13 },
   students: { borderTopWidth: 1, borderTopColor: colors.border, padding: 10, gap: 6 },
-  studentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', ga
+  studentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingVertical: 4 },
+  studentNameWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  studentName: { color: colors.text, flexShrink: 1 },
+  btnDesignate: { backgroundColor: colors.brandDark, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 },
+  btnDesignateText: { color: '#fff', fontWeight: '700', fontSize: 12 },
+  btnRevoke: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.brand, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 },
+  btnRevokeText: { color: colors.brand, fontWeight: '700', fontSize: 12 },
+  muted: { color: colors.textMuted, padding: 16, textAlign: 'center' },
+});

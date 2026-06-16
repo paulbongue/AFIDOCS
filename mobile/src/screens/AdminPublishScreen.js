@@ -189,4 +189,16 @@ const styles = StyleSheet.create({
   accNiv: { paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#F5F7FA', borderTopWidth: 1, borderTopColor: '#E6EAF0' },
   accDisabled: { opacity: 0.4 },
   accNivTitle: { fontSize: 11.5, fontWeight: '800', color: colors.navy, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
-  matRow: { flexDirection: 'r
+  matRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7 },
+  check: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  checkOn: { backgroundColor: colors.red, borderColor: colors.red },
+  checkMark: { color: '#fff', fontWeight: '900', fontSize: 13 },
+  matTxt: { flex: 1, color: colors.text },
+  muted: { color: colors.textMuted, fontSize: 13 },
+  loadErr: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
+  retry: { color: colors.red, fontWeight: '800' },
+  fileBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderColor: colors.brandDark, borderStyle: 'dashed', borderRadius: radius.md, padding: 14 },
+  fileBtnText: { color: colors.brandDark, fontWeight: '700' },
+  publish: { backgroundColor: colors.brand, borderRadius: radius.md, paddingVertical: 14, alignItems: 'center', marginTop: 22 },
+  publishText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+});

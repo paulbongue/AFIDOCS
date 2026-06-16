@@ -185,4 +185,47 @@ function MainTabs() {
         component={ExchangesStack}
         options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon name="chat" color={color} focused={focused} /> }}
       />
-      {role !== 'admin' 
+      {role !== 'admin' && (
+        <Tab.Screen
+          name="Hors-ligne"
+          component={DownloadsScreen}
+          options={{ tabBarIcon: ({ color, focused }) => <TabIcon name="download" color={color} focused={focused} /> }}
+        />
+      )}
+      <Tab.Screen
+        name="Notifs"
+        component={NotificationsScreen}
+        options={{
+          tabBarBadge: unread > 0 ? (unread > 9 ? '9+' : unread) : undefined,
+          tabBarIcon: ({ color, focused }) => <TabIcon name="bell" color={color} focused={focused} />,
+        }}
+      />
+      <Tab.Screen
+        name="Profil"
+        component={ProfileScreen}
+        options={{ tabBarIcon: ({ color, focused }) => <TabIcon name="user" color={color} focused={focused} /> }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+export default function RootNavigator() {
+  const { user } = useAuth();
+
+  return user ? <MainTabs /> : (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+    </Stack.Navigator>
+  );
+}
+
+const styles = StyleSheet.create({
+  tabIcon: { width: 46, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  tabIconActive: { backgroundColor: colors.brandSoft },
+  headerBtn: {
+    marginLeft: 12, width: 34, height: 34, borderRadius: 17,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  headerIcon: { fontSize: 15 },
+});
