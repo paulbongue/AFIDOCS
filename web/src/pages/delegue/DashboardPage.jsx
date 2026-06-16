@@ -38,22 +38,4 @@ export default function DashboardPage() {
 
       <div className="stats-row" style={{ marginTop: 16 }}>
         <div className="stat-card"><div className="value">{mine.length}</div><div className="label">Mes publications</div></div>
-        <div className="stat-card"><div className="value">{all.length}</div><div className="label">Ressources (toutes filières)</div></div>
-        <div className="stat-card"><div className="value">{user?.filiere?.code || '—'}{user?.niveau ? ` ${user.niveau.nom}` : ''}</div><div className="label">Ma classe</div></div>
-      </div>
-
-      <div className="spread mt" style={{ marginTop: 28 }}>
-        <h3>Mes dernières publications</h3>
-        <button className="btn btn-red" onClick={() => navigate('/delegue/publier')}>⬆ Publier</button>
-      </div>
-
-      <div className="mt">
-        {mine.slice(0, 5).map((r) => (
-          <ResourceListItem key={r.id} ressource={r}
-            onOpen={() => navigate(`/delegue/ressources/${r.id}`)} />
-        ))}
-        {mine.length === 0 && <div className="empty">Vous n'avez encore rien publié.</div>}
-      </div>
-    </div>
-  );
-}
+        <div className="stat-card"><div className="value">{all.length}</div><div className="label">Ressources (toutes filières)</div></di

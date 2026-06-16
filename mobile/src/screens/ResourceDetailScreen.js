@@ -8,12 +8,13 @@ import * as DocumentPicker from 'expo-document-picker';
 
 import OfflineBanner from '../components/OfflineBanner';
 import Avatar from '../components/Avatar';
+import Icon from '../components/Icon';
 import { useNetwork } from '../context/NetworkContext';
 import { useAuth } from '../context/AuthContext';
 import client, { recordActivity } from '../api/client';
 import * as dbApi from '../db/database';
 import { downloadRessource, removeDownload, reachableFileUrl } from '../services/sync';
-import { colors, radius, labelForType, formatSize } from '../theme';
+import { colors, radius, shadow, colorForType, labelForType, formatSize } from '../theme';
 
 export default function ResourceDetailScreen({ route, navigation }) {
   const { id } = route.params;
@@ -206,7 +207,8 @@ export default function ResourceDetailScreen({ route, navigation }) {
         {/* Carte d'information */}
         <View style={styles.infoCard}>
           <View style={styles.infoHead}>
-            <View style={[styles.iconBox, { backgroundColor: accent }]}>
+            <View style={[styles.iconBox, { backgroundColor: colorForType(ressource.type_fichier) }]}>
+              <Icon name={ressource.type_fichier} size={18} color="#fff" strokeWidth={2.2} />
               <Text style={styles.iconType}>{labelForType(ressource.type_fichier)}</Text>
             </View>
             <Text style={styles.titre}>{ressource.titre}</Text>
@@ -222,17 +224,21 @@ export default function ResourceDetailScreen({ route, navigation }) {
             {user?.role !== 'admin' && (
               isOffline ? (
                 <TouchableOpacity style={styles.btnRed} onPress={handleOpen} activeOpacity={0.85}>
-                  <Text style={styles.btnRedText}>📂  Ouvrir le fichier</Text>
+                  <Icon name="file" size={17} color="#fff" />
+                  <Text style={styles.btnRedText}>Ouvrir le fichier</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity style={styles.btnRed} onPress={handleDownload} disabled={downloading} activeOpacity={0.85}>
-                  {downloading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>⬇  Télécharger</Text>}
+                  {downloading ? <ActivityIndicator color="#fff" /> : (
+                    <><Icon name="download" size={17} color="#fff" /><Text style={styles.btnRedText}>Télécharger</Text></>
+                  )}
                 </TouchableOpacity>
               )
             )}
 
             <TouchableOpacity style={styles.btnOutline} onPress={handlePreview} activeOpacity={0.85}>
-              <Text style={styles.btnOutlineText}>👁  Aperçu / Ouvrir en ligne</Text>
+              <Icon name="eye" size={16} color={colors.brandDark} />
+              <Text style={styles.btnOutlineText}>Aperçu / Ouvrir en ligne</Text>
             </TouchableOpacity>
           </View>
           {isOffline && (
@@ -242,7 +248,8 @@ export default function ResourceDetailScreen({ route, navigation }) {
           )}
           {canEdit && !editing && (
             <TouchableOpacity style={styles.btnOutline} onPress={startEdit} activeOpacity={0.85}>
-              <Text style={styles.btnOutlineText}>✏️  Modifier la ressource</Text>
+              <Icon name="edit" size={16} color={colors.brandDark} />
+              <Text style={styles.btnOutlineText}>Modifier la ressource</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -258,7 +265,8 @@ export default function ResourceDetailScreen({ route, navigation }) {
             <TextInput style={[styles.editInput, { height: 80 }]} value={eDesc} onChangeText={setEDesc}
                        multiline placeholder="Description" placeholderTextColor={colors.textLight} />
             <TouchableOpacity style={styles.fileBtn} onPress={pickNewFile}>
-              <Text style={styles.fileBtnText}>{eFile ? `📎 ${eFile.name}` : '＋ Remplacer le fichier (optionnel)'}</Text>
+              <Icon name={eFile ? 'attach' : 'plus'} size={16} color={colors.brandDark} />
+              <Text style={styles.fileBtnText}>{eFile ? eFile.name : 'Remplacer le fichier (optionnel)'}</Text>
             </TouchableOpacity>
             <View style={styles.editActions}>
               <TouchableOpacity style={styles.btnRed} onPress={saveEdit} disabled={saving} activeOpacity={0.85}>
@@ -289,7 +297,7 @@ export default function ResourceDetailScreen({ route, navigation }) {
             onPress={submitComment}
             disabled={!isOnline || busy}
           >
-            <Text style={styles.sendText}>Envoyer</Text>
+            {busy ? <ActivityIndicator color="#fff" size="small" /> : <Icon name="send" size={19} color="#fff" />}
           </TouchableOpacity>
         </View>
 
@@ -321,59 +329,28 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
   content: { padding: 16 },
   breadcrumb: { marginBottom: 12, flexDirection: 'row', flexWrap: 'wrap' },
-  crumb: { color: colors.red, fontWeight: '700', fontSize: 13 },
+  crumb: { color: colors.brand, fontWeight: '700', fontSize: 13 },
   sep: { color: colors.textLight, fontSize: 13 },
   infoCard: {
-    backgroundColor: colors.cardGray, borderRadius: radius.md, padding: 16,
-    borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.surface, borderRadius: radius.xxl, padding: 16,
+    borderWidth: 1, borderColor: colors.border, ...shadow.card,
   },
   infoHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  iconBox: { width: 44, height: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  iconType: { color: '#fff', fontSize: 11, fontWeight: '800' },
-  titre: { flex: 1, fontSize: 18, fontWeight: '900', color: colors.navy },
+  iconBox: { width: 46, height: 46, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  iconType: { color: '#fff', fontSize: 8, fontWeight: '800' },
+  titre: { flex: 1, fontSize: 18, fontWeight: '900', color: colors.text },
   meta: { fontSize: 13, color: colors.textMuted, marginTop: 12 },
   author: { fontSize: 12, color: colors.textLight, marginTop: 4 },
   description: { fontSize: 15, color: colors.text, marginTop: 12, lineHeight: 22 },
   actions: { marginTop: 16 },
-  btnRed: { backgroundColor: colors.red, borderRadius: radius.sm, paddingVertical: 13, alignItems: 'center' },
+  btnRed: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.brand, borderRadius: radius.md, paddingVertical: 13 },
   btnRedText: { color: '#fff', fontWeight: '800', fontSize: 15 },
-  btnOutline: { borderWidth: 1.5, borderColor: colors.navy, borderRadius: radius.sm, paddingVertical: 12, alignItems: 'center', marginTop: 8 },
-  btnOutlineText: { color: colors.navy, fontWeight: '700', fontSize: 14 },
-  remove: { color: colors.red, textAlign: 'center', marginTop: 12, fontWeight: '600' },
+  btnOutline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderColor: colors.brandDark, borderRadius: radius.md, paddingVertical: 12, marginTop: 8 },
+  btnOutlineText: { color: colors.brandDark, fontWeight: '700', fontSize: 14 },
+  remove: { color: colors.brand, textAlign: 'center', marginTop: 12, fontWeight: '600' },
   editCard: {
-    backgroundColor: colors.surface, borderRadius: radius.md, padding: 16, marginTop: 14,
-    borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.surface, borderRadius: radius.xxl, padding: 16, marginTop: 14,
+    borderWidth: 1, borderColor: colors.border, ...shadow.card,
   },
-  editTitle: { fontSize: 16, fontWeight: '900', color: colors.navy, marginBottom: 8 },
-  editLbl: { fontSize: 13, fontWeight: '700', color: colors.navy, marginTop: 10, marginBottom: 4 },
-  editInput: {
-    backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm,
-    paddingHorizontal: 12, paddingVertical: 10, color: colors.text, fontSize: 15,
-  },
-  fileBtn: {
-    borderWidth: 1.5, borderColor: colors.navy, borderStyle: 'dashed', borderRadius: radius.sm,
-    padding: 12, alignItems: 'center', marginTop: 12,
-  },
-  fileBtnText: { color: colors.navy, fontWeight: '700' },
-  editActions: { flexDirection: 'row', gap: 10, marginTop: 14, alignItems: 'center' },
-  cancelBtn: { paddingVertical: 12, paddingHorizontal: 16 },
-  cancelText: { color: colors.textMuted, fontWeight: '700' },
-  section: { fontSize: 16, fontWeight: '800', color: colors.navy, marginTop: 26, marginBottom: 12 },
-  commentBox: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
-  commentInput: {
-    flex: 1, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
-    borderRadius: radius.sm, paddingHorizontal: 12, paddingVertical: 10, color: colors.text, minHeight: 44,
-  },
-  send: { backgroundColor: colors.red, borderRadius: radius.sm, paddingHorizontal: 16, paddingVertical: 12 },
-  sendText: { color: '#fff', fontWeight: '800' },
-  disabled: { opacity: 0.5 },
-  comment: {
-    flexDirection: 'row', gap: 10, backgroundColor: colors.surface, borderRadius: radius.md,
-    padding: 12, marginTop: 10, borderWidth: 1, borderColor: colors.border,
-  },
-  commentBody: { flex: 1 },
-  commentAuthor: { fontWeight: '800', color: colors.navy, fontSize: 13 },
-  commentText: { color: colors.text, marginTop: 3, lineHeight: 20 },
-  commentDelete: { color: colors.red, fontWeight: '700', fontSize: 12, marginTop: 6 },
-  noComment: { color: colors.textMuted, marginTop: 10, fontStyle: 'italic' },
-});
+  editTitle: { fontSize: 16, fontWeight: '900', color: colors.text, marginBottom: 8 },
+  editLbl: { fontSize: 13, fontWeight: '700', color: colors.text, ma

@@ -5,8 +5,9 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 
 import OfflineBanner from '../components/OfflineBanner';
+import Icon from '../components/Icon';
 import client from '../api/client';
-import { colors, radius, colorForFiliere } from '../theme';
+import { colors, radius, shadow, colorForFiliere } from '../theme';
 
 // Centre de contrôle (Admin, mobile) : classes par filière + désigner/révoquer
 // le délégué en choisissant parmi les élèves de la classe.
@@ -93,7 +94,12 @@ export default function AdminControlScreen() {
                     {current ? `Délégué : ${current.name}` : 'Aucun délégué'}
                   </Text>
                 </View>
-                <Text style={styles.chevron}>{isOpen ? '▲' : `▼ ${eleves.length}`}</Text>
+                <View style={styles.chevronWrap}>
+                  {!isOpen && <Text style={styles.chevronCount}>{eleves.length}</Text>}
+                  <View style={{ transform: [{ rotate: isOpen ? '-90deg' : '90deg' }] }}>
+                    <Icon name="chevron" size={18} color={colors.textLight} />
+                  </View>
+                </View>
               </TouchableOpacity>
 
               {isOpen && (
@@ -104,9 +110,10 @@ export default function AdminControlScreen() {
                     const isDeleg = current && current.id === u.id;
                     return (
                       <View key={u.id} style={styles.studentRow}>
-                        <Text style={styles.studentName} numberOfLines={1}>
-                          {u.name}{isDeleg ? '  ⭐' : ''}
-                        </Text>
+                        <View style={styles.studentNameWrap}>
+                          <Text style={styles.studentName} numberOfLines={1}>{u.name}</Text>
+                          {isDeleg && <Icon name="star" size={14} color={colors.warning} fill={colors.warning} />}
+                        </View>
                         {isDeleg ? (
                           <TouchableOpacity style={styles.btnRevoke}
                             onPress={() => confirmRevoke(item.niveau_id, u.id, u.name)}>
@@ -148,19 +155,13 @@ const styles = StyleSheet.create({
   chips: { paddingHorizontal: 12, paddingVertical: 10, gap: 8 },
   chip: { borderWidth: 1.5, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
   chipText: { fontWeight: '700', fontSize: 12 },
-  card: { backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, marginBottom: 10, overflow: 'hidden' },
+  card: { backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, marginBottom: 10, overflow: 'hidden', ...shadow.card },
   cardHead: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 },
-  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   badgeText: { color: '#fff', fontWeight: '800', fontSize: 12 },
-  classTitle: { fontWeight: '800', color: colors.navy, fontSize: 15 },
+  classTitle: { fontWeight: '800', color: colors.text, fontSize: 15 },
   delegInfo: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
-  chevron: { color: colors.textMuted, fontWeight: '700' },
+  chevronWrap: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  chevronCount: { color: colors.textMuted, fontWeight: '700', fontSize: 13 },
   students: { borderTopWidth: 1, borderTopColor: colors.border, padding: 10, gap: 6 },
-  studentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingVertical: 4 },
-  studentName: { flex: 1, color: colors.text },
-  btnDesignate: { backgroundColor: colors.navy, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  btnDesignateText: { color: '#fff', fontWeight: '700', fontSize: 12 },
-  btnRevoke: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.red, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  btnRevokeText: { color: colors.red, fontWeight: '700', fontSize: 12 },
-  muted: { color: colors.textMuted, padding: 16, textAlign: 'center' },
-});
+  studentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', ga

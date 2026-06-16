@@ -4,32 +4,45 @@
 // ===========================================================================
 
 export const colors = {
-  // Identité
-  navy: '#14213D',        // bleu marine (login, titres, header secondaire)
-  navyDark: '#0E1830',
-  red: '#C0392B',         // rouge brique — header principal & actions
-  redDark: '#A23222',     // état pressé
+  // Identité (charte alignée sur la maquette « University Hub » / Lovable)
+  navy: '#0F1932',        // bleu nuit — avatars, titres forts, icône nav inactive
+  navyDark: '#0B1326',
+  brand: '#CF4238',       // rouge institutionnel — header, actions, état actif
+  red: '#CF4238',         // alias historique de `brand`
+  brandDark: '#0F1932',   // alias bleu nuit
+  redDark: '#B5392F',     // état pressé
   redBright: '#E1342A',   // accent logo AFI-L'UE
-  salmon: '#EBB9AC',      // surbrillance d'onglet/élément actif (fond)
+  brandSoft: 'rgba(207,66,56,0.12)', // pilule active, bulle envoyée, badge rôle
+  salmon: '#F7E2DE',      // surbrillance d'onglet/élément actif (fond rose pâle)
 
   navy2: '#1E2A47',
 
   // Surfaces
-  background: '#EEF0F3',  // fond d'application (gris bleuté doux)
+  background: '#F8FAFC',  // fond d'application
   surface: '#FFFFFF',
-  surface2: '#F7F8FA',
-  cardGray: '#E4E7EB',    // carte d'information (détail ressource)
-  border: '#DEE2E7',
+  surface2: '#F1F4F8',
+  muted: '#EFF2F5',       // fonds secondaires (pastilles, champs)
+  cardGray: '#EFF2F5',    // carte d'information (détail ressource)
+  border: '#E1E5EA',
   borderStrong: '#CBD2DA',
 
-  // Texte (contrastes alignés sur le web — AA sur fond clair)
-  text: '#14213D',
-  textMuted: '#4E5763',   // texte secondaire (~6.3:1)
-  textLight: '#5B6472',   // anciennement #98A2B0 (sous le seuil) → AA (~5.8:1)
+  // Texte (contrastes AA sur fond clair)
+  text: '#081123',
+  textMuted: '#5C646F',   // texte secondaire (~5.8:1)
+  textLight: '#5C646F',
+
+  // Couleurs par type de fichier (badges)
+  filePdf: '#8047E1',     // violet
+  fileDocx: '#362AC1',    // bleu
+  filePptx: '#F3680F',    // orange
+  fileXlsx: '#23A136',    // vert
+  fileImage: '#0891B2',   // teal
+  download: '#23A136',    // vert téléchargement / hors-ligne
+  notif: '#F3680F',       // orange notifications / annonces
 
   // États
-  success: '#16A34A',
-  danger: '#C0392B',
+  success: '#23A136',
+  danger: '#CF4238',
   warning: '#D97706',
   offline: '#64748B',
 
@@ -73,30 +86,4 @@ export function labelForType(type) {
   return map[type] || 'Fichier';
 }
 
-export function formatSize(bytes) {
-  if (!bytes && bytes !== 0) return '';
-  if (bytes < 1024) return `${bytes} o`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} Ko`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
-}
-
-// Espacements et rayons cohérents (look "carte" des maquettes).
-export const radius = { sm: 8, md: 12, lg: 16, xl: 22, pill: 999 };
-export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 };
-
-export const shadow = {
-  card: {
-    shadowColor: '#101828',
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
-  },
-  soft: {
-    shadowColor: '#101828',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
-  },
-};
+// Couleur du badge selon le TYPE d

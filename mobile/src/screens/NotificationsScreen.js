@@ -3,9 +3,42 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, RefreshControl } fr
 import { useFocusEffect } from '@react-navigation/native';
 
 import OfflineBanner from '../components/OfflineBanner';
+import Icon from '../components/Icon';
 import client from '../api/client';
 import { useNotifications } from '../context/NotificationsContext';
-import { colors, radius } from '../theme';
+import { colors, radius, shadow } from '../theme';
+
+// Catégorie visuelle (icône + couleur) déduite des données de la notification.
+function categoryOf(data) {
+  const d = data || {};
+  if (d.kind === 'emploi' || d.link === 'emploi') {
+    return { icon: 'calendar', color: colors.fileDocx, bg: '#E7E9FB', label: 'Emploi du temps' };
+  }
+  if (d.link === 'classe' || d.message_id) {
+    return { icon: 'chat', color: colors.filePdf, bg: '#F0E8FC', label: 'Message de classe' };
+  }
+  if (d.link === 'annonces' || d.post_id) {
+    return { icon: 'megaphone', color: colors.notif, bg: '#FDEBDD', label: 'Annonce' };
+  }
+  if (d.ressource_id) {
+    return { icon: 'file', color: colors.download, bg: '#E3F4E7', label: 'Nouvelle ressource' };
+  }
+  if (d.kind === 'membre' || d.new_user_id) {
+    return { icon: 'user-plus', color: colors.success, bg: '#E3F4E7', label: 'Nouveau membre' };
+  }
+  return { icon: 'bell', color: colors.textMuted, bg: colors.muted, label: 'Notification' };
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+  if (diff < 60) return "à l'instant";
+  if (diff < 3600) return `il y a ${Math.floor(diff / 60)} min`;
+  if (diff < 86400) return `il y a ${Math.floor(diff / 3600)} h`;
+  const days = Math.floor(diff / 86400);
+  if (days < 7) return `il y a ${days} j`;
+  return new Date(dateStr).toLocaleDateString('fr-FR');
+}
 
 export default function NotificationsScreen({ navigation }) {
   const { refresh } = useNotifications();
@@ -65,57 +98,9 @@ export default function NotificationsScreen({ navigation }) {
     <View style={styles.flex}>
       <OfflineBanner />
       <View style={styles.head}>
-        <Text style={styles.title}>Notifications</Text>
+        <View>
+          <Text style={styles.kicker}>ACTIVITÉ</Text>
+          <Text style={styles.title}>Notifications</Text>
+        </View>
         {hasUnread && (
-          <TouchableOpacity onPress={markAll}><Text style={styles.link}>Tout marquer lu</Text></TouchableOpacity>
-        )}
-      </View>
-
-      <FlatList
-        data={items}
-        keyExtractor={(i) => String(i.id)}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        renderItem={({ item }) => (
-          <View style={[styles.item, !item.read && styles.unread]}>
-            <Text style={styles.dot}>{item.read ? '' : '●'}</Text>
-            <TouchableOpacity style={{ flex: 1 }} onPress={() => open(item)} activeOpacity={0.7}>
-              <Text style={styles.msg}>{item.data?.message || 'Notification'}</Text>
-              {item.data?.matiere ? <Text style={styles.sub}>{item.data.matiere}</Text> : null}
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => remove(item)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Text style={styles.del}>✕</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>🔔</Text>
-            <Text style={styles.emptyText}>Aucune notification pour le moment.</Text>
-          </View>
-        }
-        contentContainerStyle={items.length === 0 && styles.grow}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
-  grow: { flexGrow: 1 },
-  head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16 },
-  title: { fontSize: 20, fontWeight: '900', color: colors.navy },
-  link: { color: colors.red, fontWeight: '700' },
-  item: {
-    flexDirection: 'row', gap: 10, alignItems: 'flex-start',
-    backgroundColor: colors.surface, borderRadius: radius.md, padding: 14,
-    marginHorizontal: 14, marginVertical: 5, borderWidth: 1, borderColor: colors.border,
-  },
-  unread: { backgroundColor: '#FCEEEA', borderColor: '#F1C9BD' },
-  dot: { color: colors.red, fontSize: 12, width: 12 },
-  del: { color: colors.textLight, fontSize: 16, paddingHorizontal: 4, paddingTop: 2 },
-  msg: { color: colors.navy, fontWeight: '700', fontSize: 14 },
-  sub: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
-  emptyIcon: { fontSize: 44, marginBottom: 10 },
-  emptyText: { color: colors.textMuted },
-});
+          <TouchableOpacity style={styles.markAll} onPress={markAll} activeOpacity={0.7}

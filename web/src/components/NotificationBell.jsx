@@ -78,19 +78,4 @@ export default function NotificationBell() {
             {unread > 0 && <button className="bell-link" onClick={markAll}>Tout marquer lu</button>}
           </div>
           {items.length === 0 ? (
-            <div className="bell-empty">Aucune notification.</div>
-          ) : items.map((n) => (
-            <div key={n.id} className={'bell-item' + (n.read ? '' : ' unread')}>
-              <div className="bell-item-main" onClick={() => openNotif(n)}>
-                <div>{n.data?.message || 'Notification'}</div>
-                {n.data?.matiere && <div className="bell-time">{n.data.matiere}</div>}
-              </div>
-              <button className="bell-del" title="Supprimer"
-                      onClick={(e) => { e.stopPropagation(); deleteNotif(n.id); }}>✕</button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+ 

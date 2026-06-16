@@ -140,24 +140,4 @@ export default function ResourcesPage() {
                             onClick={() => setActiveNiveau(null)}>Tous</button>
                     {niveaux.map((n) => (
                       <button key={n.id}
-                        className={'btn ' + (String(activeNiveau) === String(n.id) ? 'btn-navy' : 'btn-ghost')}
-                        onClick={() => setActiveNiveau(n.id)}>
-                        {n.nom}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </>
-            );
-          })()}
-
-          <div className="mt">
-            {loading ? <SkeletonRows count={5} />
-              : ressources.length === 0 ? <div className="empty">Aucune ressource trouvée.</div>
-              : renderList(ressources)}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+                        className={'btn ' + (String(activeNiveau) === String(n.id) ? 'b

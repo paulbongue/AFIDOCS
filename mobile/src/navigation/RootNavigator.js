@@ -9,6 +9,7 @@ import { useNotifications } from '../context/NotificationsContext';
 import { colors } from '../theme';
 import { Wordmark } from '../components/Logo';
 import Avatar from '../components/Avatar';
+import Icon from '../components/Icon';
 
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -31,31 +32,49 @@ import AdminUsersScreen from '../screens/AdminUsersScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// En-tête rouge brique commun (wordmark AFI-DOCS centré + avatar à droite).
+// En-tête rouge institutionnel commun : recherche à gauche, wordmark centré,
+// avatar à droite, coins inférieurs arrondis (façon maquette).
 function redHeader(navigation, { back = false } = {}) {
   return {
-    headerStyle: { backgroundColor: colors.red },
+    headerStyle: {
+      backgroundColor: colors.brand,
+      borderBottomLeftRadius: 24,
+      borderBottomRightRadius: 24,
+    },
     headerTintColor: '#fff',
     headerShadowVisible: false,
     headerTitleAlign: 'center',
     headerTitle: () => <Wordmark color="#fff" size={18} />,
+    headerLeft: back ? undefined : () => <HeaderSearch navigation={navigation} />,
     headerRight: () => <HeaderAvatar navigation={navigation} />,
   };
+}
+
+function HeaderSearch({ navigation }) {
+  return (
+    <TouchableOpacity
+      onPress={() => navigation.navigate('Ressources')}
+      style={styles.headerBtn}
+      activeOpacity={0.7}
+    >
+      <Icon name="search" size={18} color="#fff" />
+    </TouchableOpacity>
+  );
 }
 
 function HeaderAvatar({ navigation }) {
   const { user } = useAuth();
   return (
-    <TouchableOpacity onPress={() => navigation.navigate('Profil')} style={{ marginRight: 6 }}>
-      <Avatar name={user?.name} size={32} bg={colors.navy} />
+    <TouchableOpacity onPress={() => navigation.navigate('Profil')} style={{ marginRight: 10 }}>
+      <Avatar name={user?.name} size={34} bg={colors.brandDark} />
     </TouchableOpacity>
   );
 }
 
-function TabIcon({ emoji, color, focused }) {
+function TabIcon({ name, color, focused }) {
   return (
     <View style={[styles.tabIcon, focused && styles.tabIconActive]}>
-      <Text style={{ fontSize: 18, color }}>{emoji}</Text>
+      <Icon name={name} size={21} color={color} strokeWidth={focused ? 2.4 : 2} />
     </View>
   );
 }
@@ -146,61 +165,24 @@ function MainTabs() {
       <Tab.Screen
         name="Accueil"
         component={HomeScreen}
-        options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="🏠" color={color} focused={focused} /> }}
+        options={{ tabBarIcon: ({ color, focused }) => <TabIcon name="home" color={color} focused={focused} /> }}
       />
       <Tab.Screen
         name="Ressources"
         component={RessourcesStack}
-        options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon emoji="📚" color={color} focused={focused} /> }}
+        options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon name="resources" color={color} focused={focused} /> }}
       />
       {/* Onglet spécifique au rôle (le délégué publie depuis l'espace Ressources) */}
       {role === 'admin' && (
         <Tab.Screen
           name="Admin"
           component={AdminStack}
-          options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon emoji="⚙️" color={color} focused={focused} /> }}
+          options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon name="settings" color={color} focused={focused} /> }}
         />
       )}
       <Tab.Screen
         name="Échanges"
         component={ExchangesStack}
-        options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon emoji="💬" color={color} focused={focused} /> }}
+        options={{ headerShown: false, tabBarIcon: ({ color, focused }) => <TabIcon name="chat" color={color} focused={focused} /> }}
       />
-      {role !== 'admin' && (
-        <Tab.Screen
-          name="Hors-ligne"
-          component={DownloadsScreen}
-          options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="📥" color={color} focused={focused} /> }}
-        />
-      )}
-      <Tab.Screen
-        name="Notifs"
-        component={NotificationsScreen}
-        options={{
-          tabBarBadge: unread > 0 ? (unread > 9 ? '9+' : unread) : undefined,
-          tabBarIcon: ({ color, focused }) => <TabIcon emoji="🔔" color={color} focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Profil"
-        component={ProfileScreen}
-        options={{ tabBarIcon: ({ color, focused }) => <TabIcon emoji="👤" color={color} focused={focused} /> }}
-      />
-    </Tab.Navigator>
-  );
-}
-
-export default function RootNavigator() {
-  const { user } = useAuth();
-
-  return user ? <MainTabs /> : (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Login" component={LoginScreen} />
-    </Stack.Navigator>
-  );
-}
-
-const styles = StyleSheet.create({
-  tabIcon: { width: 44, height: 30, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  tabIconActive: { backgroundColor: colors.salmon },
-});
+      {role !== 'admin' 

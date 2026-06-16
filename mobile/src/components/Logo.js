@@ -27,5 +27,5 @@ const styles = StyleSheet.create({
   badgeRow: { alignItems: 'flex-start' },
   logo: { width: 170, height: 55 },
   subtitle: { color: colors.navy, fontSize: 9, fontWeight: '700', marginTop: 4, letterSpacing: 0.2 },
-  wordmark: { fontWeight: '900', letterSpacing: 1 },
+  wordmark: { fontWeight: '900', letterSpacing: 3 },
 });

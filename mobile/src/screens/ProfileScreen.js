@@ -4,10 +4,12 @@ import {
   KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import Constants from 'expo-constants';
 
 import OfflineBanner from '../components/OfflineBanner';
 import Avatar from '../components/Avatar';
 import FiliereBadge from '../components/FiliereBadge';
+import Icon from '../components/Icon';
 import { useAuth } from '../context/AuthContext';
 import { useNetwork } from '../context/NetworkContext';
 import { fullSync, getLastSyncAt } from '../services/sync';
@@ -16,22 +18,25 @@ import * as dbApi from '../db/database';
 import { colors, radius, shadow } from '../theme';
 
 const ROLE_LABEL = { admin: 'Administrateur', delegue: 'Délégué', etudiant: 'Étudiant' };
+const APP_VERSION = Constants?.expoConfig?.version || '1.0.1';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const { isOnline } = useNetwork();
   const [lastSync, setLastSync] = useState(null);
   const [downloaded, setDownloaded] = useState(0);
+  const [ressourcesCount, setRessourcesCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
   const [pwd, setPwd] = useState({ current_password: '', password: '', password_confirmation: '' });
   const [pwdBusy, setPwdBusy] = useState(false);
-  const [open, setOpen] = useState('info'); // section dépliée (une à la fois)
+  const [open, setOpen] = useState(null); // section dépliée (une à la fois)
   const toggle = (id) => setOpen((o) => (o === id ? null : id));
 
   const refresh = useCallback(async () => {
     setLastSync(await getLastSyncAt());
     const row = await dbApi.countDownloaded(user?.id);
     setDownloaded(row?.n ?? 0);
+    try { const all = await dbApi.getRessources({}, user?.id); setRessourcesCount(all.length); } catch (_) {}
   }, [user]);
 
   async function changePassword() {
@@ -84,6 +89,7 @@ export default function ProfileScreen() {
   }
 
   const syncLabel = lastSync ? new Date(lastSync).toLocaleString('fr-FR') : 'jamais';
+  const isAdmin = user?.role === 'admin';
 
   return (
     <KeyboardAvoidingView style={styles.flex}
@@ -91,39 +97,73 @@ export default function ProfileScreen() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
       <OfflineBanner />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {/* En-tête profil */}
-        <View style={styles.head}>
-          <Avatar name={user?.name} size={64} bg={colors.navy} />
+        {/* Carte d'identité */}
+        <View style={styles.idCard}>
+          <View style={styles.avatarWrap}>
+            <Avatar name={user?.name} size={60} bg={colors.brandDark} />
+            <View style={styles.onlineDot} />
+          </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{user?.name}</Text>
-            <Text style={styles.email}>{user?.email}</Text>
+            <Text style={styles.name} numberOfLines={1}>{user?.name}</Text>
+            <View style={styles.emailRow}>
+              <Icon name="user" size={13} color={colors.textMuted} />
+              <Text style={styles.email} numberOfLines={1}>{user?.email}</Text>
+            </View>
             <View style={styles.rolerow}>
-              <Text style={styles.role}>{ROLE_LABEL[user?.role] || user?.role}</Text>
+              <Text style={styles.roleBadge}>{ROLE_LABEL[user?.role] || user?.role}</Text>
               {user?.filiere && <FiliereBadge code={user.filiere.code} couleur={user.filiere.couleur} small />}
             </View>
           </View>
         </View>
 
-        <Section id="info" title="Informations personnelles" open={open} onToggle={toggle}>
+        {/* Stats */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCell}>
+            <Text style={styles.statVal}>{ressourcesCount}</Text>
+            <Text style={styles.statLbl}>Ressources</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statCell}>
+            <Text style={styles.statVal}>{downloaded}</Text>
+            <Text style={styles.statLbl}>Hors-ligne</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statCell}>
+            <Text style={styles.statVal}>{user?.filiere?.code || '—'}</Text>
+            <Text style={styles.statLbl}>{user?.niveau?.nom || 'Classe'}</Text>
+          </View>
+        </View>
+
+        <Text style={styles.groupKicker}>COMPTE & PARAMÈTRES</Text>
+
+        <Section id="info" icon="user" tint={colors.filePdf} tintBg="#F0E8FC"
+                 title="Informations personnelles" subtitle="Nom, email, statut"
+                 open={open} onToggle={toggle}>
           <Row label="Nom d'utilisateur" value={user?.name} />
           <Row label="Statut" value={ROLE_LABEL[user?.role] || user?.role} />
           {user?.filiere && <Row label="Filière" value={`${user.filiere.code} — ${user.filiere.nom}`} />}
           {user?.niveau && <Row label="Niveau / Classe" value={`${user.filiere?.code || ''} · ${user.niveau.nom}`} />}
         </Section>
 
-        {user?.role !== 'admin' && (
-          <Section id="sync" title="Synchronisation" open={open} onToggle={toggle}>
+        {!isAdmin && (
+          <Section id="sync" icon="sync" tint={colors.fileDocx} tintBg="#E7E9FB"
+                   title="Synchronisation" subtitle="Cours hors-ligne"
+                   open={open} onToggle={toggle}>
             <Row label="Statut réseau" value={isOnline ? '● En ligne' : '● Hors-ligne'}
                  valueColor={isOnline ? colors.success : colors.offline} />
             <Row label="Dernière synchro" value={syncLabel} />
             <Row label="Fichiers hors-ligne" value={String(downloaded)} />
             <TouchableOpacity style={styles.btnRed} onPress={handleSync} disabled={syncing} activeOpacity={0.85}>
-              {syncing ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>🔄  Synchroniser maintenant</Text>}
+              {syncing ? <ActivityIndicator color="#fff" /> : (
+                <><Icon name="sync" size={17} color="#fff" /><Text style={styles.btnRedText}>Synchroniser maintenant</Text></>
+              )}
             </TouchableOpacity>
           </Section>
         )}
 
-        <Section id="security" title="Sécurité — Mot de passe" open={open} onToggle={toggle}>
+        <Section id="security" icon="shield" tint={colors.download} tintBg="#E3F4E7"
+                 title="Sécurité — Mot de passe" subtitle="Modifier le mot de passe"
+                 open={open} onToggle={toggle}>
           <PwdField placeholder="Mot de passe actuel" value={pwd.current_password}
                     onChangeText={(t) => setPwd({ ...pwd, current_password: t })} />
           <PwdField placeholder="Nouveau mot de passe" value={pwd.password}
@@ -135,7 +175,9 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </Section>
 
-        <Section id="devices" title="Appareils connectés" open={open} onToggle={toggle}>
+        <Section id="devices" icon="device" tint={colors.notif} tintBg="#FDEBDD"
+                 title="Appareils connectés" subtitle="Maximum 3 appareils"
+                 open={open} onToggle={toggle}>
           <Text style={styles.deviceNote}>
             Un compte peut être connecté sur 3 appareils au maximum. Au-delà, le plus ancien est
             déconnecté. Tu peux aussi déconnecter manuellement les autres.
@@ -145,9 +187,12 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </Section>
 
-        <TouchableOpacity style={styles.btnLogout} onPress={confirmLogout}>
+        <TouchableOpacity style={styles.btnLogout} onPress={confirmLogout} activeOpacity={0.85}>
+          <Icon name="logout" size={18} color={colors.brand} />
           <Text style={styles.btnLogoutText}>Se déconnecter</Text>
         </TouchableOpacity>
+
+        <Text style={styles.version}>AFI-DOCS · v{APP_VERSION}</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -162,70 +207,19 @@ function Row({ label, value, valueColor }) {
   );
 }
 
-// Section dépliable (accordéon) — composant stable : le contenu (champs mot de
-// passe) ne se remonte pas à chaque frappe.
-function Section({ id, title, open, onToggle, children }) {
+// Ligne de réglage façon maquette : icône ronde + titre + sous-texte + chevron.
+// Au tap, la section se déplie (les contrôles restent en place, pas de remontage).
+function Section({ id, icon, tint, tintBg, title, subtitle, open, onToggle, children }) {
   const isOpen = open === id;
   return (
     <View style={styles.section}>
       <TouchableOpacity style={styles.sectionHead} onPress={() => onToggle(id)} activeOpacity={0.7}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        <Text style={styles.sectionChev}>{isOpen ? '▾' : '▸'}</Text>
-      </TouchableOpacity>
-      {isOpen && <View style={styles.sectionBody}>{children}</View>}
-    </View>
-  );
-}
-
-// Champ mot de passe avec bouton œil (afficher / masquer).
-function PwdField({ placeholder, value, onChangeText }) {
-  const [show, setShow] = useState(false);
-  return (
-    <View style={styles.pwdWrap}>
-      <TextInput style={[styles.input, { marginTop: 0, paddingRight: 46 }]} placeholder={placeholder}
-                 placeholderTextColor={colors.textLight} secureTextEntry={!show}
-                 value={value} onChangeText={onChangeText} autoCapitalize="none" />
-      <TouchableOpacity style={styles.pwdEye} onPress={() => setShow((s) => !s)}>
-        <Text style={{ fontSize: 16 }}>{show ? '🙈' : '👁'}</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 16 },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 8 },
-  name: { fontSize: 19, fontWeight: '900', color: colors.navy },
-  email: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
-  rolerow: { flexDirection: 'row', gap: 10, alignItems: 'center', marginTop: 6 },
-  role: { fontSize: 13, color: colors.text, fontWeight: '700' },
-  card: {
-    backgroundColor: colors.surface, borderRadius: radius.md, padding: 16, marginTop: 16,
-    borderWidth: 1, borderColor: colors.border, ...shadow.card,
-  },
-  cardTitle: { fontSize: 15, fontWeight: '800', color: colors.navy, marginBottom: 6 },
-  section: { backgroundColor: colors.surface, borderRadius: radius.md, marginTop: 12,
-    borderWidth: 1, borderColor: colors.border, overflow: 'hidden', ...shadow.soft },
-  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingVertical: 14, paddingHorizontal: 16 },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: colors.navy, flex: 1 },
-  sectionChev: { fontSize: 14, color: colors.textMuted, marginLeft: 10 },
-  sectionBody: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 2 },
-  input: {
-    backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm,
-    paddingHorizontal: 12, paddingVertical: 10, color: colors.text, fontSize: 14, marginTop: 10,
-  },
-  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, gap: 12 },
-  rowLabel: { color: colors.textMuted, fontSize: 14 },
-  rowValue: { color: colors.text, fontSize: 14, fontWeight: '600', flexShrink: 1, textAlign: 'right' },
-  btnRed: { backgroundColor: colors.red, borderRadius: radius.sm, paddingVertical: 13, alignItems: 'center', marginTop: 14 },
-  btnRedText: { color: '#fff', fontWeight: '800', fontSize: 15 },
-  btnOutline: { borderWidth: 1.5, borderColor: colors.navy, borderRadius: radius.sm, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
-  btnOutlineText: { color: colors.navy, fontWeight: '700', fontSize: 14 },
-  deviceNote: { color: colors.textMuted, fontSize: 13, lineHeight: 19, marginTop: 4 },
-  pwdWrap: { position: 'relative', marginTop: 10 },
-  pwdEye: { position: 'absolute', right: 4, top: 0, bottom: 0, justifyContent: 'center', paddingHorizontal: 10 },
-  btnLogout: { paddingVertical: 16, alignItems: 'center', marginTop: 8 },
-  btnLogoutText: { color: colors.red, fontWeight: '800', fontSize: 15 },
-});
+        <View style={[styles.sectionIcon, { backgroundColor: tintBg }]}>
+          <Icon name={icon} size={18} color={tint} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.sectionTitle}>{title}</Text>
+          {!!subtitle && <Text style={styles.sectionSub}>{subtitle}</Text>}
+        </View>
+        <View style={{ transform: [{ rotate: isOpen ? '90deg' : '0deg' }] }}>
+     

@@ -85,14 +85,4 @@ export default function App() {
         <Route path="publier" element={<AdminPublishPage />} />
         <Route path="controle" element={<ControlCenterPage />} />
         <Route path="pedagogie" element={<PedagogiePage />} />
-        <Route path="utilisateurs" element={<UsersPage />} />
-        <Route path="moderation" element={<ModerationPage />} />
-        <Route path="annonces" element={<FeedPage />} />
-        <Route path="ressources/:id" element={<ResourceDetailPage />} />
-        <Route path="profil" element={<ProfilePage />} />
-      </Route>
-
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
-}
+        <Route path="utilisateurs" elemen

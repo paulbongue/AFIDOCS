@@ -43,30 +43,4 @@ export default function DashboardPage() {
           }}>
             <IconDownload size={16} /> Rapport complet
           </button>
-        </div>
-      </div>
-
-      <div className="stats-row" style={{ marginTop: 16 }}>
-        <StatCard icon={IconBook} value={t.ressources} label="Ressources" tone="navy" />
-        <StatCard icon={IconUsers} value={t.utilisateurs} label="Utilisateurs" tone="blue" />
-        <StatCard icon={IconBell} value={t.commentaires} label="Commentaires" tone="orange" />
-        <StatCard icon={IconCap} value={t.filieres} label="Filières" tone="green" />
-      </div>
-
-      <h3 className="mt" style={{ marginTop: 28 }}>Ressources par filière</h3>
-      <div className="card mt">
-        {stats.ressources_par_filiere.map((f) => (
-          <div key={f.code} className="row" style={{ marginBottom: 10, gap: 12 }}>
-            <div style={{ width: 56 }}><Badge code={f.code} couleur={f.couleur} /></div>
-            <div style={{ flex: 1, background: '#EFEFEF', borderRadius: 6, height: 18, overflow: 'hidden' }}>
-              <div style={{ width: `${(f.ressources / maxRes) * 100}%`, height: '100%', background: f.couleur }} />
-            </div>
-            <div style={{ width: 30, textAlign: 'right', fontWeight: 700 }}>{f.ressources}</div>
-          </div>
-        ))}
-      </div>
-
-      <ActivityPanel />
-    </div>
-  );
-}
+     

@@ -5,6 +5,7 @@ import {
 import * as DocumentPicker from 'expo-document-picker';
 
 import OfflineBanner from '../components/OfflineBanner';
+import Icon from '../components/Icon';
 import client from '../api/client';
 import { colors, radius, colorForFiliere } from '../theme';
 
@@ -117,7 +118,9 @@ export default function AdminPublishScreen() {
                   </View>
                   <View style={styles.accHeadRight}>
                     {n > 0 && <View style={styles.accCount}><Text style={styles.accCountTxt}>{n}</Text></View>}
-                    <Text style={styles.accChev}>{open ? '▾' : '▸'}</Text>
+                    <View style={{ transform: [{ rotate: open ? '90deg' : '0deg' }] }}>
+                      <Icon name="chevron" size={18} color={colors.textLight} />
+                    </View>
                   </View>
                 </TouchableOpacity>
 
@@ -132,7 +135,7 @@ export default function AdminPublishScreen() {
                           <TouchableOpacity key={m.id} style={styles.matRow} disabled={disabled}
                                             onPress={() => toggle(m.id)}>
                             <View style={[styles.check, on && styles.checkOn]}>
-                              {on && <Text style={styles.checkMark}>✓</Text>}
+                              {on && <Icon name="check" size={14} color="#fff" strokeWidth={3} />}
                             </View>
                             <Text style={styles.matTxt} numberOfLines={1}>{m.nom}</Text>
                           </TouchableOpacity>
@@ -149,7 +152,8 @@ export default function AdminPublishScreen() {
 
         <Text style={styles.label}>Fichier</Text>
         <TouchableOpacity style={styles.fileBtn} onPress={pickFile}>
-          <Text style={styles.fileBtnText}>{file ? `📎 ${file.name}` : '＋ Choisir un fichier'}</Text>
+          <Icon name={file ? 'attach' : 'plus'} size={16} color={colors.brandDark} />
+          <Text style={styles.fileBtnText}>{file ? file.name : 'Choisir un fichier'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.publish} onPress={publish} disabled={busy}>
@@ -185,16 +189,4 @@ const styles = StyleSheet.create({
   accNiv: { paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#F5F7FA', borderTopWidth: 1, borderTopColor: '#E6EAF0' },
   accDisabled: { opacity: 0.4 },
   accNivTitle: { fontSize: 11.5, fontWeight: '800', color: colors.navy, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
-  matRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7 },
-  check: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
-  checkOn: { backgroundColor: colors.red, borderColor: colors.red },
-  checkMark: { color: '#fff', fontWeight: '900', fontSize: 13 },
-  matTxt: { flex: 1, color: colors.text },
-  muted: { color: colors.textMuted, fontSize: 13 },
-  loadErr: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
-  retry: { color: colors.red, fontWeight: '800' },
-  fileBtn: { borderWidth: 1.5, borderColor: colors.navy, borderStyle: 'dashed', borderRadius: radius.sm, padding: 14, alignItems: 'center' },
-  fileBtnText: { color: colors.navy, fontWeight: '700' },
-  publish: { backgroundColor: colors.red, borderRadius: radius.sm, paddingVertical: 14, alignItems: 'center', marginTop: 22 },
-  publishText: { color: '#fff', fontWeight: '800', fontSize: 16 },
-});
+  matRow: { flexDirection: 'r

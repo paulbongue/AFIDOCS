@@ -7,10 +7,11 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 
 import Avatar from './Avatar';
+import Icon from './Icon';
 import { useAuth } from '../context/AuthContext';
 import { useNetwork } from '../context/NetworkContext';
 import client from '../api/client';
-import { colors, radius, colorForFiliere, labelForType, formatSize } from '../theme';
+import { colors, radius, shadow, colorForFiliere, labelForType, formatSize } from '../theme';
 
 // Espace commun (interfilière) : annonces des admins/délégués + commentaires.
 export default function Feed({ focusPost, focusTs }) {
@@ -167,7 +168,10 @@ export default function Feed({ focusPost, focusTs }) {
 
         {/* Emploi du temps général épinglé */}
         <View style={styles.pinned}>
-          <Text style={styles.pinnedHead}>📌 {schedule?.titre || 'Emploi du temps général'}</Text>
+          <View style={styles.pinnedHeadRow}>
+            <Icon name="pin" size={15} color={colors.brand} fill={colors.brand} />
+            <Text style={styles.pinnedHead}>{schedule?.titre || 'Emploi du temps général'}</Text>
+          </View>
           {schedule ? (
             <>
               {!!schedule.description && <Text style={styles.muted}>{schedule.description}</Text>}
@@ -175,7 +179,8 @@ export default function Feed({ focusPost, focusTs }) {
                 <TouchableOpacity style={styles.btnRed} onPress={() => navigation.navigate('EchangesPreview', {
                   remoteUrl: schedule.url_fichier, type: schedule.type_fichier, titre: schedule.titre || 'Emploi du temps',
                 })}>
-                  <Text style={styles.btnRedText}>📅 Ouvrir l'emploi du temps</Text>
+                  <Icon name="calendar" size={17} color="#fff" />
+                  <Text style={styles.btnRedText}>Ouvrir l'emploi du temps</Text>
                 </TouchableOpacity>
               )}
               {!!schedule.type_fichier && (
@@ -233,10 +238,11 @@ export default function Feed({ focusPost, focusTs }) {
             )}
             <View style={styles.composerActions}>
               <TouchableOpacity style={styles.photoBtn} onPress={pickImage}>
-                <Text style={styles.photoBtnText}>📷 Photo</Text>
+                <Icon name="image" size={16} color={colors.text} />
+                <Text style={styles.photoBtnText}>Photo</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.btnRed, { flex: 1, marginTop: 0 }]} onPress={submitPost} disabled={posting}>
-                {posting ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>Publier</Text>}
+                {posting ? <ActivityIndicator color="#fff" /> : <><Icon name="send" size={16} color="#fff" /><Text style={styles.btnRedText}>Publier</Text></>}
               </TouchableOpacity>
             </View>
           </View>
@@ -254,7 +260,9 @@ export default function Feed({ focusPost, focusTs }) {
                 <Text style={styles.postDate}>{new Date(p.created_at).toLocaleString('fr-FR')}</Text>
               </View>
               {(is_admin || p.user_id === user.id) && (
-                <TouchableOpacity onPress={() => confirmDeletePost(p.id)}><Text style={styles.removeLink}>Suppr.</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => confirmDeletePost(p.id)} hitSlop={8}>
+                  <Icon name="trash" size={17} color={colors.textMuted} />
+                </TouchableOpacity>
               )}
             </View>
 
@@ -304,49 +312,27 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 30 },
   content: { padding: 14, paddingBottom: 24 },
-  title: { fontSize: 18, fontWeight: '900', color: colors.navy, marginBottom: 12 },
+  title: { fontSize: 19, fontWeight: '900', color: colors.text, marginBottom: 12 },
   muted: { color: colors.textMuted, fontSize: 14 },
   metaSmall: { color: colors.textLight, fontSize: 12, marginTop: 6 },
-  pinned: { backgroundColor: colors.surface, borderRadius: radius.md, padding: 14,
-    borderWidth: 1, borderColor: colors.border, borderLeftWidth: 4, borderLeftColor: colors.red },
-  pinnedHead: { fontSize: 15, fontWeight: '800', color: colors.navy, marginBottom: 6 },
-  btnRed: { backgroundColor: colors.red, borderRadius: radius.sm, paddingVertical: 11, alignItems: 'center', marginTop: 10 },
+  pinned: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 14,
+    borderWidth: 1, borderColor: colors.border, borderLeftWidth: 4, borderLeftColor: colors.brand, ...shadow.card },
+  pinnedHeadRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 6 },
+  pinnedHead: { fontSize: 15, fontWeight: '800', color: colors.text },
+  btnRed: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.brand, borderRadius: radius.md, paddingVertical: 12, marginTop: 10 },
   btnRedText: { color: '#fff', fontWeight: '800' },
-  btnNavy: { backgroundColor: colors.navy, borderRadius: radius.sm, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center' },
+  btnNavy: { backgroundColor: colors.brandDark, borderRadius: radius.md, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center' },
   btnNavyText: { color: '#fff', fontWeight: '700' },
   modRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border },
-  removeLink: { color: colors.red, fontWeight: '700' },
+  removeLink: { color: colors.brand, fontWeight: '700' },
   hint: { color: colors.textMuted, fontSize: 13, marginVertical: 14 },
-  composerCard: { backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, borderWidth: 1, borderColor: colors.border, marginTop: 14 },
-  area: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm,
-    paddingHorizontal: 12, paddingVertical: 10, color: colors.text, minHeight: 70, textAlignVertical: 'top' },
+  composerCard: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: colors.border, marginTop: 14, ...shadow.card },
+  area: { backgroundColor: colors.muted, borderRadius: radius.md,
+    paddingHorizontal: 14, paddingVertical: 12, color: colors.text, minHeight: 70, textAlignVertical: 'top' },
   prevWrap: { marginTop: 10 },
-  prevImg: { width: '100%', height: 180, borderRadius: radius.sm, marginBottom: 6 },
+  prevImg: { width: '100%', height: 180, borderRadius: radius.md, marginBottom: 6 },
   smallLabel: { color: colors.textMuted, fontSize: 13, marginTop: 12, marginBottom: 6 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   chip: { borderWidth: 1.5, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5 },
   chipText: { fontWeight: '800', fontSize: 12 },
-  chipN: { borderWidth: 1, borderColor: colors.navy, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: '#fff' },
-  chipNOn: { backgroundColor: colors.navy },
-  chipNText: { color: colors.navy, fontWeight: '700', fontSize: 12 },
-  chipNTextOn: { color: '#fff' },
-  composerActions: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 },
-  photoBtn: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, paddingHorizontal: 14, paddingVertical: 11 },
-  photoBtnText: { color: colors.navy, fontWeight: '700' },
-  post: { backgroundColor: colors.surface, borderRadius: radius.md, padding: 14, borderWidth: 1, borderColor: colors.border, marginBottom: 14 },
-  postHi: { borderColor: colors.red, borderWidth: 2 },
-  postHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  postAuthor: { fontWeight: '800', color: colors.navy, fontSize: 14 },
-  postDate: { color: colors.textLight, fontSize: 12 },
-  postText: { color: colors.text, fontSize: 15, marginTop: 10, lineHeight: 21 },
-  postImg: { width: '100%', height: 220, borderRadius: radius.sm, marginTop: 10 },
-  commentsBox: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border },
-  comment: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  commentText: { flex: 1, color: colors.text, fontSize: 14 },
-  commentAuthor: { fontWeight: '800', color: colors.navy },
-  cDel: { color: colors.textMuted, fontSize: 20, paddingHorizontal: 4 },
-  commentComposer: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  commentInput: { flex: 1, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border,
-    borderRadius: radius.sm, paddingHorizontal: 12, paddingVertical: 8, color: colors.text },
-  cSend: { color: colors.red, fontWeight: '800' },
-});
+  chipN: { borderWidth: 1, borderColor: colors.border, borderRadius: 14, paddingHoriz

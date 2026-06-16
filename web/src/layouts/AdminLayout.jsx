@@ -20,8 +20,4 @@ export default function AdminLayout() {
       <div className="group-title">ÉCHANGES</div>
       <NavLink to="/admin/annonces" className={link}><IconMegaphone /><span>Annonces</span></NavLink>
 
-      <div className="group-title">MON COMPTE</div>
-      <NavLink to="/admin/profil" className={link}><IconUser /><span>Profil</span></NavLink>
-    </DashboardShell>
-  );
-}
+     

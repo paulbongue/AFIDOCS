@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNetwork } from '../context/NetworkContext';
 import { colors, radius } from '../theme';
 import { AfiBadge, Wordmark } from '../components/Logo';
+import Icon from '../components/Icon';
 
 export default function LoginScreen() {
   const { login } = useAuth();
@@ -75,7 +76,7 @@ export default function LoginScreen() {
               autoCapitalize="none"
             />
             <TouchableOpacity style={styles.pwdEye} onPress={() => setShowPwd((s) => !s)}>
-              <Text style={{ fontSize: 16 }}>{showPwd ? '🙈' : '👁'}</Text>
+              <Icon name={showPwd ? 'eye-off' : 'eye'} size={18} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -114,5 +115,4 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: '#fff', fontWeight: '800', fontSize: 16, letterSpacing: 0.3 },
   offline: { color: colors.red, fontSize: 12, textAlign: 'center', marginTop: 12 },
-  hint: { color: 'rgba(255,255,255,0.6)', fontSize: 12, textAlign: 'center', marginTop: 24, lineHeight: 18 },
-});
+  hint: { color: 'rgba(255,255,255,0.6)', fontSize: 12, textAl

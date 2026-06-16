@@ -6,6 +6,7 @@ import {
 import * as DocumentPicker from 'expo-document-picker';
 
 import OfflineBanner from '../components/OfflineBanner';
+import Icon from '../components/Icon';
 import { useAuth } from '../context/AuthContext';
 import { useNetwork } from '../context/NetworkContext';
 import client from '../api/client';
@@ -117,7 +118,8 @@ export default function PublishScreen({ navigation }) {
         <View style={styles.topRow}>
           <Text style={styles.title}>Publier une ressource</Text>
           <TouchableOpacity style={styles.mineBtn} onPress={() => navigation.navigate('MesRessources')}>
-            <Text style={styles.mineBtnText}>📂 Mes ressources</Text>
+            <Icon name="resources" size={14} color="#fff" />
+            <Text style={styles.mineBtnText}>Mes ressources</Text>
           </TouchableOpacity>
         </View>
 
@@ -151,7 +153,8 @@ export default function PublishScreen({ navigation }) {
 
         <Text style={styles.label}>Fichier</Text>
         <TouchableOpacity style={styles.fileBtn} onPress={pickFile}>
-          <Text style={styles.fileBtnText}>{file ? `📎 ${file.name}` : '＋ Choisir un fichier'}</Text>
+          <Icon name={file ? 'attach' : 'plus'} size={16} color={colors.brandDark} />
+          <Text style={styles.fileBtnText}>{file ? file.name : 'Choisir un fichier'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.publish} onPress={publish} disabled={busy}>
@@ -169,7 +172,7 @@ export default function PublishScreen({ navigation }) {
               <Text style={styles.mineMeta} numberOfLines={1}>{r.matiere?.nom}</Text>
             </View>
             <TouchableOpacity style={styles.mineDel} onPress={() => confirmDeleteMine(r)}>
-              <Text style={styles.mineDelText}>Suppr.</Text>
+              <Icon name="trash" size={16} color={colors.brand} />
             </TouchableOpacity>
           </View>
         ))}
@@ -183,38 +186,33 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 30 },
   info: { color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
   content: { padding: 16 },
-  title: { fontSize: 20, fontWeight: '900', color: colors.navy },
+  title: { fontSize: 20, fontWeight: '900', color: colors.text },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 10 },
-  mineBtn: { backgroundColor: colors.navy, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
+  mineBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.brandDark, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
   mineBtnText: { color: '#fff', fontWeight: '700', fontSize: 12 },
-  label: { fontSize: 13, fontWeight: '700', color: colors.navy, marginTop: 14, marginBottom: 6 },
+  label: { fontSize: 13, fontWeight: '700', color: colors.text, marginTop: 14, marginBottom: 6 },
   muted: { color: colors.textMuted },
   mineRow: {
     flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface,
-    borderRadius: radius.sm, padding: 12, marginTop: 8, borderWidth: 1, borderColor: colors.border,
+    borderRadius: radius.lg, padding: 12, marginTop: 8, borderWidth: 1, borderColor: colors.border,
   },
-  mineTitle: { fontWeight: '800', color: colors.navy },
+  mineTitle: { fontWeight: '800', color: colors.text },
   mineMeta: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
-  mineDel: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.red, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
-  mineDelText: { color: colors.red, fontWeight: '700', fontSize: 12 },
-  locked: { backgroundColor: '#EDEDED', borderRadius: radius.sm, padding: 12, borderWidth: 1, borderColor: colors.border },
+  mineDel: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  locked: { backgroundColor: colors.muted, borderRadius: radius.md, padding: 12, borderWidth: 1, borderColor: colors.border },
   lockedText: { color: colors.textMuted, fontWeight: '700' },
   input: {
-    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm,
-    paddingHorizontal: 12, paddingVertical: 10, color: colors.text, fontSize: 15,
+    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md,
+    paddingHorizontal: 14, paddingVertical: 11, color: colors.text, fontSize: 15,
   },
   option: {
-    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm,
+    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md,
     paddingHorizontal: 12, paddingVertical: 11, marginBottom: 6,
   },
-  optionActive: { borderColor: colors.red, backgroundColor: '#FCEEEA' },
+  optionActive: { borderColor: colors.brand, backgroundColor: colors.brandSoft },
   optionText: { color: colors.text },
-  optionTextActive: { color: colors.red, fontWeight: '700' },
+  optionTextActive: { color: colors.brand, fontWeight: '700' },
   fileBtn: {
-    borderWidth: 1.5, borderColor: colors.navy, borderStyle: 'dashed',
-    borderRadius: radius.sm, padding: 14, alignItems: 'center',
-  },
-  fileBtnText: { color: colors.navy, fontWeight: '700' },
-  publish: { backgroundColor: colors.red, borderRadius: radius.sm, paddingVertical: 14, alignItems: 'center', marginTop: 22 },
-  publishText: { color: '#fff', fontWeight: '800', fontSize: 16 },
-});
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderWidth: 1.5, borderColor: colors.brandDark, borderStyle: 'dashed',
+    borderRadius: radius

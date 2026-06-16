@@ -93,33 +93,4 @@ export default function LandingPage() {
             <span>2. Ouvrez-le, puis autorisez « installer des applications inconnues » si demandé.</span>
             <span>3. Installez, puis connectez-vous avec votre compte AFI.</span>
           </div>
-          <p className="lp-download-note">Compatible Android uniquement. Version iOS non disponible pour le moment.</p>
-        </div>
-      </section>
-
-      <section className="lp-section lp-filieres">
-        <div className="lp-section-head">
-          <h2>Nos domaines de formation</h2>
-          <p className="muted">Les filières de l'AFI couvrent plusieurs grands domaines, chacun avec ses classes et ses matières.</p>
-        </div>
-        <div className="lp-chips">
-          {DOMAINES.map((d) => <span key={d} className="lp-chip">{d}</span>)}
-        </div>
-      </section>
-
-      <section className="lp-cta">
-        <h2>Prêt à accéder à vos ressources pédagogiques ?</h2>
-        <p>Connectez-vous avec votre compte AFI pour retrouver tous vos cours.</p>
-        <button className="btn btn-light" onClick={login}>Se connecter</button>
-      </section>
-
-      <footer className="lp-footer">
-        <div className="lp-foot-brand">
-          <img src="/logo-afi.png" alt="AFI-L'UE" />
-          <span>AFI-DOCS — L'Université de l'Entreprise</span>
-        </div>
-        <div className="lp-foot-note">© {new Date().getFullYear()} AFI-DOCS · Plateforme de ressources pédagogiques.</div>
-      </footer>
-    </div>
-  );
-}
+          <p className="lp-download-note">Compatible Android uniquement. Version iOS non disponible pou

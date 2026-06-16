@@ -159,9 +159,3 @@ const styles = StyleSheet.create({
   colLabel: { fontSize: 9, color: colors.textLight, marginTop: 4 },
   platRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, flexWrap: 'wrap', gap: 8 },
   platText: { fontSize: 13, color: colors.textMuted },
-  platNum: { fontWeight: '800', color: colors.navy },
-  reportHint: { fontSize: 13, color: colors.textMuted, marginBottom: 12 },
-  reportBtns: { gap: 8 },
-  reportBtn: { borderWidth: 1.5, borderColor: colors.navy, borderRadius: radius.sm, paddingVertical: 11, alignItems: 'center' },
-  reportBtnText: { color: colors.navy, fontWeight: '700' },
-});

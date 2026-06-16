@@ -8,6 +8,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import ResourceCard from '../components/ResourceCard';
 import SkeletonRows from '../components/Skeleton';
 import OfflineBanner from '../components/OfflineBanner';
+import Icon from '../components/Icon';
 import { useNetwork } from '../context/NetworkContext';
 import { useAuth } from '../context/AuthContext';
 import { fullSync } from '../services/sync';
@@ -92,14 +93,20 @@ export default function ResourceListScreen({ navigation }) {
   const header = (
     <View>
       <View style={styles.headerRow}>
-        <Text style={styles.headerTitle}>
-          {!hasClass ? 'Ressources' : browse ? 'Explorer les ressources' : 'Recommandées pour vous'}
-        </Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>
+            {!hasClass ? 'Ressources' : browse ? 'Explorer les ressources' : 'Recommandées pour vous'}
+          </Text>
+          <Text style={styles.headerSub}>
+            {ressources.length} fichier{ressources.length > 1 ? 's' : ''} · {filieres.length} filière{filieres.length > 1 ? 's' : ''}
+          </Text>
+        </View>
         {hasClass && (
           <TouchableOpacity style={[styles.browseBtn, browse && styles.browseBtnAlt]}
                             onPress={() => { setBrowse((b) => !b); setSearch(''); setActiveFiliere(null); setActiveNiveau(null); }}>
+            <Icon name={browse ? 'back' : 'search'} size={14} color={browse ? colors.text : '#fff'} />
             <Text style={[styles.browseText, browse && styles.browseTextAlt]}>
-              {browse ? '← Ma classe' : '🔎 Autres ressources'}
+              {browse ? 'Ma classe' : 'Autres'}
             </Text>
           </TouchableOpacity>
         )}
@@ -115,10 +122,12 @@ export default function ResourceListScreen({ navigation }) {
       {user?.role === 'delegue' && (
         <View style={styles.delegRow}>
           <TouchableOpacity style={styles.pubBtn} onPress={() => navigation.navigate('PublishHome')}>
-            <Text style={styles.pubBtnText}>⬆️ Publier</Text>
+            <Icon name="plus" size={16} color="#fff" />
+            <Text style={styles.pubBtnText}>Publier</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.pubBtnAlt} onPress={() => navigation.navigate('MesRessources')}>
-            <Text style={styles.pubBtnAltText}>📁 Mes ressources</Text>
+            <Icon name="resources" size={16} color={colors.text} />
+            <Text style={styles.pubBtnAltText}>Mes ressources</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -127,19 +136,29 @@ export default function ResourceListScreen({ navigation }) {
       <View style={styles.viewToggle}>
         <TouchableOpacity style={[styles.vtBtn, view === 'list' && styles.vtBtnActive]}
                           onPress={() => setView('list')}>
-          <Text style={[styles.vtText, view === 'list' && styles.vtTextActive]}>☰ Liste</Text>
+          <Icon name="list" size={15} color={view === 'list' ? '#fff' : colors.textMuted} />
+          <Text style={[styles.vtText, view === 'list' && styles.vtTextActive]}>Liste</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.vtBtn, view === 'grid' && styles.vtBtnActive]}
                           onPress={() => setView('grid')}>
-          <Text style={[styles.vtText, view === 'grid' && styles.vtTextActive]}>▦ Cartes</Text>
+          <Icon name="grid" size={15} color={view === 'grid' ? '#fff' : colors.textMuted} />
+          <Text style={[styles.vtText, view === 'grid' && styles.vtTextActive]}>Cartes</Text>
         </TouchableOpacity>
       </View>
 
       {showBrowseUI && (
         <>
           <View style={styles.searchWrap}>
-            <TextInput style={styles.search} value={search} onChangeText={setSearch}
-                       placeholder="Rechercher une ressource…" placeholderTextColor={colors.textMuted} />
+            <View style={styles.searchField}>
+              <Icon name="search" size={18} color={colors.textMuted} />
+              <TextInput style={styles.search} value={search} onChangeText={setSearch}
+                         placeholder="Rechercher une ressource…" placeholderTextColor={colors.textMuted} />
+              {search.length > 0 && (
+                <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
+                  <Icon name="close" size={16} color={colors.textMuted} />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
             {[{ id: null, code: 'Toutes' }, ...filieres].map((item) => {
@@ -196,59 +215,4 @@ export default function ResourceListScreen({ navigation }) {
         ListHeaderComponent={header}
         renderItem={({ item }) => (
           <ResourceCard ressource={item} compact={view === 'grid'}
-            onPress={() => navigation.navigate('RessourceDetail', { id: item.id, titre: item.titre })} />
-        )}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>
-              {showBrowseUI
-                ? (isOnline ? 'Aucune ressource trouvée.' : 'Aucune ressource en cache.')
-                : 'Aucune ressource pour votre classe pour l’instant.\nTouchez « Autres ressources » pour explorer.'}
-            </Text>
-          </View>
-        }
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: 14, paddingBottom: 6 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: colors.navy, flex: 1 },
-  browseBtn: { backgroundColor: colors.red, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
-  browseBtnAlt: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border },
-  browseText: { color: '#fff', fontWeight: '700', fontSize: 12 },
-  browseTextAlt: { color: colors.navy },
-  classLine: { color: colors.textMuted, paddingHorizontal: 14, marginBottom: 4, fontWeight: '600' },
-  searchWrap: { padding: 12, paddingBottom: 6 },
-  search: {
-    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
-    borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text,
-  },
-  chips: { paddingHorizontal: 12, gap: 8, paddingBottom: 6 },
-  chip: { borderWidth: 1.5, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
-  chipText: { fontWeight: '700', fontSize: 12 },
-  chipN: { borderWidth: 1, borderColor: colors.navy, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: '#fff' },
-  chipNActive: { backgroundColor: colors.navy },
-  chipNText: { fontWeight: '700', fontSize: 12, color: colors.navy },
-  chipNTextActive: { color: '#fff' },
-  filiereTitle: { fontSize: 15, fontWeight: '800', color: colors.navy, paddingHorizontal: 16, paddingTop: 2, paddingBottom: 4 },
-  delegRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 14, marginTop: 8 },
-  pubBtn: { backgroundColor: colors.red, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 16 },
-  pubBtnText: { color: '#fff', fontWeight: '800', fontSize: 13 },
-  pubBtnAlt: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 16 },
-  pubBtnAltText: { color: colors.navy, fontWeight: '800', fontSize: 13 },
-  viewToggle: { flexDirection: 'row', alignSelf: 'flex-start', marginHorizontal: 14, marginTop: 4, marginBottom: 2,
-    borderWidth: 1, borderColor: colors.border, borderRadius: 20, overflow: 'hidden', backgroundColor: colors.surface },
-  vtBtn: { paddingHorizontal: 14, paddingVertical: 7 },
-  vtBtnActive: { backgroundColor: colors.red },
-  vtText: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
-  vtTextActive: { color: '#fff' },
-  gridWrap: { paddingHorizontal: 8, gap: 0 },
-  syncing: { textAlign: 'center', color: colors.textMuted, fontSize: 12, paddingVertical: 4 },
-  empty: { alignItems: 'center', justifyContent: 'center', padding: 40 },
-  emptyText: { color: colors.textMuted, textAlign: 'center', lineHeight: 20 },
-});
+            onPress={() => navigation.navigate('Res
