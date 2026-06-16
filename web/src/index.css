@@ -6,37 +6,49 @@
    =========================================================================== */
 
 :root {
-  /* Identité */
-  --navy: #14213D;
-  --navy-2: #1E2A47;
-  --navy-dark: #0E1830;
-  --red: #C0392B;
-  --red-dark: #A23222;
+  /* Identité (charte « University Hub » / Lovable) */
+  --navy: #0F1932;
+  --navy-2: #1A2542;
+  --navy-dark: #0B1326;
+  --red: #C9302D;            /* rouge institutionnel (brand v2026) */
+  --red-dark: #AE2A27;
   --red-bright: #E1342A;
-  --salmon: #F2D3CB;
-  --salmon-strong: #EBB9AC;
+  --brand-soft: rgba(201,48,45,.10);   /* fonds doux */
+  --accent-soft: #FAEFED;              /* rosé très pâle (hover, badges) */
+  --salmon: #F7E2DE;
+  --salmon-strong: #F0CFC8;
 
   /* Neutres */
-  --bg: #F4F6FB;
+  --bg: #FAFCFE;
   --surface: #FFFFFF;
-  --surface-2: #F7F8FA;
-  --card-gray: #E4E7EB;
-  --border: #DEE2E7;
+  --surface-2: #F0F4F9;
+  --card-gray: #EFF2F5;
+  --border: #E0E5EB;
   --border-strong: #CBD2DA;
-  --text: #14213D;
-  --muted: #4E5763;          /* texte secondaire — AA sur blanc (~6.3:1) */
-  --light: #5B6472;          /* anciennement #98A2B0 (sous le seuil) — désormais AA (~5.8:1) */
-  --success: #15803D;
-  --success-bg: #E7F5EC;
+  --text: #0B111F;
+  --muted: #5A6472;          /* texte secondaire — AA sur blanc */
+  --light: #5A6472;
+  --success: #23A136;
+  --success-bg: #E3F4E7;
+
+  /* Couleurs par type de fichier (badges) */
+  --pdf: #8047E1;            /* violet */
+  --docx: #362AC1;           /* bleu */
+  --pptx: #F3680F;           /* orange */
+  --xlsx: #23A136;           /* vert */
+  --image: #0891B2;          /* teal */
+  --download: #23A136;
+  --notif: #F3680F;
 
   /* Système */
   --radius: 16px;
   --radius-sm: 12px;
   --radius-lg: 20px;
+  --radius-xl: 24px;
   --sidebar-w: 264px;
   --topbar-h: 56px;
-  --ring: 0 0 0 3px rgba(20,33,61,.18);
-  --ring-red: 0 0 0 3px rgba(192,57,43,.22);
+  --ring: 0 0 0 3px rgba(15,25,50,.18);
+  --ring-red: 0 0 0 3px rgba(207,66,56,.22);
   --sh-sm: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
   --sh-md: 0 4px 12px rgba(16,24,40,.08), 0 2px 4px rgba(16,24,40,.05);
   --sh-lg: 0 12px 32px rgba(16,24,40,.16);
@@ -68,12 +80,12 @@ h3 { font-size: 16px; font-weight: 800; }
 /* ---- Topbar (barre rouge AFI-DOCS) --------------------------------------- */
 .topbar {
   height: var(--topbar-h);
-  background: linear-gradient(180deg, var(--red) 0%, var(--red-dark) 130%);
+  background: var(--red);
   color: #fff;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 28px;
   position: fixed; top: 0; left: 0; right: 0; z-index: 30;
-  box-shadow: var(--sh-md);
+  box-shadow: 0 2px 12px rgba(15,23,42,.10);
 }
 .topbar .right { display: flex; align-items: center; gap: 16px; }
 /* Nom de l'app, discret, à côté du logo (plus de gros titre centré redondant) */
@@ -102,10 +114,8 @@ h3 { font-size: 16px; font-weight: 800; }
   transition: background var(--t), color var(--t);
 }
 .nav-item:hover { background: var(--surface-2); color: var(--navy); }
-.nav-item.active { background: var(--navy); color: #fff; font-weight: 800; box-shadow: var(--sh-sm);
-  position: relative; }
-.nav-item.active::before { content: ''; position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
-  width: 3px; height: 18px; border-radius: 2px; background: var(--red-bright); }
+.nav-item.active { background: var(--navy); color: #fff; font-weight: 800; box-shadow: var(--sh-sm); }
+.nav-item.active:hover { background: var(--navy); color: #fff; }
 .content { margin-left: var(--sidebar-w); flex: 1; padding: 30px 38px; max-width: 1200px; }
 
 /* ---- Cartes -------------------------------------------------------------- */
@@ -130,9 +140,11 @@ h3 { font-size: 16px; font-weight: 800; }
 .stat-label { font-size: 13px; color: var(--muted); font-weight: 600; margin-top: 2px; }
 .tone-navy { background: var(--navy); }
 .tone-red { background: var(--red); }
-.tone-blue { background: #2D6CDF; }
-.tone-green { background: #1E8E5A; }
-.tone-orange { background: #E07B39; }
+.tone-blue { background: var(--docx); }
+.tone-green { background: var(--download); }
+.tone-orange { background: var(--notif); }
+.tone-purple { background: var(--pdf); }
+.tone-teal { background: var(--image); }
 
 /* Bascule d'affichage liste / grille */
 .view-toggle { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 999px;
