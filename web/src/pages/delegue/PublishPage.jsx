@@ -66,10 +66,10 @@ export default function PublishPage() {
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: 760, marginInline: 'auto' }}>
       <div className="page-title">Publier une ressource</div>
 
-      <form className="card" style={{ maxWidth: 640 }} onSubmit={submit}>
+      <form className="card" onSubmit={submit}>
         <label className="field">Ma classe (verrouillée)</label>
         <input className="input"
                value={filiere && niveau ? `${filiere.code} — ${filiere.nom} · ${niveau.nom}` : 'Chargement…'}

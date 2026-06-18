@@ -66,9 +66,9 @@ export default function AdminPublishPage() {
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: 820, marginInline: 'auto' }}>
       <div className="page-title">Publier une ressource (admin)</div>
-      <form className="card" style={{ maxWidth: 760 }} onSubmit={submit}>
+      <form className="card" onSubmit={submit}>
         <label className="field">Titre</label>
         <input className="input" value={titre} onChange={(e) => setTitre(e.target.value)} placeholder="Titre de la ressource" />
 
