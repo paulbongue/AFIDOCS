@@ -131,9 +131,9 @@ h3 { font-size: 16px; font-weight: 800; }
 .nav-item.active::before { content: ''; position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
   width: 3px; height: 18px; border-radius: 2px; background: var(--red); }
 .content { margin-left: var(--sidebar-w); flex: 1; padding: 30px 38px; min-width: 0; }
-/* Le contenu de chaque page est centré (boîte max 1200px) dans l'espace
+/* Le contenu de chaque page est centré (boîte max 1400px) dans l'espace
    disponible à droite de la sidebar — plus de gros vide d'un seul côté. */
-.content > * { max-width: 1200px; margin-inline: auto; }
+.content > * { max-width: 1400px; margin-inline: auto; }
 
 /* ---- Cartes -------------------------------------------------------------- */
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
