@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Topbar from './Topbar';
+import AssistantWidget from './AssistantWidget';
 
 // Coquille commune des espaces (étudiant / délégué / admin) :
 // barre supérieure + barre latérale qui devient un menu hamburger dépliable
@@ -20,6 +21,7 @@ export default function DashboardShell({ profilePath, children }) {
         {open && <div className="sidebar-backdrop" onClick={() => setOpen(false)} />}
         <main className="content"><Outlet /></main>
       </div>
+      <AssistantWidget />
     </>
   );
 }

@@ -23,4 +23,10 @@ return [
         ],
     ],
 
+    // Assistant IA (Google Gemini — offre gratuite). Clé : https://aistudio.google.com
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.0-flash'),
+    ],
+
 ];
