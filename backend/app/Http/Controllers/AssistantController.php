@@ -118,7 +118,7 @@ TXT;
         } else {
             foreach ($posts as $p) {
                 $when = optional($p->created_at)->format('d/m');
-                $who = $p->auteur->name ?? 'Administration';
+                $who = $p->auteur?->name ?? 'Administration';
                 $txt = trim((string) $p->contenu) !== '' ? mb_strimwidth($p->contenu, 0, 160, '…') : '(photo / pièce jointe)';
                 $cible = $p->filieres->isEmpty() ? 'tous' : $p->filieres->pluck('code')->implode(', ');
                 $lines[] = "- [{$when}] {$who} ({$cible}) : {$txt}";
@@ -132,9 +132,9 @@ TXT;
         } else {
             foreach ($res as $r) {
                 $when = optional($r->created_at)->format('d/m');
-                $fil = $r->matiere->niveau->filiere->code ?? '';
-                $niv = $r->matiere->niveau->nom ?? '';
-                $mat = $r->matiere->nom ?? '';
+                $fil = $r->matiere?->niveau?->filiere?->code ?? '';
+                $niv = $r->matiere?->niveau?->nom ?? '';
+                $mat = $r->matiere?->nom ?? '';
                 $lines[] = "- [{$when}] « {$r->titre} » ({$fil} · {$niv} · {$mat})";
             }
         }
