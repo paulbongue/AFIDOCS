@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import ResourceListItem from '../../components/ResourceListItem';
-import DigestCard from '../../components/DigestCard';
 import { IconUpload, IconFolder, IconSearch } from '../../components/Icons';
 
 export default function DashboardPage() {
@@ -22,9 +21,7 @@ export default function DashboardPage() {
     <div>
       <div className="page-title">Bonjour, {prenom}</div>
 
-      <DigestCard />
-
-      <div className="quick" style={{ marginTop: 16 }}>
+      <div className="quick">
         <div className="quick-title">Actions rapides</div>
         <div className="quick-row">
           <button className="quick-btn primary" onClick={() => navigate('/delegue/publier')}>

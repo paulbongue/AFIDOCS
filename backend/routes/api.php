@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\ActiviteController;
-use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClasseController;
 use App\Http\Controllers\CommentaireController;
@@ -39,10 +38,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout-others', [AuthController::class, 'logoutOtherDevices']);
     Route::post('/me/password', [AuthController::class, 'updatePassword']);
     Route::post('/me/push-token', [AuthController::class, 'updatePushToken']);
-
-    // Assistant IA (chat contextuel + résumé des nouveautés)
-    Route::post('/assistant/chat', [AssistantController::class, 'chat']);
-    Route::get('/assistant/digest', [AssistantController::class, 'digest']);
 
     // Notifications in-app (cloche)
     Route::get('/notifications', [NotificationController::class, 'index']);

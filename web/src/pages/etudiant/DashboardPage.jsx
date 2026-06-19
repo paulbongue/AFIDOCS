@@ -4,7 +4,6 @@ import client from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import ResourceListItem from '../../components/ResourceListItem';
 import StatCard from '../../components/StatCard';
-import DigestCard from '../../components/DigestCard';
 import { IconBook, IconCap, IconLayers } from '../../components/Icons';
 
 export default function DashboardPage() {
@@ -31,9 +30,7 @@ export default function DashboardPage() {
     <div>
       <div className="page-title">Bonjour, {prenom}</div>
 
-      <DigestCard />
-
-      <div className="stats-row" style={{ marginTop: 16 }}>
+      <div className="stats-row">
         <StatCard icon={IconBook} value={stats.ressources} label="Ressources disponibles" tone="navy" />
         <StatCard icon={IconCap} value={stats.filieres} label="Filières" tone="red" />
         <StatCard icon={IconLayers} value={stats.matieres} label="Matières" tone="blue" />

@@ -5,7 +5,6 @@ import Badge from '../../components/Badge';
 import StatCard from '../../components/StatCard';
 import { IconBook, IconUsers, IconBell, IconCap, IconSearch, IconUpload, IconSliders, IconDownload } from '../../components/Icons';
 import ActivityPanel from '../../components/ActivityPanel';
-import DigestCard from '../../components/DigestCard';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -26,8 +25,6 @@ export default function DashboardPage() {
         <h1 className="page-title">Tableau de bord</h1>
         <p className="page-sub">Vue d'ensemble de l'activité de la plateforme — Administration</p>
       </div>
-
-      <DigestCard />
 
       <div className="quick">
         <div className="quick-title">Actions rapides</div>
