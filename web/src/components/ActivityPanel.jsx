@@ -106,7 +106,7 @@ export default function ActivityPanel() {
       </div>
 
       {/* Rapport complet téléchargeable (web/mobile séparés) sur une durée choisie */}
-      <div className="card mt">
+      <div className="card mt" id="rapport-complet">
         <h3 style={{ marginTop: 0 }}>Rapport complet d'activité</h3>
         <div className="muted" style={{ marginBottom: 12 }}>
           Rapport structuré (CSV) séparant l'activité en ligne (web) et l'activité mobile,

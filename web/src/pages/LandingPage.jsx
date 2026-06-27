@@ -87,11 +87,13 @@ export default function LandingPage() {
             Installez l'application pour consulter vos cours <b>même hors connexion</b>,
             recevoir les notifications et lire vos documents (PDF, images) directement dans l'app.
           </p>
-          <a className="btn btn-red" href="/AFI-DOCS.apk" download>⬇ Télécharger l'application (Android)</a>
+          <a className="btn btn-red"
+             href="https://expo.dev/accounts/pauldaryll/projects/afi-mobile/builds/da40ab79-38ef-459f-aa28-d264501203c0"
+             target="_blank" rel="noopener noreferrer">⬇ Installer l'application (Android)</a>
           <div className="lp-download-steps">
-            <span>1. Téléchargez le fichier <b>.apk</b> sur votre téléphone.</span>
-            <span>2. Ouvrez-le, puis autorisez « installer des applications inconnues » si demandé.</span>
-            <span>3. Installez, puis connectez-vous avec votre compte AFI.</span>
+            <span>1. Ouvrez ce lien <b>depuis votre téléphone Android</b>.</span>
+            <span>2. Appuyez sur « Install » / « Télécharger », puis autorisez « installer des applications inconnues » si demandé.</span>
+            <span>3. Ouvrez l'application et connectez-vous avec votre compte AFI.</span>
           </div>
           <p className="lp-download-note">Compatible Android uniquement. Version iOS non disponible pour le moment.</p>
         </div>

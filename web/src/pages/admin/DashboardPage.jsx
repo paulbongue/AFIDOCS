@@ -42,7 +42,8 @@ export default function DashboardPage() {
             <IconUsers size={16} /> Utilisateurs
           </button>
           <button className="quick-btn" onClick={() => {
-            document.getElementById('rapport-activite')?.scrollIntoView({ behavior: 'smooth' });
+            const el = document.getElementById('rapport-complet') || document.getElementById('rapport-activite');
+            el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }}>
             <IconDownload size={16} /> Rapport complet
           </button>
