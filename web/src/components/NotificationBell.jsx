@@ -5,18 +5,22 @@ import { useAuth } from '../context/AuthContext';
 import { IconBell, IconChat, IconMegaphone, IconBook, IconUsers, IconPin } from './Icons';
 
 // Catégorie visuelle (icône + couleur) déduite des données de la notification.
+// L'ordre est important : un commentaire porte aussi ressource_id, un nouveau
+// membre porte aussi link=classe — on teste donc le plus spécifique d'abord.
 function categoryOf(data) {
   const d = data || {};
+  if (d.type === 'commentaire')
+    return { Icon: IconChat, color: 'var(--image)', bg: '#E0F2F5', label: 'Commentaire' };
+  if (d.kind === 'membre')
+    return { Icon: IconUsers, color: 'var(--download)', bg: 'var(--success-bg)', label: 'Nouveau membre' };
   if (d.kind === 'emploi' || d.link === 'emploi')
     return { Icon: IconPin, color: 'var(--docx)', bg: '#E7E9FB', label: 'Emploi du temps' };
-  if (d.link === 'classe' || d.message_id)
+  if (d.kind === 'message' || d.message_id || d.link === 'classe')
     return { Icon: IconChat, color: 'var(--pdf)', bg: '#F0E8FC', label: 'Message de classe' };
-  if (d.link === 'annonces' || d.post_id)
+  if (d.kind === 'annonce' || d.post_id || d.link === 'annonces')
     return { Icon: IconMegaphone, color: 'var(--notif)', bg: '#FDEBDD', label: 'Annonce' };
   if (d.ressource_id)
     return { Icon: IconBook, color: 'var(--download)', bg: 'var(--success-bg)', label: 'Nouvelle ressource' };
-  if (d.kind === 'membre' || d.new_user_id)
-    return { Icon: IconUsers, color: 'var(--download)', bg: 'var(--success-bg)', label: 'Nouveau membre' };
   return { Icon: IconBell, color: 'var(--muted)', bg: '#EEF1F4', label: 'Notification' };
 }
 

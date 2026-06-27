@@ -9,22 +9,27 @@ import { useNotifications } from '../context/NotificationsContext';
 import { colors, radius, shadow } from '../theme';
 
 // Catégorie visuelle (icône + couleur) déduite des données de la notification.
+// L'ordre est important : les types les plus spécifiques sont testés en premier
+// (un commentaire et un nouveau membre portent aussi ressource_id / link=classe).
 function categoryOf(data) {
   const d = data || {};
+  if (d.type === 'commentaire') {
+    return { icon: 'message-circle', color: colors.fileImage, bg: '#E0F2F5', label: 'Commentaire' };
+  }
+  if (d.kind === 'membre') {
+    return { icon: 'user-plus', color: colors.success, bg: '#E3F4E7', label: 'Nouveau membre' };
+  }
   if (d.kind === 'emploi' || d.link === 'emploi') {
     return { icon: 'calendar', color: colors.fileDocx, bg: '#E7E9FB', label: 'Emploi du temps' };
   }
-  if (d.link === 'classe' || d.message_id) {
+  if (d.kind === 'message' || d.message_id || d.link === 'classe') {
     return { icon: 'chat', color: colors.filePdf, bg: '#F0E8FC', label: 'Message de classe' };
   }
-  if (d.link === 'annonces' || d.post_id) {
+  if (d.kind === 'annonce' || d.post_id || d.link === 'annonces') {
     return { icon: 'megaphone', color: colors.notif, bg: '#FDEBDD', label: 'Annonce' };
   }
   if (d.ressource_id) {
     return { icon: 'file', color: colors.download, bg: '#E3F4E7', label: 'Nouvelle ressource' };
-  }
-  if (d.kind === 'membre' || d.new_user_id) {
-    return { icon: 'user-plus', color: colors.success, bg: '#E3F4E7', label: 'Nouveau membre' };
   }
   return { icon: 'bell', color: colors.textMuted, bg: colors.muted, label: 'Notification' };
 }
