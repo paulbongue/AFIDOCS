@@ -88,7 +88,7 @@ export default function LandingPage() {
             recevoir les notifications et lire vos documents (PDF, images) directement dans l'app.
           </p>
           <a className="btn btn-red"
-             href="https://expo.dev/accounts/pauldaryll/projects/afi-mobile/builds/db2c9dbd-cc9e-4c51-a6c4-f3c2ce2003fd"
+             href="https://expo.dev/accounts/pauldaryll/projects/afi-mobile/builds/4c02840e-31a1-4d5e-bb84-12dbe28255d1"
              target="_blank" rel="noopener noreferrer">⬇ Installer l'application (Android)</a>
           <div className="lp-download-steps">
             <span>1. Ouvrez ce lien <b>depuis votre téléphone Android</b>.</span>
