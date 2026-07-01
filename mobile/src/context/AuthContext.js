@@ -75,6 +75,12 @@ export function AuthProvider({ children }) {
     await client.post('/login/otp/resend', { email });
   }
 
+  // Met à jour le profil en mémoire (ex. après confirmation de l'e-mail de sécurité).
+  async function updateUser(u) {
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(u));
+    setUser(u);
+  }
+
   async function logout() {
     try {
       await clearPushToken();      // retire le jeton push côté serveur
@@ -88,7 +94,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, verifyOtp, resendOtp, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, verifyOtp, resendOtp, updateUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

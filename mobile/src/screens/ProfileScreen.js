@@ -21,7 +21,7 @@ const ROLE_LABEL = { admin: 'Administrateur', delegue: 'Délégué', etudiant: '
 const APP_VERSION = Constants?.expoConfig?.version || '1.0.1';
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const { isOnline } = useNetwork();
   const [lastSync, setLastSync] = useState(null);
   const [downloaded, setDownloaded] = useState(0);
@@ -31,6 +31,38 @@ export default function ProfileScreen() {
   const [pwdBusy, setPwdBusy] = useState(false);
   const [open, setOpen] = useState(null); // section dépliée (une à la fois)
   const toggle = (id) => setOpen((o) => (o === id ? null : id));
+
+  // E-mail de sécurité (OTP)
+  const [secEmail, setSecEmail] = useState('');
+  const [secCode, setSecCode] = useState('');
+  const [secStep, setSecStep] = useState('idle'); // 'idle' | 'sent'
+  const [secBusy, setSecBusy] = useState(false);
+
+  async function sendContactCode() {
+    if (!isOnline) return Alert.alert('Hors-ligne', 'Connecte-toi à internet.');
+    if (!secEmail.trim()) return Alert.alert('Champ requis', 'Saisis une adresse e-mail réelle.');
+    setSecBusy(true);
+    try {
+      const { data } = await client.post('/me/contact-email', { email: secEmail.trim().toLowerCase() });
+      setSecStep('sent');
+      Alert.alert('Code envoyé', `Un code de confirmation a été envoyé à ${data.pending}.`);
+    } catch (e) {
+      Alert.alert('Erreur', e?.response?.data?.errors?.email?.[0] || e?.response?.data?.message || 'Envoi impossible.');
+    } finally { setSecBusy(false); }
+  }
+
+  async function confirmContactCode() {
+    if (secCode.trim().length < 6) return Alert.alert('Code incomplet', 'Saisis le code à 6 chiffres.');
+    setSecBusy(true);
+    try {
+      const { data } = await client.post('/me/contact-email/confirm', { code: secCode.trim() });
+      await updateUser(data.user);
+      setSecStep('idle'); setSecEmail(''); setSecCode('');
+      Alert.alert('Confirmée', 'Adresse e-mail de sécurité confirmée. La double authentification est active.');
+    } catch (e) {
+      Alert.alert('Erreur', e?.response?.data?.errors?.code?.[0] || e?.response?.data?.message || 'Code invalide.');
+    } finally { setSecBusy(false); }
+  }
 
   const refresh = useCallback(async () => {
     setLastSync(await getLastSyncAt());
@@ -173,6 +205,57 @@ export default function ProfileScreen() {
           <TouchableOpacity style={styles.btnRed} onPress={changePassword} disabled={pwdBusy} activeOpacity={0.85}>
             {pwdBusy ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>Mettre à jour</Text>}
           </TouchableOpacity>
+        </Section>
+
+        <Section id="secmail" icon="shield" tint={colors.brand} tintBg={colors.brandSoft}
+                 title="E-mail de sécurité" subtitle="Code de connexion (double authentification)"
+                 open={open} onToggle={toggle}>
+          <Text style={styles.deviceNote}>
+            Cette adresse e-mail réelle reçoit ton code de connexion. Elle ne remplace pas ton
+            identifiant ({user?.email}) — elle sert uniquement à la sécurité.
+          </Text>
+
+          {!!user?.contact_email && (
+            <Row label="Adresse confirmée" value={`✓ ${user.contact_email}`} valueColor={colors.success} />
+          )}
+          {!user?.contact_email && !!user?.contact_email_pending && (
+            <Row label="En attente" value={user.contact_email_pending} />
+          )}
+
+          {secStep === 'idle' ? (
+            <>
+              <TextInput
+                style={styles.input}
+                value={secEmail}
+                onChangeText={setSecEmail}
+                placeholder={user?.contact_email ? 'Nouvelle adresse e-mail réelle' : 'votre.adresse@exemple.com'}
+                placeholderTextColor={colors.textLight}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+              <TouchableOpacity style={styles.btnRed} onPress={sendContactCode} disabled={secBusy} activeOpacity={0.85}>
+                {secBusy ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>Envoyer un code de confirmation</Text>}
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <TextInput
+                style={[styles.input, { textAlign: 'center', fontSize: 22, fontWeight: '800', letterSpacing: 8 }]}
+                value={secCode}
+                onChangeText={(t) => setSecCode(t.replace(/\D/g, '').slice(0, 6))}
+                placeholder="••••••"
+                placeholderTextColor={colors.textLight}
+                keyboardType="number-pad"
+                maxLength={6}
+              />
+              <TouchableOpacity style={styles.btnRed} onPress={confirmContactCode} disabled={secBusy} activeOpacity={0.85}>
+                {secBusy ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnRedText}>Confirmer</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.btnOutline} onPress={() => { setSecStep('idle'); setSecCode(''); }} activeOpacity={0.85}>
+                <Text style={styles.btnOutlineText}>Annuler</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </Section>
 
         <Section id="devices" icon="device" tint={colors.notif} tintBg="#FDEBDD"

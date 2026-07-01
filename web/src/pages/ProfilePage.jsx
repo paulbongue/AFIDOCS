@@ -22,14 +22,54 @@ function Section({ id, title, open, onToggle, children }) {
 }
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState('info'); // section dépliée (une à la fois)
   const [pwd, setPwd] = useState({ current_password: '', password: '', password_confirmation: '' });
   const [msg, setMsg] = useState(null);
   const [busy, setBusy] = useState(false);
 
+  // E-mail de sécurité (OTP)
+  const [secEmail, setSecEmail] = useState('');
+  const [secCode, setSecCode] = useState('');
+  const [secStep, setSecStep] = useState('idle'); // 'idle' | 'sent'
+  const [secMsg, setSecMsg] = useState(null);
+  const [secBusy, setSecBusy] = useState(false);
+
   const toggle = (id) => setOpen((o) => (o === id ? null : id));
+
+  async function sendContactCode(e) {
+    e.preventDefault();
+    setSecMsg(null);
+    setSecBusy(true);
+    try {
+      const { data } = await client.post('/me/contact-email', { email: secEmail.trim().toLowerCase() });
+      setSecStep('sent');
+      setSecMsg({ type: 'ok', text: `Code envoyé à ${data.pending}. Consultez cette boîte e-mail.` });
+    } catch (err) {
+      setSecMsg({ type: 'err', text: err?.response?.data?.errors?.email?.[0] || err?.response?.data?.message || 'Envoi impossible.' });
+    } finally {
+      setSecBusy(false);
+    }
+  }
+
+  async function confirmContactCode(e) {
+    e.preventDefault();
+    setSecMsg(null);
+    setSecBusy(true);
+    try {
+      const { data } = await client.post('/me/contact-email/confirm', { code: secCode.trim() });
+      updateUser(data.user);
+      setSecStep('idle');
+      setSecEmail('');
+      setSecCode('');
+      setSecMsg({ type: 'ok', text: 'Adresse e-mail de sécurité confirmée. La double authentification est active pour ce compte.' });
+    } catch (err) {
+      setSecMsg({ type: 'err', text: err?.response?.data?.errors?.code?.[0] || err?.response?.data?.message || 'Code invalide.' });
+    } finally {
+      setSecBusy(false);
+    }
+  }
 
   async function changePassword(e) {
     e.preventDefault();
@@ -109,6 +149,55 @@ export default function ProfilePage() {
             )}
             <button className="btn btn-red mt" disabled={busy}>{busy ? 'Enregistrement…' : 'Mettre à jour'}</button>
           </form>
+        </Section>
+
+        <Section id="secmail" title="E-mail de sécurité (double authentification)" open={open} onToggle={toggle}>
+          <p className="muted" style={{ marginTop: 0 }}>
+            Cette adresse e-mail <b>réelle</b> reçoit votre code de connexion à usage unique.
+            Elle ne remplace pas votre identifiant ({user?.email}) — elle sert uniquement à la sécurité.
+          </p>
+
+          {user?.contact_email && (
+            <div className="spread mt">
+              <span className="muted">Adresse confirmée</span>
+              <b style={{ color: 'var(--success)' }}>✓ {user.contact_email}</b>
+            </div>
+          )}
+          {!user?.contact_email && user?.contact_email_pending && (
+            <div className="mt muted">Une confirmation est en attente pour {user.contact_email_pending}.</div>
+          )}
+
+          {secStep === 'idle' ? (
+            <form onSubmit={sendContactCode}>
+              <label className="field mt">{user?.contact_email ? 'Changer l’adresse e-mail de sécurité' : 'Ajouter une adresse e-mail de sécurité'}</label>
+              <input className="input" type="email" value={secEmail} autoComplete="email"
+                     onChange={(e) => setSecEmail(e.target.value)} placeholder="votre.adresse@exemple.com" />
+              {secMsg && (
+                <div style={{ marginTop: 12, color: secMsg.type === 'ok' ? 'var(--success)' : 'var(--red)' }}>{secMsg.text}</div>
+              )}
+              <button className="btn btn-red mt" disabled={secBusy || !secEmail}>
+                {secBusy ? 'Envoi…' : 'Envoyer un code de confirmation'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={confirmContactCode}>
+              <label className="field mt">Code de confirmation reçu par e-mail</label>
+              <input className="input login-otp-input" type="text" inputMode="numeric" maxLength={6}
+                     value={secCode} autoFocus
+                     onChange={(e) => setSecCode(e.target.value.replace(/\D/g, ''))} placeholder="••••••" />
+              {secMsg && (
+                <div style={{ marginTop: 12, color: secMsg.type === 'ok' ? 'var(--success)' : 'var(--red)' }}>{secMsg.text}</div>
+              )}
+              <div className="row mt" style={{ gap: 10 }}>
+                <button className="btn btn-red" disabled={secBusy || secCode.length < 6}>
+                  {secBusy ? 'Vérification…' : 'Confirmer'}
+                </button>
+                <button type="button" className="btn btn-ghost" onClick={() => { setSecStep('idle'); setSecCode(''); setSecMsg(null); }}>
+                  Annuler
+                </button>
+              </div>
+            </form>
+          )}
         </Section>
 
         <Section id="devices" title="Appareils connectés" open={open} onToggle={toggle}>

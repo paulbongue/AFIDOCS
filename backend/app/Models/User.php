@@ -26,6 +26,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'contact_email',
         'password',
         'role',
         'filiere_id',
@@ -37,6 +38,8 @@ class User extends Authenticatable
         'password',
         'remember_token',
         'otp_code_hash',
+        'contact_email_code_hash',
+        'contact_email_pending',
     ];
 
     protected function casts(): array
@@ -46,6 +49,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'otp_expires_at' => 'datetime',
             'otp_last_sent_at' => 'datetime',
+            'contact_email_code_expires_at' => 'datetime',
         ];
     }
 

@@ -60,16 +60,18 @@ class AuthController extends Controller
         $deviceName = $credentials['device_name'] ?? $request->userAgent() ?? 'mobile';
 
         // --- Double authentification (OTP) ----------------------------------
-        // Si l'OTP est activé ET que l'appareil n'est pas déjà « de confiance »,
-        // on n'ouvre PAS encore la session : on envoie un code par e-mail et on
-        // demande au client de le vérifier via /login/otp.
-        if (config('otp.enabled') && ! $this->deviceIsTrusted($user, $credentials['device_token'] ?? null)) {
+        // L'OTP ne s'applique QUE si l'utilisateur a une adresse e-mail de
+        // sécurité confirmée (sinon le code n'irait nulle part → blocage).
+        // On saute aussi l'OTP si l'appareil est déjà « de confiance ».
+        if (config('otp.enabled')
+            && $user->contact_email
+            && ! $this->deviceIsTrusted($user, $credentials['device_token'] ?? null)) {
             $this->sendOtp($user);
 
             return response()->json([
                 'otp_required' => true,
-                'email' => $this->maskEmail($user->email),
-                'message' => 'Un code de vérification a été envoyé à votre adresse e-mail.',
+                'email' => $this->maskEmail($user->contact_email),
+                'message' => 'Un code de vérification a été envoyé à votre adresse e-mail de sécurité.',
             ]);
         }
 
@@ -246,6 +248,78 @@ class AuthController extends Controller
         return response()->json(['message' => 'Jeton push enregistre.']);
     }
 
+    /**
+     * Étape 1 — l'utilisateur saisit son adresse e-mail de SÉCURITÉ (réelle) :
+     * on la met « en attente » et on envoie un code de confirmation À CETTE
+     * adresse. Elle ne devient active qu'après confirmation (protège contre les
+     * fautes de frappe qui pourraient verrouiller le compte).
+     */
+    public function setContactEmail(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email:rfc'],
+        ]);
+
+        $user = $request->user();
+        $length = (int) config('otp.length', 6);
+        $code = (string) random_int((int) str_pad('1', $length, '0'), (int) str_pad('', $length, '9'));
+
+        $user->forceFill([
+            'contact_email_pending' => Str::lower($data['email']),
+            'contact_email_code_hash' => Hash::make($code),
+            'contact_email_code_expires_at' => now()->addMinutes((int) config('otp.ttl_minutes', 10)),
+        ])->save();
+
+        Mail::to($data['email'])->send(
+            new OtpCodeMail($code, $user->name ?: 'utilisateur', (int) config('otp.ttl_minutes', 10))
+        );
+
+        return response()->json([
+            'message' => 'Un code de confirmation a été envoyé à cette adresse.',
+            'pending' => $this->maskEmail($data['email']),
+        ]);
+    }
+
+    /**
+     * Étape 2 — confirmation de l'adresse e-mail de sécurité avec le code reçu.
+     */
+    public function confirmContactEmail(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'code' => ['required', 'string'],
+        ]);
+
+        $user = $request->user();
+
+        if (! $user->contact_email_pending || ! $user->contact_email_code_hash
+            || ! $user->contact_email_code_expires_at
+            || now()->greaterThan($user->contact_email_code_expires_at)) {
+            throw ValidationException::withMessages([
+                'code' => ['Aucune confirmation en cours ou code expiré. Recommencez.'],
+            ]);
+        }
+
+        if (! Hash::check($data['code'], $user->contact_email_code_hash)) {
+            throw ValidationException::withMessages([
+                'code' => ['Code incorrect.'],
+            ]);
+        }
+
+        $user->forceFill([
+            'contact_email' => $user->contact_email_pending,
+            'contact_email_pending' => null,
+            'contact_email_code_hash' => null,
+            'contact_email_code_expires_at' => null,
+        ])->save();
+
+        $user->load('filiere', 'niveau');
+
+        return response()->json([
+            'message' => 'Adresse e-mail de sécurité confirmée.',
+            'user' => $this->userPayload($user),
+        ]);
+    }
+
     // -------------------------------------------------------------------
     // Helpers OTP / session
     // -------------------------------------------------------------------
@@ -289,7 +363,11 @@ class AuthController extends Controller
             'otp_last_sent_at' => now(),
         ])->save();
 
-        Mail::to($user->email)->send(
+        // Le code part vers l'adresse de SÉCURITÉ confirmée (repli sur
+        // l'identifiant si jamais elle n'est pas définie).
+        $destinataire = $user->contact_email ?: $user->email;
+
+        Mail::to($destinataire)->send(
             new OtpCodeMail($code, $user->name ?: 'utilisateur', (int) config('otp.ttl_minutes', 10))
         );
     }
@@ -382,6 +460,11 @@ class AuthController extends Controller
                 'id' => $user->niveau->id,
                 'nom' => $user->niveau->nom,
             ] : null,
+            // Adresse e-mail de sécurité (OTP) : état côté client.
+            'contact_email' => $user->contact_email,
+            'contact_email_pending' => $user->contact_email_pending
+                ? $this->maskEmail($user->contact_email_pending) : null,
+            'otp_enabled' => (bool) config('otp.enabled'),
         ];
     }
 }

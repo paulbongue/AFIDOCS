@@ -63,6 +63,12 @@ export function AuthProvider({ children }) {
     setUser(data.user);
   }
 
+  // Met à jour le profil en mémoire (ex. après confirmation de l'e-mail de sécurité).
+  function updateUser(u) {
+    localStorage.setItem(USER_KEY, JSON.stringify(u));
+    setUser(u);
+  }
+
   async function logout() {
     try { await client.post('/logout'); } catch (_) { /* ignore */ }
     localStorage.removeItem(TOKEN_KEY);
@@ -71,7 +77,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, verifyOtp, resendOtp, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, verifyOtp, resendOtp, updateUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

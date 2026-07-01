@@ -42,6 +42,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout-others', [AuthController::class, 'logoutOtherDevices']);
     Route::post('/me/password', [AuthController::class, 'updatePassword']);
     Route::post('/me/push-token', [AuthController::class, 'updatePushToken']);
+    // Adresse e-mail de sécurité (OTP) : saisie + confirmation par code.
+    Route::post('/me/contact-email', [AuthController::class, 'setContactEmail']);
+    Route::post('/me/contact-email/confirm', [AuthController::class, 'confirmContactEmail']);
 
     // Notifications in-app (cloche)
     Route::get('/notifications', [NotificationController::class, 'index']);
