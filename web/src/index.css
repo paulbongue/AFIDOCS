@@ -394,6 +394,10 @@ table.tbl tr:last-child td { border-bottom: none; }
 .login-right { width: 500px; display: flex; align-items: center; justify-content: center; padding: 40px; background: var(--surface); }
 .login-card { width: 100%; max-width: 390px; background: #fff; border: 1px solid var(--border);
   border-radius: 22px; padding: 38px 36px; box-shadow: var(--sh-lg); }
+.login-back { display: inline-block; color: var(--muted); font-size: 13px; font-weight: 700;
+  margin-bottom: 16px; transition: color var(--t); }
+.login-back:hover { color: var(--red); }
+.login-brand a { display: inline-block; }
 .login-card-head { margin-bottom: 18px; }
 .login-card-head h2 { font-size: 27px; font-weight: 900; }
 .login-card-head .muted { font-size: 13.5px; margin-top: 4px; }

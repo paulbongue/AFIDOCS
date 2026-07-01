@@ -141,8 +141,8 @@ class ActiviteController extends Controller
             };
 
             $put(['RAPPORT D\'ACTIVITÉ — AFI-DOCS']);
-            $put(['Période', $from->toDateString().' au '.$to->toDateString()]);
-            $put(['Généré le', now()->toDateTimeString()]);
+            $put(['Période', $from->format('d/m/Y').' au '.$to->format('d/m/Y')]);
+            $put(['Généré le', now()->format('d/m/Y \à H\hi')]);
             $put();
 
             // --- Synthèse séparant web et mobile -----------------------------

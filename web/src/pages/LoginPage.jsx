@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import PasswordInput from '../components/PasswordInput';
 
@@ -40,7 +40,9 @@ export default function LoginPage() {
     <div className="login-wrap">
       <div className="login-left">
         <div className="login-brand">
-          <img src="/logo-afi.png" alt="AFI-L'UE" />
+          <Link to="/" aria-label="Retour à l'accueil">
+            <img src="/logo-afi.png" alt="AFI-L'UE" />
+          </Link>
         </div>
 
         <div className="login-hero">
@@ -58,6 +60,7 @@ export default function LoginPage() {
 
       <div className="login-right">
         <form className="login-card" onSubmit={onSubmit}>
+          <Link to="/" className="login-back">← Retour à l'accueil</Link>
           <div className="login-card-head">
             <h2>Connexion</h2>
             <p className="muted">Accédez à votre espace AFI-DOCS.</p>

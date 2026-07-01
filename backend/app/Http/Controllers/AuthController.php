@@ -6,6 +6,9 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -22,13 +25,32 @@ class AuthController extends Controller
             'device_name' => ['nullable', 'string'],
         ]);
 
+        // Verrouillage anti-force-brute PAR COMPTE (en plus du throttle par IP) :
+        // cible une seule adresse e-mail depuis une même origine, ce qui bloque
+        // les attaques par dictionnaire sur un compte précis. Clé = email + IP.
+        $throttleKey = Str::lower($credentials['email']).'|'.$request->ip();
+        $maxTentatives = 5;
+
+        if (RateLimiter::tooManyAttempts($throttleKey, $maxTentatives)) {
+            $secondes = RateLimiter::availableIn($throttleKey);
+            $minutes = (int) ceil($secondes / 60);
+            throw ValidationException::withMessages([
+                'email' => ["Trop de tentatives de connexion. Réessayez dans environ {$minutes} minute(s)."],
+            ])->status(429);
+        }
+
         $user = User::where('email', $credentials['email'])->first();
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+            // Échec : on incrémente le compteur (fenêtre glissante de 5 minutes).
+            RateLimiter::hit($throttleKey, 300);
             throw ValidationException::withMessages([
                 'email' => ['Identifiants incorrects.'],
             ]);
         }
+
+        // Connexion réussie : on remet le compteur d'échecs à zéro.
+        RateLimiter::clear($throttleKey);
 
         $deviceName = $credentials['device_name'] ?? $request->userAgent() ?? 'mobile';
         $token = $user->createToken($deviceName)->plainTextToken;
@@ -89,7 +111,7 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'current_password' => ['required', 'string'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
         ]);
 
         $user = $request->user();
