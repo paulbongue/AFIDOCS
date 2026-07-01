@@ -409,6 +409,10 @@ table.tbl tr:last-child td { border-bottom: none; }
 .login-resend { display: block; margin: 14px auto 0; background: none; border: 0;
   color: var(--muted); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .login-resend:hover { color: var(--red); }
+.login-or { display: flex; align-items: center; gap: 12px; margin: 18px 0 14px; color: var(--muted); font-size: 12.5px; }
+.login-or::before, .login-or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.login-google { display: flex; justify-content: center; }
+.login-google-note { margin-top: 10px; text-align: center; color: var(--muted); font-size: 12px; }
 .login-card-head { margin-bottom: 18px; }
 .login-card-head h2 { font-size: 27px; font-weight: 900; }
 .login-card-head .muted { font-size: 13.5px; margin-top: 4px; }

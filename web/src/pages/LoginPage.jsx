@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import PasswordInput from '../components/PasswordInput';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 function homeFor(role) {
   return role === 'admin' ? '/admin' : role === 'delegue' ? '/delegue' : '/etudiant';
 }
 
 export default function LoginPage() {
-  const { login, verifyOtp, resendOtp, user } = useAuth();
+  const { login, verifyOtp, resendOtp, googleLogin, user } = useAuth();
   const navigate = useNavigate();
+  const googleBtnRef = useRef(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,6 +24,48 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(false);
   const [maskedEmail, setMaskedEmail] = useState('');
   const [info, setInfo] = useState('');
+
+  // Bouton « Se connecter avec Google » (Google Identity Services).
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID || step !== 'creds') return undefined;
+    let cancelled = false;
+
+    function render() {
+      if (cancelled || !window.google?.accounts?.id || !googleBtnRef.current) return;
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (resp) => {
+          try {
+            const u = await googleLogin(resp.credential);
+            navigate(homeFor(u.role), { replace: true });
+          } catch (err) {
+            setError(err?.response?.data?.errors?.email?.[0]
+              || err?.response?.data?.message
+              || 'Connexion Google impossible.');
+          }
+        },
+      });
+      googleBtnRef.current.innerHTML = '';
+      window.google.accounts.id.renderButton(googleBtnRef.current, {
+        theme: 'outline', size: 'large', width: 320, text: 'signin_with', locale: 'fr',
+      });
+    }
+
+    if (window.google?.accounts?.id) {
+      render();
+      return () => { cancelled = true; };
+    }
+
+    let s = document.getElementById('gsi-client');
+    if (!s) {
+      s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.async = true; s.defer = true; s.id = 'gsi-client';
+      document.body.appendChild(s);
+    }
+    s.addEventListener('load', render);
+    return () => { cancelled = true; s.removeEventListener('load', render); };
+  }, [step]);
 
   // Déjà connecté → atterrit sur la page d'accueil de l'espace.
   if (user) {
@@ -131,6 +176,16 @@ export default function LoginPage() {
             <button className="btn btn-red" style={{ width: '100%', marginTop: 22 }} disabled={loading}>
               {loading ? 'Connexion…' : 'Se connecter'}
             </button>
+
+            {GOOGLE_CLIENT_ID && (
+              <>
+                <div className="login-or"><span>ou</span></div>
+                <div ref={googleBtnRef} className="login-google" />
+                <p className="login-google-note">
+                  Réservé aux comptes ayant une adresse e-mail de sécurité confirmée.
+                </p>
+              </>
+            )}
           </form>
         ) : (
           <form className="login-card" onSubmit={onVerify}>

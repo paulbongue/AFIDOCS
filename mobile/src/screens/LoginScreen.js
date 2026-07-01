@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Alert,
 } from 'react-native';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { useAuth } from '../context/AuthContext';
 import { useNetwork } from '../context/NetworkContext';
 import { colors, radius } from '../theme';
+import { GOOGLE_WEB_CLIENT_ID } from '../config';
 import { AfiBadge, Wordmark } from '../components/Logo';
 import Icon from '../components/Icon';
 
 export default function LoginScreen() {
-  const { login, verifyOtp, resendOtp } = useAuth();
+  const { login, verifyOtp, resendOtp, googleLogin } = useAuth();
   const { isOnline } = useNetwork();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,11 +25,38 @@ export default function LoginScreen() {
   const [remember, setRemember] = useState(true);
   const [maskedEmail, setMaskedEmail] = useState('');
 
+  // Configuration Google Sign-In (une fois, si le Client ID est renseigné).
+  useEffect(() => {
+    if (GOOGLE_WEB_CLIENT_ID) {
+      GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
+    }
+  }, []);
+
   function errMsg(e, fallback) {
     return e?.response?.data?.errors?.code?.[0]
       || e?.response?.data?.message
       || e?.response?.data?.errors?.email?.[0]
       || fallback;
+  }
+
+  async function handleGoogle() {
+    if (!isOnline) {
+      Alert.alert('Hors-ligne', 'Une connexion internet est nécessaire.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await GoogleSignin.hasPlayServices();
+      const res = await GoogleSignin.signIn();
+      const idToken = res?.data?.idToken ?? res?.idToken;
+      if (!idToken) throw new Error('Jeton Google introuvable.');
+      await googleLogin(idToken);
+    } catch (e) {
+      if (e?.code === statusCodes.SIGN_IN_CANCELLED) return;
+      Alert.alert('Connexion Google', errMsg(e, 'Connexion Google impossible.'));
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleLogin() {
@@ -129,6 +158,23 @@ export default function LoginScreen() {
             {!isOnline && (
               <Text style={styles.offline}>● Hors-ligne — connexion internet requise pour s'identifier</Text>
             )}
+
+            {!!GOOGLE_WEB_CLIENT_ID && (
+              <>
+                <View style={styles.orRow}>
+                  <View style={styles.orLine} />
+                  <Text style={styles.orText}>ou</Text>
+                  <View style={styles.orLine} />
+                </View>
+                <TouchableOpacity style={styles.googleBtn} onPress={handleGoogle} disabled={loading} activeOpacity={0.85}>
+                  <Text style={styles.googleG}>G</Text>
+                  <Text style={styles.googleText}>Se connecter avec Google</Text>
+                </TouchableOpacity>
+                <Text style={styles.googleNote}>
+                  Réservé aux comptes ayant une adresse e-mail de sécurité confirmée.
+                </Text>
+              </>
+            )}
           </View>
         ) : (
           <View style={styles.card}>
@@ -200,6 +246,17 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: '#fff', fontWeight: '800', fontSize: 16, letterSpacing: 0.3 },
   offline: { color: colors.red, fontSize: 12, textAlign: 'center', marginTop: 12 },
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 18, marginBottom: 4 },
+  orLine: { flex: 1, height: 1, backgroundColor: colors.border },
+  orText: { color: colors.textMuted, fontSize: 12.5, fontWeight: '600' },
+  googleBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    borderWidth: 1.5, borderColor: colors.border, borderRadius: radius.sm,
+    paddingVertical: 12, marginTop: 12, backgroundColor: '#fff',
+  },
+  googleG: { color: '#4285F4', fontSize: 18, fontWeight: '900' },
+  googleText: { color: colors.navy, fontWeight: '800', fontSize: 15 },
+  googleNote: { color: colors.textMuted, fontSize: 11.5, textAlign: 'center', marginTop: 8, lineHeight: 16 },
   hint: { color: 'rgba(255,255,255,0.6)', fontSize: 12, textAlign: 'center', marginTop: 24, lineHeight: 18 },
 
   // Étape OTP

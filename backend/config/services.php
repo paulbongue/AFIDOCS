@@ -23,4 +23,11 @@ return [
         ],
     ],
 
+    // Connexion « Se connecter avec Google » : identifiant client OAuth (web).
+    // C'est ce même Client ID qui sert d'audience (aud) attendue dans l'ID token,
+    // que le token vienne du web (GIS) ou du mobile (webClientId).
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+    ],
+
 ];

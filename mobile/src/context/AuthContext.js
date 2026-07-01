@@ -75,6 +75,17 @@ export function AuthProvider({ children }) {
     await client.post('/login/otp/resend', { email });
   }
 
+  // Connexion via Google : l'écran de login obtient un ID token, on l'envoie au
+  // backend qui vérifie et ouvre la session si l'adresse correspond à un compte.
+  async function googleLogin(idToken) {
+    const { data } = await client.post('/auth/google', {
+      id_token: idToken,
+      device_name: 'expo-mobile',
+    });
+    await finalizeSession(data);
+    return data.user;
+  }
+
   // Met à jour le profil en mémoire (ex. après confirmation de l'e-mail de sécurité).
   async function updateUser(u) {
     await AsyncStorage.setItem(USER_KEY, JSON.stringify(u));
@@ -94,7 +105,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, verifyOtp, resendOtp, updateUser, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, verifyOtp, resendOtp, googleLogin, updateUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

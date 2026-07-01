@@ -14,7 +14,9 @@ const ROLES = [
   { key: 'delegue', label: 'Délégué' },
   { key: 'admin', label: 'Admin' },
 ];
-const EMPTY = { name: '', email: '', password: '', role: 'etudiant', filiere_id: null, niveau_id: null };
+// Création : prénom + nom (identifiant généré côté serveur, comme sur le web).
+// Édition : nom complet + email (identifiant modifiable).
+const EMPTY = { prenom: '', nom: '', name: '', email: '', password: '', role: 'etudiant', filiere_id: null, niveau_id: null };
 
 export default function AdminUsersScreen() {
   const [users, setUsers] = useState([]);
@@ -50,6 +52,7 @@ export default function AdminUsersScreen() {
   function startEdit(u) {
     setEditingId(u.id);
     setForm({
+      prenom: '', nom: '',
       name: u.name || '', email: u.email || '', password: '',
       role: u.role || 'etudiant',
       filiere_id: u.filiere?.id ?? null, niveau_id: u.niveau?.id ?? null,
@@ -62,16 +65,24 @@ export default function AdminUsersScreen() {
   }
 
   async function submit() {
-    if (!form.name || !form.email) return Alert.alert('Champs requis', 'Nom et email.');
-    if (!editingId && !form.password) return Alert.alert('Champs requis', 'Mot de passe.');
+    // Validation selon le mode (création = prénom+nom ; édition = nom complet).
+    if (editingId) {
+      if (!form.name) return Alert.alert('Champs requis', 'Le nom complet est requis.');
+    } else {
+      if (!form.prenom || !form.nom) return Alert.alert('Champs requis', 'Prénom et nom sont requis.');
+      if (!form.password) return Alert.alert('Champs requis', 'Le mot de passe est requis.');
+    }
     if (form.role === 'delegue' && !form.niveau_id) return Alert.alert('Classe requise', 'Un délégué doit avoir une classe.');
     setBusy(true);
     try {
-      const payload = { ...form, filiere_id: form.filiere_id || null, niveau_id: form.niveau_id || null };
+      const base = { role: form.role, filiere_id: form.filiere_id || null, niveau_id: form.niveau_id || null };
       if (editingId) {
-        if (!payload.password) delete payload.password; // inchangé
+        const payload = { ...base, name: form.name, email: form.email };
+        if (form.password) payload.password = form.password;
         await client.put(`/admin/users/${editingId}`, payload);
       } else {
+        // Identifiant généré côté serveur à partir du prénom, du nom, de la filière et du niveau.
+        const payload = { ...base, prenom: form.prenom, nom: form.nom, password: form.password };
         await client.post('/admin/users', payload);
       }
       closeForm(); await load();
@@ -118,11 +129,24 @@ export default function AdminUsersScreen() {
         {showForm && (
           <View style={styles.formCard}>
             <Text style={styles.formTitle}>{editingId ? 'Modifier le compte' : 'Nouveau compte'}</Text>
-            <TextInput style={styles.input} placeholder="Nom" placeholderTextColor={colors.textLight}
-                       value={form.name} onChangeText={(t) => setForm({ ...form, name: t })} />
-            <TextInput style={styles.input} placeholder="Email" placeholderTextColor={colors.textLight}
-                       autoCapitalize="none" keyboardType="email-address"
-                       value={form.email} onChangeText={(t) => setForm({ ...form, email: t })} />
+
+            {editingId ? (
+              <>
+                <TextInput style={styles.input} placeholder="Nom complet" placeholderTextColor={colors.textLight}
+                           value={form.name} onChangeText={(t) => setForm({ ...form, name: t })} />
+                <TextInput style={styles.input} placeholder="Identifiant (email)" placeholderTextColor={colors.textLight}
+                           autoCapitalize="none" keyboardType="email-address"
+                           value={form.email} onChangeText={(t) => setForm({ ...form, email: t })} />
+              </>
+            ) : (
+              <>
+                <TextInput style={styles.input} placeholder="Prénom" placeholderTextColor={colors.textLight}
+                           value={form.prenom} onChangeText={(t) => setForm({ ...form, prenom: t })} />
+                <TextInput style={styles.input} placeholder="Nom" placeholderTextColor={colors.textLight}
+                           value={form.nom} onChangeText={(t) => setForm({ ...form, nom: t })} />
+              </>
+            )}
+
             <TextInput style={styles.input}
                        placeholder={editingId ? 'Mot de passe (laisser vide = inchangé)' : 'Mot de passe'}
                        placeholderTextColor={colors.textLight}
@@ -153,6 +177,13 @@ export default function AdminUsersScreen() {
                 </View>
               </>
             )}
+            {!editingId && (
+              <Text style={styles.note}>
+                L'identifiant de connexion sera généré automatiquement à partir du prénom, du nom,
+                de la filière et du niveau.
+              </Text>
+            )}
+
             <TouchableOpacity style={styles.create} onPress={submit} disabled={busy}>
               <Text style={styles.createText}>
                 {busy ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Créer le compte'}
@@ -237,6 +268,7 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
   chip: { borderWidth: 1.5, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 5 },
   chipText: { fontWeight: '700', fontSize: 12 },
+  note: { color: colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: 10 },
   create: { backgroundColor: colors.red, borderRadius: radius.sm, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
   createText: { color: '#fff', fontWeight: '800' },
   uRow: {

@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -173,6 +174,60 @@ class AuthController extends Controller
         $this->sendOtp($user);
 
         return $ok;
+    }
+
+    /**
+     * Connexion « Se connecter avec Google ».
+     * Le client (web ou mobile) obtient un ID token Google, on le vérifie ici,
+     * puis on ouvre la session UNIQUEMENT si l'adresse Google (vérifiée) correspond
+     * à l'adresse e-mail de sécurité d'un compte existant. Sinon : accès refusé.
+     * Google faisant office de 2e facteur, on ne redemande pas d'OTP.
+     */
+    public function googleLogin(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'id_token' => ['required', 'string'],
+            'device_name' => ['nullable', 'string'],
+        ]);
+
+        // Vérification de l'ID token auprès de Google (signature + expiration).
+        $resp = Http::get('https://oauth2.googleapis.com/tokeninfo', [
+            'id_token' => $data['id_token'],
+        ]);
+
+        $refus = fn ($msg) => throw ValidationException::withMessages(['email' => [$msg]]);
+
+        if (! $resp->ok()) {
+            $refus('Jeton Google invalide ou expiré. Réessayez.');
+        }
+
+        $payload = $resp->json();
+        $expectedAud = config('services.google.client_id');
+
+        if (! $expectedAud || ($payload['aud'] ?? null) !== $expectedAud) {
+            $refus('Ce jeton Google ne provient pas de cette application.');
+        }
+
+        $emailVerified = $payload['email_verified'] ?? false;
+        $verified = $emailVerified === true || $emailVerified === 'true';
+        $email = Str::lower($payload['email'] ?? '');
+
+        if (! $verified || ! $email) {
+            $refus('Adresse Google non vérifiée.');
+        }
+
+        // Correspondance avec l'adresse e-mail de SÉCURITÉ d'un compte existant.
+        $user = User::whereRaw('LOWER(contact_email) = ?', [$email])->first();
+
+        if (! $user) {
+            $refus("Compte non reconnu : l'adresse « {$email} » n'est associée à aucun compte AFI-DOCS. "
+                .'Ajoutez-la d\'abord dans votre profil (E-mail de sécurité).');
+        }
+
+        $deviceName = $data['device_name'] ?? $request->userAgent() ?? 'google';
+
+        // Google a authentifié l'utilisateur : session ouverte sans OTP.
+        return response()->json($this->issueTokenResponse($user, $deviceName));
     }
 
     /**

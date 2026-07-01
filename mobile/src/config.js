@@ -62,3 +62,9 @@ export const API_URL = !__DEV__
 
 // Durée (ms) au-delà de laquelle une requête est considérée en échec.
 export const REQUEST_TIMEOUT = 10000;
+
+// « Se connecter avec Google » : Client ID OAuth de type **Web** du projet
+// Google Cloud (le même que côté backend/GOOGLE_CLIENT_ID et web). C'est ce
+// webClientId qui fait que l'ID token renvoyé a la bonne « audience » (aud),
+// vérifiée par le serveur. À renseigner après création du projet Google Cloud.
+export const GOOGLE_WEB_CLIENT_ID = '1055401424505-1lv88l3uinubb1j9obvf5ffjjqgsongb.apps.googleusercontent.com';

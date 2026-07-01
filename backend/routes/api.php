@@ -34,6 +34,9 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,
 Route::post('/login/otp', [AuthController::class, 'verifyOtp'])->middleware('throttle:10,1');
 Route::post('/login/otp/resend', [AuthController::class, 'resendOtp'])->middleware('throttle:3,1');
 
+// Connexion « Se connecter avec Google » (web + mobile).
+Route::post('/auth/google', [AuthController::class, 'googleLogin'])->middleware('throttle:10,1');
+
 // --- Authentifie (admin | delegue | etudiant) -------------------------------
 Route::middleware('auth:sanctum')->group(function () {
 

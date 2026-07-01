@@ -57,6 +57,14 @@ export function AuthProvider({ children }) {
     await client.post('/login/otp/resend', { email });
   }
 
+  // Connexion via Google : on envoie l'ID token au backend qui vérifie et ouvre
+  // la session si l'adresse Google correspond à un compte connu.
+  async function googleLogin(idToken) {
+    const { data } = await client.post('/auth/google', { id_token: idToken, device_name: 'web' });
+    finalizeSession(data);
+    return data.user;
+  }
+
   function finalizeSession(data) {
     localStorage.setItem(TOKEN_KEY, data.token);
     localStorage.setItem(USER_KEY, JSON.stringify(data.user));
@@ -77,7 +85,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, verifyOtp, resendOtp, updateUser, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, verifyOtp, resendOtp, googleLogin, updateUser, logout }}>
       {children}
     </AuthContext.Provider>
   );
