@@ -4,6 +4,7 @@ import client, { TOKEN_KEY, setAuthToken } from '../api/client';
 import { registerForPushAndSync, clearPushToken } from '../services/notifications';
 
 const USER_KEY = '@afi_user';
+const DEVICE_KEY = '@afi_device_token';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -29,19 +30,49 @@ export function AuthProvider({ children }) {
     })();
   }, []);
 
-  async function login(email, password) {
-    const { data } = await client.post('/login', {
-      email,
-      password,
-      device_name: 'expo-mobile',
-    });
+  // Ouvre réellement la session à partir de la réponse serveur { token, user }.
+  async function finalizeSession(data) {
     await AsyncStorage.setItem(TOKEN_KEY, data.token);
     await AsyncStorage.setItem(USER_KEY, JSON.stringify(data.user));
     setAuthToken(data.token);
     setToken(data.token);
     setUser(data.user);
     registerForPushAndSync(); // enregistre le jeton push (fire and forget)
+  }
+
+  // Étape 1 — identifiants. Renvoie { otpRequired } ou { otpRequired:false, user }.
+  async function login(email, password) {
+    const device_token = (await AsyncStorage.getItem(DEVICE_KEY)) || undefined;
+    const { data } = await client.post('/login', {
+      email,
+      password,
+      device_name: 'expo-mobile',
+      device_token,
+    });
+
+    if (data.otp_required) {
+      return { otpRequired: true, maskedEmail: data.email };
+    }
+
+    await finalizeSession(data);
+    return { otpRequired: false, user: data.user };
+  }
+
+  // Étape 2 — vérification du code reçu par e-mail.
+  async function verifyOtp(email, code, rememberDevice) {
+    const { data } = await client.post('/login/otp', {
+      email,
+      code,
+      device_name: 'expo-mobile',
+      remember_device: !!rememberDevice,
+    });
+    if (data.device_token) await AsyncStorage.setItem(DEVICE_KEY, data.device_token);
+    await finalizeSession(data);
     return data.user;
+  }
+
+  async function resendOtp(email) {
+    await client.post('/login/otp/resend', { email });
   }
 
   async function logout() {
@@ -57,7 +88,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, verifyOtp, resendOtp, logout }}>
       {children}
     </AuthContext.Provider>
   );

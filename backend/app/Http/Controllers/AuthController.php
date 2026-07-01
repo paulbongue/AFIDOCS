@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\OtpCodeMail;
+use App\Models\TrustedDevice;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -23,6 +26,8 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
             'device_name' => ['nullable', 'string'],
+            // Jeton d'appareil de confiance (« se souvenir de cet appareil »).
+            'device_token' => ['nullable', 'string'],
         ]);
 
         // Verrouillage anti-force-brute PAR COMPTE (en plus du throttle par IP) :
@@ -53,19 +58,119 @@ class AuthController extends Controller
         RateLimiter::clear($throttleKey);
 
         $deviceName = $credentials['device_name'] ?? $request->userAgent() ?? 'mobile';
-        $token = $user->createToken($deviceName)->plainTextToken;
 
-        // Limite a 3 appareils connectes : on ne garde que les 3 jetons les plus
-        // recents (le plus ancien est deconnecte au-dela).
-        $keep = $user->tokens()->orderByDesc('id')->take(3)->pluck('id');
-        $user->tokens()->whereNotIn('id', $keep)->delete();
+        // --- Double authentification (OTP) ----------------------------------
+        // Si l'OTP est activé ET que l'appareil n'est pas déjà « de confiance »,
+        // on n'ouvre PAS encore la session : on envoie un code par e-mail et on
+        // demande au client de le vérifier via /login/otp.
+        if (config('otp.enabled') && ! $this->deviceIsTrusted($user, $credentials['device_token'] ?? null)) {
+            $this->sendOtp($user);
 
-        $user->load('filiere', 'niveau');
+            return response()->json([
+                'otp_required' => true,
+                'email' => $this->maskEmail($user->email),
+                'message' => 'Un code de vérification a été envoyé à votre adresse e-mail.',
+            ]);
+        }
 
-        return response()->json([
-            'token' => $token,
-            'user' => $this->userPayload($user),
+        // Pas d'OTP (désactivé ou appareil de confiance) : session ouverte direct.
+        return response()->json($this->issueTokenResponse($user, $deviceName));
+    }
+
+    /**
+     * Étape 2 de la connexion : vérifie le code OTP reçu par e-mail, ouvre la
+     * session (token Sanctum) et, en option, mémorise l'appareil (30 jours).
+     */
+    public function verifyOtp(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+            'code' => ['required', 'string'],
+            'device_name' => ['nullable', 'string'],
+            'remember_device' => ['nullable', 'boolean'],
         ]);
+
+        $user = User::where('email', $data['email'])->first();
+
+        // Message volontairement générique (ne révèle pas si le compte existe).
+        $invalide = fn () => throw ValidationException::withMessages([
+            'code' => ['Code invalide ou expiré. Redemandez un nouveau code.'],
+        ]);
+
+        if (! $user || ! $user->otp_code_hash || ! $user->otp_expires_at) {
+            $invalide();
+        }
+
+        // Code expiré : on nettoie et on refuse.
+        if (now()->greaterThan($user->otp_expires_at)) {
+            $this->clearOtp($user);
+            $invalide();
+        }
+
+        // Trop d'essais sur ce code : on l'invalide et on force un renvoi.
+        if ($user->otp_attempts >= (int) config('otp.max_attempts')) {
+            $this->clearOtp($user);
+            throw ValidationException::withMessages([
+                'code' => ['Trop d\'essais. Un nouveau code est nécessaire.'],
+            ]);
+        }
+
+        if (! Hash::check($data['code'], $user->otp_code_hash)) {
+            $user->increment('otp_attempts');
+            throw ValidationException::withMessages([
+                'code' => ['Code incorrect.'],
+            ]);
+        }
+
+        // Code correct : on l'invalide immédiatement (usage unique).
+        $this->clearOtp($user);
+
+        $deviceName = $data['device_name'] ?? $request->userAgent() ?? 'mobile';
+        $payload = $this->issueTokenResponse($user, $deviceName);
+
+        // « Se souvenir de cet appareil » : on émet un jeton d'appareil de
+        // confiance (stocké haché) que le client renverra aux prochaines connexions.
+        if (! empty($data['remember_device'])) {
+            $payload['device_token'] = $this->rememberDevice($user, $deviceName);
+        }
+
+        return response()->json($payload);
+    }
+
+    /**
+     * Renvoi d'un nouveau code OTP (avec délai anti-spam).
+     */
+    public function resendOtp(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $user = User::where('email', $data['email'])->first();
+
+        // Réponse identique quoi qu'il arrive (pas de fuite d'information).
+        $ok = response()->json([
+            'message' => 'Si un code était en attente, un nouveau vient d\'être envoyé.',
+        ]);
+
+        if (! $user) {
+            return $ok;
+        }
+
+        $cooldown = (int) config('otp.resend_cooldown_seconds');
+        if ($user->otp_last_sent_at) {
+            $ecoule = now()->getTimestamp() - $user->otp_last_sent_at->getTimestamp();
+            if ($ecoule < $cooldown) {
+                $reste = $cooldown - $ecoule;
+                throw ValidationException::withMessages([
+                    'code' => ["Veuillez patienter {$reste} seconde(s) avant de redemander un code."],
+                ])->status(429);
+            }
+        }
+
+        $this->sendOtp($user);
+
+        return $ok;
     }
 
     /**
@@ -139,6 +244,122 @@ class AuthController extends Controller
         $request->user()->update(['expo_push_token' => $data['token'] ?? null]);
 
         return response()->json(['message' => 'Jeton push enregistre.']);
+    }
+
+    // -------------------------------------------------------------------
+    // Helpers OTP / session
+    // -------------------------------------------------------------------
+
+    /**
+     * Ouvre la session : crée le token Sanctum, applique la limite de 3
+     * appareils et renvoie le corps de réponse standard { token, user }.
+     */
+    private function issueTokenResponse(User $user, string $deviceName): array
+    {
+        $token = $user->createToken($deviceName)->plainTextToken;
+
+        // Limite à 3 appareils connectés : on ne garde que les 3 jetons les plus
+        // récents (le plus ancien est déconnecté au-delà).
+        $keep = $user->tokens()->orderByDesc('id')->take(3)->pluck('id');
+        $user->tokens()->whereNotIn('id', $keep)->delete();
+
+        $user->load('filiere', 'niveau');
+
+        return [
+            'token' => $token,
+            'user' => $this->userPayload($user),
+        ];
+    }
+
+    /**
+     * Génère un code OTP, le stocke haché avec une expiration, et l'envoie par
+     * e-mail. On ne conserve jamais le code en clair.
+     */
+    private function sendOtp(User $user): void
+    {
+        $length = (int) config('otp.length', 6);
+        $min = (int) str_pad('1', $length, '0');       // ex. 100000
+        $max = (int) str_pad('', $length, '9');        // ex. 999999
+        $code = (string) random_int($min, $max);
+
+        $user->forceFill([
+            'otp_code_hash' => Hash::make($code),
+            'otp_expires_at' => now()->addMinutes((int) config('otp.ttl_minutes', 10)),
+            'otp_attempts' => 0,
+            'otp_last_sent_at' => now(),
+        ])->save();
+
+        Mail::to($user->email)->send(
+            new OtpCodeMail($code, $user->name ?: 'utilisateur', (int) config('otp.ttl_minutes', 10))
+        );
+    }
+
+    /**
+     * Efface le code OTP en attente (après succès, expiration ou abus).
+     */
+    private function clearOtp(User $user): void
+    {
+        $user->forceFill([
+            'otp_code_hash' => null,
+            'otp_expires_at' => null,
+            'otp_attempts' => 0,
+        ])->save();
+    }
+
+    /**
+     * Vérifie qu'un jeton d'appareil correspond à un appareil de confiance
+     * encore valide pour cet utilisateur (et rafraîchit sa date d'usage).
+     */
+    private function deviceIsTrusted(User $user, ?string $deviceToken): bool
+    {
+        if (! $deviceToken) {
+            return false;
+        }
+
+        $device = $user->trustedDevices()
+            ->where('token_hash', hash('sha256', $deviceToken))
+            ->where('expires_at', '>', now())
+            ->first();
+
+        if (! $device) {
+            return false;
+        }
+
+        $device->update(['last_used_at' => now()]);
+
+        return true;
+    }
+
+    /**
+     * Mémorise l'appareil courant et renvoie le jeton (en clair) à stocker côté
+     * client. On ne garde qu'un hash SHA-256 en base.
+     */
+    private function rememberDevice(User $user, string $deviceName): string
+    {
+        $plain = Str::random(48);
+
+        // Un peu de ménage : on retire les appareils expirés de ce compte.
+        $user->trustedDevices()->where('expires_at', '<=', now())->delete();
+
+        $user->trustedDevices()->create([
+            'token_hash' => hash('sha256', $plain),
+            'label' => Str::limit($deviceName, 60, ''),
+            'expires_at' => now()->addDays((int) config('otp.trusted_days', 30)),
+            'last_used_at' => now(),
+        ]);
+
+        return $plain;
+    }
+
+    /**
+     * Masque une adresse e-mail pour l'affichage (ex. jo***@gmail.com).
+     */
+    private function maskEmail(string $email): string
+    {
+        [$name, $domain] = array_pad(explode('@', $email, 2), 2, '');
+        $visible = mb_substr($name, 0, min(2, mb_strlen($name)));
+
+        return $visible.str_repeat('*', 3).($domain ? '@'.$domain : '');
     }
 
     private function userPayload(User $user): array

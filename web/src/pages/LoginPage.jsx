@@ -3,30 +3,44 @@ import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import PasswordInput from '../components/PasswordInput';
 
+function homeFor(role) {
+  return role === 'admin' ? '/admin' : role === 'delegue' ? '/delegue' : '/etudiant';
+}
+
 export default function LoginPage() {
-  const { login, user } = useAuth();
+  const { login, verifyOtp, resendOtp, user } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Déjà connecté → atterrit sur le tableau de bord / la page d'accueil de l'espace.
+  // Étape OTP (double authentification par e-mail).
+  const [step, setStep] = useState('creds'); // 'creds' | 'otp'
+  const [code, setCode] = useState('');
+  const [remember, setRemember] = useState(false);
+  const [maskedEmail, setMaskedEmail] = useState('');
+  const [info, setInfo] = useState('');
+
+  // Déjà connecté → atterrit sur la page d'accueil de l'espace.
   if (user) {
-    const home = user.role === 'admin' ? '/admin'
-      : user.role === 'delegue' ? '/delegue' : '/etudiant';
-    return <Navigate to={home} replace />;
+    return <Navigate to={homeFor(user.role)} replace />;
   }
 
   async function onSubmit(e) {
     e.preventDefault();
     setError('');
+    setInfo('');
     setLoading(true);
     try {
-      const u = await login(email.trim().toLowerCase(), password);
-      const home = u.role === 'admin' ? '/admin'
-        : u.role === 'delegue' ? '/delegue' : '/etudiant';
-      navigate(home, { replace: true });
+      const res = await login(email.trim().toLowerCase(), password);
+      if (res.otpRequired) {
+        setMaskedEmail(res.maskedEmail || '');
+        setStep('otp');
+        setInfo('Un code de vérification vient de vous être envoyé par e-mail.');
+      } else {
+        navigate(homeFor(res.user.role), { replace: true });
+      }
     } catch (err) {
       setError(err?.response?.data?.message
         || err?.response?.data?.errors?.email?.[0]
@@ -34,6 +48,43 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function onVerify(e) {
+    e.preventDefault();
+    setError('');
+    setInfo('');
+    setLoading(true);
+    try {
+      const u = await verifyOtp(email.trim().toLowerCase(), code.trim(), remember);
+      navigate(homeFor(u.role), { replace: true });
+    } catch (err) {
+      setError(err?.response?.data?.errors?.code?.[0]
+        || err?.response?.data?.message
+        || 'Code invalide. Réessayez.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function onResend() {
+    setError('');
+    setInfo('');
+    try {
+      await resendOtp(email.trim().toLowerCase());
+      setInfo('Un nouveau code vient de vous être envoyé.');
+    } catch (err) {
+      setError(err?.response?.data?.errors?.code?.[0]
+        || err?.response?.data?.message
+        || 'Impossible de renvoyer le code pour le moment.');
+    }
+  }
+
+  function backToCreds() {
+    setStep('creds');
+    setCode('');
+    setError('');
+    setInfo('');
   }
 
   return (
@@ -59,27 +110,68 @@ export default function LoginPage() {
       </div>
 
       <div className="login-right">
-        <form className="login-card" onSubmit={onSubmit}>
-          <Link to="/" className="login-back">← Retour à l'accueil</Link>
-          <div className="login-card-head">
-            <h2>Connexion</h2>
-            <p className="muted">Accédez à votre espace AFI-DOCS.</p>
-          </div>
+        {step === 'creds' ? (
+          <form className="login-card" onSubmit={onSubmit}>
+            <Link to="/" className="login-back">← Retour à l'accueil</Link>
+            <div className="login-card-head">
+              <h2>Connexion</h2>
+              <p className="muted">Accédez à votre espace AFI-DOCS.</p>
+            </div>
 
-          <label className="field">Identifiant</label>
-          <input className="input" type="email" value={email} autoComplete="username"
-                 onChange={(e) => setEmail(e.target.value)} placeholder="prenom.nom@afi.sn" />
+            <label className="field">Identifiant</label>
+            <input className="input" type="email" value={email} autoComplete="username"
+                   onChange={(e) => setEmail(e.target.value)} placeholder="prenom.nom@afi.sn" />
 
-          <label className="field">Mot de passe</label>
-          <PasswordInput value={password} autoComplete="current-password"
-                         onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+            <label className="field">Mot de passe</label>
+            <PasswordInput value={password} autoComplete="current-password"
+                           onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
 
-          {error && <div className="login-err">{error}</div>}
+            {error && <div className="login-err">{error}</div>}
 
-          <button className="btn btn-red" style={{ width: '100%', marginTop: 22 }} disabled={loading}>
-            {loading ? 'Connexion…' : 'Se connecter'}
-          </button>
-        </form>
+            <button className="btn btn-red" style={{ width: '100%', marginTop: 22 }} disabled={loading}>
+              {loading ? 'Connexion…' : 'Se connecter'}
+            </button>
+          </form>
+        ) : (
+          <form className="login-card" onSubmit={onVerify}>
+            <button type="button" className="login-back" onClick={backToCreds}>← Modifier l'identifiant</button>
+            <div className="login-card-head">
+              <h2>Vérification</h2>
+              <p className="muted">
+                Saisissez le code à 6 chiffres envoyé à {maskedEmail || 'votre adresse e-mail'}.
+              </p>
+            </div>
+
+            <label className="field">Code de vérification</label>
+            <input
+              className="input login-otp-input"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+              placeholder="••••••"
+              autoFocus
+            />
+
+            <label className="login-remember">
+              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+              <span>Se souvenir de cet appareil (30 jours)</span>
+            </label>
+
+            {info && <div className="login-info">{info}</div>}
+            {error && <div className="login-err">{error}</div>}
+
+            <button className="btn btn-red" style={{ width: '100%', marginTop: 18 }} disabled={loading}>
+              {loading ? 'Vérification…' : 'Vérifier et se connecter'}
+            </button>
+
+            <button type="button" className="login-resend" onClick={onResend}>
+              Renvoyer le code
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );

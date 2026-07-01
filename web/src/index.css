@@ -395,9 +395,20 @@ table.tbl tr:last-child td { border-bottom: none; }
 .login-card { width: 100%; max-width: 390px; background: #fff; border: 1px solid var(--border);
   border-radius: 22px; padding: 38px 36px; box-shadow: var(--sh-lg); }
 .login-back { display: inline-block; color: var(--muted); font-size: 13px; font-weight: 700;
-  margin-bottom: 16px; transition: color var(--t); }
+  margin-bottom: 16px; transition: color var(--t);
+  background: none; border: 0; padding: 0; cursor: pointer; font-family: inherit; }
 .login-back:hover { color: var(--red); }
 .login-brand a { display: inline-block; }
+.login-otp-input { text-align: center; font-size: 30px; font-weight: 800;
+  letter-spacing: 14px; padding-left: 14px; }
+.login-remember { display: flex; align-items: center; gap: 9px; margin-top: 14px;
+  font-size: 13.5px; color: var(--text); font-weight: 600; cursor: pointer; }
+.login-remember input { width: 16px; height: 16px; accent-color: var(--red); cursor: pointer; }
+.login-info { margin-top: 14px; background: var(--accent-soft); color: var(--navy);
+  border: 1px solid var(--border); border-radius: 12px; padding: 10px 13px; font-size: 13px; }
+.login-resend { display: block; margin: 14px auto 0; background: none; border: 0;
+  color: var(--muted); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.login-resend:hover { color: var(--red); }
 .login-card-head { margin-bottom: 18px; }
 .login-card-head h2 { font-size: 27px; font-weight: 900; }
 .login-card-head .muted { font-size: 13.5px; margin-top: 4px; }

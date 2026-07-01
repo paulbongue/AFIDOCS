@@ -30,6 +30,10 @@ use Illuminate\Support\Facades\Route;
 // Limitation anti-brute-force : 6 tentatives de connexion par minute et par IP.
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 
+// Double authentification (OTP par e-mail) : vérification du code + renvoi.
+Route::post('/login/otp', [AuthController::class, 'verifyOtp'])->middleware('throttle:10,1');
+Route::post('/login/otp/resend', [AuthController::class, 'resendOtp'])->middleware('throttle:3,1');
+
 // --- Authentifie (admin | delegue | etudiant) -------------------------------
 Route::middleware('auth:sanctum')->group(function () {
 

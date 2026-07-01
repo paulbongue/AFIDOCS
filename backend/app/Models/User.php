@@ -36,6 +36,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'otp_code_hash',
     ];
 
     protected function casts(): array
@@ -43,6 +44,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'otp_expires_at' => 'datetime',
+            'otp_last_sent_at' => 'datetime',
         ];
     }
 
@@ -71,6 +74,14 @@ class User extends Authenticatable
     public function niveau(): BelongsTo
     {
         return $this->belongsTo(Niveau::class);
+    }
+
+    /**
+     * Appareils mémorisés (« se souvenir de cet appareil ») pour l'OTP.
+     */
+    public function trustedDevices(): HasMany
+    {
+        return $this->hasMany(TrustedDevice::class);
     }
 
     // -------------------------------------------------------------------
