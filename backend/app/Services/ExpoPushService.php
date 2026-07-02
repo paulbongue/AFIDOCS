@@ -28,6 +28,12 @@ class ExpoPushService
             'body' => $body,
             'data' => $data,
             'sound' => 'default',
+            // Priorité HAUTE : indispensable pour qu'Android réveille l'app et
+            // affiche la notification quand elle est en arrière-plan ou fermée
+            // (en priorité normale, la livraison est différée/ignorée).
+            'priority' => 'high',
+            // Canal Android créé par l'app (importance suffisante pour la barre).
+            'channelId' => 'default',
         ], $tokens);
 
         try {
