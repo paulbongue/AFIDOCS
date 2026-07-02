@@ -121,7 +121,7 @@ export default function UsersPage() {
       <div className="spread" style={{ gap: 12 }}>
         <div className="page-title" style={{ marginBottom: 0 }}>Gestion des utilisateurs</div>
         <button className="btn btn-red" onClick={() => { setCreating((c) => !c); setEditForm(null); setForm(NEW); setMsg(null); }}>
-          {creating ? 'Fermer' : '+ Nouveau compte étudiant'}
+          {creating ? 'Fermer' : '+ Nouveau compte'}
         </button>
       </div>
 
