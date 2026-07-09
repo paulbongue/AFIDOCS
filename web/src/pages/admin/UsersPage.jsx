@@ -20,6 +20,8 @@ export default function UsersPage() {
 
   const [msg, setMsg] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [csvBusy, setCsvBusy] = useState(false);
+  const [csvResult, setCsvResult] = useState(null);
   const [q, setQ] = useState('');
   const [roleF, setRoleF] = useState('etudiant'); // par défaut : les étudiants
   const [filiereF, setFiliereF] = useState('');
@@ -59,6 +61,21 @@ export default function UsersPage() {
     } catch (err) {
       setMsg({ type: 'err', text: err?.response?.data?.message || 'Création impossible.' });
     } finally { setBusy(false); }
+  }
+
+  // ----- Import CSV -----
+  async function importCsv(file) {
+    if (!file) return;
+    setCsvBusy(true); setCsvResult(null); setMsg(null);
+    try {
+      const fd = new FormData();
+      fd.append('fichier', file);
+      const { data } = await client.post('/admin/users/import', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setCsvResult(data);
+      await load();
+    } catch (e) {
+      setMsg({ type: 'err', text: e?.response?.data?.message || 'Import impossible.' });
+    } finally { setCsvBusy(false); }
   }
 
   // ----- Édition -----
@@ -120,10 +137,32 @@ export default function UsersPage() {
     <div>
       <div className="spread" style={{ gap: 12 }}>
         <div className="page-title" style={{ marginBottom: 0 }}>Gestion des utilisateurs</div>
-        <button className="btn btn-red" onClick={() => { setCreating((c) => !c); setEditForm(null); setForm(NEW); setMsg(null); }}>
-          {creating ? 'Fermer' : '+ Nouveau compte'}
-        </button>
+        <div className="row" style={{ gap: 8 }}>
+          <label className="btn btn-ghost" style={{ cursor: csvBusy ? 'default' : 'pointer', opacity: csvBusy ? 0.6 : 1 }}>
+            {csvBusy ? 'Import…' : '⬆ Importer un CSV'}
+            <input type="file" accept=".csv,text/csv" hidden disabled={csvBusy}
+                   onChange={(e) => { importCsv(e.target.files?.[0]); e.target.value = ''; }} />
+          </label>
+          <button className="btn btn-red" onClick={() => { setCreating((c) => !c); setEditForm(null); setForm(NEW); setMsg(null); }}>
+            {creating ? 'Fermer' : '+ Nouveau compte'}
+          </button>
+        </div>
       </div>
+
+      {csvResult && (
+        <div className="card mt" style={{ borderColor: csvResult.errors?.length ? 'var(--red)' : 'var(--success)' }}>
+          <b>{csvResult.message}</b> — mot de passe par défaut : <code>{csvResult.default_password}</code> (à changer à la 1re connexion).
+          {csvResult.errors?.length > 0 && (
+            <ul style={{ marginTop: 8, color: 'var(--red)' }}>
+              {csvResult.errors.slice(0, 20).map((er, i) => <li key={i}>{er}</li>)}
+              {csvResult.errors.length > 20 && <li>… et {csvResult.errors.length - 20} autre(s) ligne(s) en erreur.</li>}
+            </ul>
+          )}
+          <div className="muted" style={{ marginTop: 8, fontSize: 12.5 }}>
+            Colonnes attendues (avec ligne d'en-tête) : <b>prénom, nom, email, filière</b> (code, ex. GL), <b>niveau</b> (ex. L3). Séparateur « ; » ou « , ».
+          </div>
+        </div>
+      )}
 
       {err && (
         <div className="card" style={{ borderColor: 'var(--red)', color: 'var(--red)', margin: '14px 0' }}>

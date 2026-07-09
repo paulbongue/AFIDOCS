@@ -15,6 +15,7 @@ class MatiereController extends Controller
             'niveau_id' => ['required', 'integer', 'exists:niveaux,id'],
             // Semestre global (1 à 10). Facultatif : sinon déduit du niveau.
             'semestre' => ['nullable', 'integer', 'between:1,10'],
+            'enseignant' => ['nullable', 'string', 'max:255'],
         ]);
 
         return response()->json(['data' => Matiere::create($data)], 201);
@@ -26,6 +27,7 @@ class MatiereController extends Controller
             'nom' => ['sometimes', 'string', 'max:255'],
             'niveau_id' => ['sometimes', 'integer', 'exists:niveaux,id'],
             'semestre' => ['nullable', 'integer', 'between:1,10'],
+            'enseignant' => ['nullable', 'string', 'max:255'],
         ]);
 
         $matiere->update($data);

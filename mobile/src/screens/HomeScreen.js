@@ -97,6 +97,23 @@ export default function HomeScreen({ navigation }) {
           )}
         </View>
 
+        {user?.role !== 'admin' && (
+          <TouchableOpacity
+            style={styles.evalCard}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('Ressources', { screen: 'Evaluations' })}
+          >
+            <View style={styles.evalIcon}>
+              <Icon name="star" size={20} color={colors.brand} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.evalTitle}>Évaluer les enseignants</Text>
+              <Text style={styles.evalSub}>Notez les modules de votre classe</Text>
+            </View>
+            <Icon name="chevron" size={20} color={colors.textLight} />
+          </TouchableOpacity>
+        )}
+
         <View style={styles.sectionHead}>
           <View style={{ flex: 1 }}>
             <Text style={styles.section}>Ressources récentes</Text>
@@ -134,4 +151,11 @@ const styles = StyleSheet.create({
   sectionSub: { fontSize: 12, color: colors.textMuted, marginTop: 1 },
   seeAll: { fontSize: 13, fontWeight: '700', color: colors.brand },
   empty: { color: colors.textMuted, paddingHorizontal: 16, marginTop: 8, lineHeight: 20 },
+  evalCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 14, marginTop: 18,
+    backgroundColor: colors.surface, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: colors.border,
+  },
+  evalIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.brandSoft },
+  evalTitle: { fontSize: 15, fontWeight: '800', color: colors.text },
+  evalSub: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
 });

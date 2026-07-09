@@ -27,6 +27,7 @@ export default function AdminScreen({ navigation }) {
     { icon: 'plus', tint: colors.filePdf, bg: '#F0E8FC', label: 'Publier une ressource', sub: 'Dans n\'importe quelle filière', to: 'AdminPublish' },
     { icon: 'settings', tint: colors.fileDocx, bg: '#E7E9FB', label: 'Centre de contrôle', sub: 'Délégués par classe', to: 'AdminControl' },
     { icon: 'resources', tint: colors.download, bg: '#E3F4E7', label: 'Gestion pédagogique', sub: 'Filières · niveaux · matières', to: 'AdminPedagogie' },
+    { icon: 'star', tint: colors.notif, bg: '#FDEBDD', label: 'Évaluations enseignants', sub: 'Résultats par filière / niveau', to: 'AdminEvaluations' },
     { icon: 'users', tint: colors.notif, bg: '#FDEBDD', label: 'Utilisateurs', sub: 'Créer / supprimer des comptes', to: 'AdminUsers' },
     { icon: 'shield', tint: colors.brand, bg: colors.brandSoft, label: 'Modération', sub: 'Retirer des ressources', to: 'AdminModeration' },
   ];

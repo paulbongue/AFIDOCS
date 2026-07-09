@@ -109,6 +109,89 @@ class UserController extends Controller
     }
 
     /**
+     * Import en masse d'étudiants via un CSV (colonnes : prénom, nom, email,
+     * filière, niveau). Mot de passe par défaut commun + changement forcé à la
+     * 1re connexion + e-mail de bienvenue automatique si une adresse est fournie.
+     */
+    public function importCsv(Request $request): JsonResponse
+    {
+        $request->validate([
+            'fichier' => ['required', 'file', 'mimes:csv,txt', 'max:5120'],
+        ]);
+
+        $lines = array_values(array_filter(array_map('trim', file($request->file('fichier')->getRealPath()))));
+        if (count($lines) < 2) {
+            return response()->json(['message' => 'Fichier CSV vide ou sans données.'], 422);
+        }
+
+        // Séparateur : « ; » (Excel FR) ou « , ».
+        $sep = substr_count($lines[0], ';') >= substr_count($lines[0], ',') ? ';' : ',';
+        $headers = array_map(fn ($h) => $this->normKey($h), str_getcsv($lines[0], $sep));
+
+        $defaultPassword = 'Afi@2026';
+        $created = 0;
+        $errors = [];
+
+        foreach (array_slice($lines, 1) as $idx => $line) {
+            $num = $idx + 2; // n° de ligne dans le fichier (1 = en-tête)
+            $cols = str_getcsv($line, $sep);
+            $cols = array_slice(array_pad($cols, count($headers), null), 0, count($headers));
+            $row = array_combine($headers, $cols);
+
+            $prenom = trim($row['prenom'] ?? '');
+            $nom = trim($row['nom'] ?? '');
+            $email = trim($row['email'] ?? ($row['mail'] ?? ''));
+            $filiereKey = trim($row['filiere'] ?? '');
+            $niveauKey = trim($row['niveau'] ?? '');
+
+            if ($prenom === '' || $nom === '') { $errors[] = "Ligne {$num} : prénom/nom manquant."; continue; }
+
+            $filiere = Filiere::whereRaw('UPPER(code) = ?', [strtoupper($filiereKey)])
+                ->orWhereRaw('LOWER(nom) = ?', [mb_strtolower($filiereKey)])->first();
+            if (! $filiere) { $errors[] = "Ligne {$num} : filière « {$filiereKey} » introuvable."; continue; }
+
+            $niveau = Niveau::where('filiere_id', $filiere->id)
+                ->whereRaw('UPPER(nom) = ?', [strtoupper($niveauKey)])->first();
+            if (! $niveau) { $errors[] = "Ligne {$num} : niveau « {$niveauKey} » introuvable dans {$filiere->code}."; continue; }
+
+            if ($email !== '' && ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors[] = "Ligne {$num} : e-mail invalide."; continue;
+            }
+
+            $user = User::create([
+                'name' => trim("{$prenom} {$nom}"),
+                'email' => $this->generateEmail($prenom, $nom, $filiere, $niveau),
+                'password' => $defaultPassword,
+                'must_change_password' => true,
+                'role' => User::ROLE_ETUDIANT,
+                'filiere_id' => $filiere->id,
+                'niveau_id' => $niveau->id,
+            ]);
+
+            if ($email !== '') {
+                $this->sendWelcome($user, Str::lower($email), $defaultPassword);
+            }
+            $created++;
+        }
+
+        return response()->json([
+            'message' => "{$created} compte(s) créé(s).",
+            'created' => $created,
+            'errors' => $errors,
+            'default_password' => $defaultPassword,
+        ]);
+    }
+
+    /** Normalise un en-tête de colonne (minuscule, sans accent ni ponctuation). */
+    private function normKey(string $h): string
+    {
+        $h = mb_strtolower(trim($h));
+        $h = strtr($h, ['é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e', 'à' => 'a', 'â' => 'a',
+            'î' => 'i', 'ï' => 'i', 'ô' => 'o', 'û' => 'u', 'ù' => 'u', 'ç' => 'c']);
+        return preg_replace('/[^a-z]/', '', $h);
+    }
+
+    /**
      * Notifie les membres existants d'une classe (étudiants + délégué) qu'un
      * nouvel utilisateur vient d'y être ajouté. Cloche in-app + push.
      */

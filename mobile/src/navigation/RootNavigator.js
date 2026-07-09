@@ -28,6 +28,8 @@ import AdminModerationScreen from '../screens/AdminModerationScreen';
 import AdminPublishScreen from '../screens/AdminPublishScreen';
 import AdminPedagogieScreen from '../screens/AdminPedagogieScreen';
 import AdminUsersScreen from '../screens/AdminUsersScreen';
+import AdminEvaluationsScreen from '../screens/AdminEvaluationsScreen';
+import EvaluationsScreen from '../screens/EvaluationsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -108,6 +110,12 @@ function RessourcesStack() {
         component={MyResourcesScreen}
         options={({ navigation }) => redHeader(navigation, { back: true })}
       />
+      {/* Évaluation des enseignants (étudiant/délégué) */}
+      <Stack.Screen
+        name="Evaluations"
+        component={EvaluationsScreen}
+        options={({ navigation }) => redHeader(navigation, { back: true })}
+      />
     </Stack.Navigator>
   );
 }
@@ -120,6 +128,7 @@ function AdminStack() {
       <Stack.Screen name="AdminModeration" component={AdminModerationScreen} />
       <Stack.Screen name="AdminPublish" component={AdminPublishScreen} />
       <Stack.Screen name="AdminPedagogie" component={AdminPedagogieScreen} />
+      <Stack.Screen name="AdminEvaluations" component={AdminEvaluationsScreen} />
       <Stack.Screen name="AdminUsers" component={AdminUsersScreen} />
     </Stack.Navigator>
   );

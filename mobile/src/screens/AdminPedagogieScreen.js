@@ -22,6 +22,8 @@ export default function AdminPedagogieScreen() {
   const [newN, setNewN] = useState('');
   const [newM, setNewM] = useState('');
   const [newMSem, setNewMSem] = useState(null);
+  const [newMEns, setNewMEns] = useState('');
+  const [ensDrafts, setEnsDrafts] = useState({}); // brouillons enseignant par matière
   const [annees, setAnnees] = useState([]);
   const [newAnnee, setNewAnnee] = useState('');
 
@@ -75,11 +77,17 @@ export default function AdminPedagogieScreen() {
   async function addMatiere() {
     if (!newM || !selN) return;
     const sem = newMSem || (semestresForNiveau(selN)[0] ?? null);
-    try { await client.post('/admin/matieres', { nom: newM, niveau_id: selN.id, semestre: sem }); setNewM(''); setNewMSem(null); await load(); }
+    try { await client.post('/admin/matieres', { nom: newM, niveau_id: selN.id, semestre: sem, enseignant: newMEns.trim() || null }); setNewM(''); setNewMSem(null); setNewMEns(''); await load(); }
     catch (_) { Alert.alert('Erreur', 'Ajout impossible.'); }
   }
   async function setMatiereSem(id, semestre) {
     try { await client.put(`/admin/matieres/${id}`, { semestre }); await load(); }
+    catch (_) { Alert.alert('Erreur', 'Modification impossible.'); }
+  }
+  async function saveEnseignant(m) {
+    const v = (ensDrafts[m.id] ?? m.enseignant ?? '').trim();
+    if (v === (m.enseignant || '')) return; // rien à changer
+    try { await client.put(`/admin/matieres/${m.id}`, { enseignant: v || null }); await load(); }
     catch (_) { Alert.alert('Erreur', 'Modification impossible.'); }
   }
   async function addAnnee() {
@@ -218,6 +226,15 @@ export default function AdminPedagogieScreen() {
                     })}
                   </View>
                 )}
+                <TextInput
+                  style={[styles.input, { marginBottom: 0 }]}
+                  placeholder="Enseignant (pour l'évaluation)"
+                  placeholderTextColor={colors.textLight}
+                  value={ensDrafts[m.id] ?? m.enseignant ?? ''}
+                  onChangeText={(t) => setEnsDrafts((d) => ({ ...d, [m.id]: t }))}
+                  onEndEditing={() => saveEnseignant(m)}
+                  returnKeyType="done"
+                />
               </View>
             ))}
             <View style={styles.addCard}>
@@ -236,6 +253,8 @@ export default function AdminPedagogieScreen() {
                   })}
                 </View>
               )}
+              <TextInput style={styles.input} placeholder="Enseignant (facultatif)" placeholderTextColor={colors.textLight}
+                         value={newMEns} onChangeText={setNewMEns} />
               <TouchableOpacity style={styles.add} onPress={addMatiere}><Text style={styles.addText}>Ajouter</Text></TouchableOpacity>
             </View>
           </>

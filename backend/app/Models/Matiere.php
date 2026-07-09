@@ -19,6 +19,7 @@ class Matiere extends Model
         'nom',
         'niveau_id',
         'semestre',
+        'enseignant',
     ];
 
     public function niveau(): BelongsTo

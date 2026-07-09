@@ -12,6 +12,7 @@ export default function PedagogiePage() {
   const [newN, setNewN] = useState('');
   const [newM, setNewM] = useState('');
   const [newMSem, setNewMSem] = useState('');
+  const [newMEns, setNewMEns] = useState('');
   const [annees, setAnnees] = useState([]);
   const [newAnnee, setNewAnnee] = useState('');
 
@@ -79,12 +80,16 @@ export default function PedagogiePage() {
     e.preventDefault();
     if (!newM || !selN) return;
     const sem = newMSem || (semestresForNiveau(selN)[0] ?? null);
-    await client.post('/admin/matieres', { nom: newM, niveau_id: selN.id, semestre: sem });
-    setNewM(''); setNewMSem('');
+    await client.post('/admin/matieres', { nom: newM, niveau_id: selN.id, semestre: sem, enseignant: newMEns.trim() || null });
+    setNewM(''); setNewMSem(''); setNewMEns('');
     await load();
   }
   async function setMatiereSem(id, semestre) {
     await client.put(`/admin/matieres/${id}`, { semestre: Number(semestre) });
+    await load();
+  }
+  async function setMatiereEnseignant(id, enseignant) {
+    await client.put(`/admin/matieres/${id}`, { enseignant: enseignant || null });
     await load();
   }
   async function delMatiere(id) {
@@ -172,26 +177,36 @@ export default function PedagogiePage() {
           {!selN ? <div className="muted">Sélectionnez un niveau.</div> : (
             <>
               {matieres.map((m) => (
-                <div key={m.id} className="nav-item" style={{ justifyContent: 'space-between', cursor: 'default', gap: 8 }}>
-                  <span style={{ flex: 1 }}>{m.nom}</span>
+                <div key={m.id} className="nav-item" style={{ display: 'block', cursor: 'default', padding: '8px 10px' }}>
+                  <div className="row" style={{ justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
+                    <span style={{ flex: 1 }}>{m.nom}</span>
+                    {semestresForNiveau(selN).length > 0 && (
+                      <select className="input" style={{ width: 84, padding: '4px 6px' }} value={m.semestre || ''}
+                              onChange={(e) => setMatiereSem(m.id, e.target.value)}>
+                        {semestresForNiveau(selN).map((s) => <option key={s} value={s}>S{s}</option>)}
+                      </select>
+                    )}
+                    <span onClick={() => delMatiere(m.id)} style={{ color: 'var(--red)', cursor: 'pointer' }}>✕</span>
+                  </div>
+                  <input className="input" style={{ marginTop: 6, padding: '4px 8px', fontSize: 13 }}
+                         placeholder="Enseignant (pour l’évaluation)"
+                         key={'ens-' + m.id + '|' + (m.enseignant || '')}
+                         defaultValue={m.enseignant || ''}
+                         onBlur={(e) => { const v = e.target.value.trim(); if (v !== (m.enseignant || '')) setMatiereEnseignant(m.id, v); }} />
+                </div>
+              ))}
+              <form className="mt" onSubmit={addMatiere} style={{ display: 'grid', gap: 8 }}>
+                <div className="row" style={{ gap: 8 }}>
+                  <input className="input" placeholder="Nom de la matière" value={newM} onChange={(e) => setNewM(e.target.value)} />
                   {semestresForNiveau(selN).length > 0 && (
-                    <select className="input" style={{ width: 84, padding: '4px 6px' }} value={m.semestre || ''}
-                            onChange={(e) => setMatiereSem(m.id, e.target.value)}>
+                    <select className="input" style={{ width: 84 }} value={newMSem} onChange={(e) => setNewMSem(e.target.value)}>
+                      <option value="">S ?</option>
                       {semestresForNiveau(selN).map((s) => <option key={s} value={s}>S{s}</option>)}
                     </select>
                   )}
-                  <span onClick={() => delMatiere(m.id)} style={{ color: 'var(--red)', cursor: 'pointer' }}>✕</span>
+                  <button className="btn btn-red">+</button>
                 </div>
-              ))}
-              <form className="row mt" onSubmit={addMatiere} style={{ gap: 8 }}>
-                <input className="input" placeholder="Nom de la matière" value={newM} onChange={(e) => setNewM(e.target.value)} />
-                {semestresForNiveau(selN).length > 0 && (
-                  <select className="input" style={{ width: 84 }} value={newMSem} onChange={(e) => setNewMSem(e.target.value)}>
-                    <option value="">S ?</option>
-                    {semestresForNiveau(selN).map((s) => <option key={s} value={s}>S{s}</option>)}
-                  </select>
-                )}
-                <button className="btn btn-red">+</button>
+                <input className="input" placeholder="Enseignant (facultatif)" value={newMEns} onChange={(e) => setNewMEns(e.target.value)} />
               </form>
             </>
           )}

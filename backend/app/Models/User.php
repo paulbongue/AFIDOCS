@@ -28,6 +28,7 @@ class User extends Authenticatable
         'email',
         'contact_email',
         'password',
+        'must_change_password',
         'role',
         'filiere_id',
         'niveau_id',
@@ -47,6 +48,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'must_change_password' => 'boolean',
             'otp_expires_at' => 'datetime',
             'otp_last_sent_at' => 'datetime',
             'contact_email_code_expires_at' => 'datetime',

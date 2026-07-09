@@ -7,6 +7,7 @@ use App\Http\Controllers\ClasseController;
 use App\Http\Controllers\CommentaireController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DiscussionController;
+use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\FiliereController;
 use App\Http\Controllers\MatiereController;
@@ -86,6 +87,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/feed/schedule', [FeedController::class, 'upsertSchedule']);
     Route::delete('/feed/schedule', [FeedController::class, 'destroySchedule']);
 
+    // --- Évaluation des enseignants (étudiants + délégués) ----------------------
+    Route::get('/evaluations/questions', [EvaluationController::class, 'questions']);
+    Route::get('/evaluations/modules', [EvaluationController::class, 'modules']);
+    Route::post('/evaluations', [EvaluationController::class, 'store']);
+
     // Commentaires inter-filieres.
     Route::get('/ressources/{ressource}/commentaires', [CommentaireController::class, 'index']);
     Route::post('/ressources/{ressource}/commentaires', [CommentaireController::class, 'store']);
@@ -112,6 +118,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/classes/{niveau}/delegue', [ClasseController::class, 'assignDelegate']);
         Route::delete('/classes/{niveau}/delegue/{user}', [ClasseController::class, 'revokeDelegate']);
 
+        // Import en masse d'étudiants (CSV) — avant apiResource pour la priorité.
+        Route::post('/users/import', [UserController::class, 'importCsv']);
         Route::apiResource('users', UserController::class)->except(['show']);
 
         Route::post('/filieres', [FiliereController::class, 'store']);
@@ -125,6 +133,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/matieres', [MatiereController::class, 'store']);
         Route::put('/matieres/{matiere}', [MatiereController::class, 'update']);
         Route::delete('/matieres/{matiere}', [MatiereController::class, 'destroy']);
+
+        // Résultats des évaluations d'enseignants (agrégés par filière/niveau/année/semestre).
+        Route::get('/evaluations', [EvaluationController::class, 'resultats']);
 
         // Années académiques : ajout, définition de la courante, suppression.
         Route::post('/annees-academiques', [AnneeAcademiqueController::class, 'store']);

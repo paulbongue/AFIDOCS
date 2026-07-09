@@ -284,7 +284,7 @@ class AuthController extends Controller
             ]);
         }
 
-        $user->update(['password' => $data['password']]);
+        $user->update(['password' => $data['password'], 'must_change_password' => false]);
 
         return response()->json(['message' => 'Mot de passe mis a jour.']);
     }
@@ -549,6 +549,7 @@ class AuthController extends Controller
                 ? $this->maskEmail($user->contact_email_pending) : null,
             // Adresse pré-enregistrée par l'admin (sans code) → confirmable en un clic.
             'contact_email_awaiting_confirm' => (bool) ($user->contact_email_pending && ! $user->contact_email_code_hash),
+            'must_change_password' => (bool) $user->must_change_password,
             'otp_enabled' => (bool) config('otp.enabled'),
         ];
     }

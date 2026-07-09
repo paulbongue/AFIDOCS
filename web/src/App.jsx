@@ -17,6 +17,7 @@ import AdminLayout from './layouts/AdminLayout';
 import StudentDashboard from './pages/etudiant/DashboardPage';
 import ResourcesPage from './pages/etudiant/ResourcesPage';
 import SearchPage from './pages/etudiant/SearchPage';
+import StudentEvaluations from './pages/etudiant/EvaluationsPage';
 
 import DelegueDashboard from './pages/delegue/DashboardPage';
 import PublishPage from './pages/delegue/PublishPage';
@@ -28,6 +29,7 @@ import UsersPage from './pages/admin/UsersPage';
 import ModerationPage from './pages/admin/ModerationPage';
 import ControlCenterPage from './pages/admin/ControlCenterPage';
 import AdminPublishPage from './pages/admin/PublishPage';
+import AdminEvaluations from './pages/admin/EvaluationsPage';
 
 // Racine : page d'accueil publique si non connecté, sinon redirection vers
 // l'espace du rôle (atterrissage direct sur la liste des ressources).
@@ -55,6 +57,7 @@ export default function App() {
         <Route path="ressources" element={<ResourcesPage />} />
         <Route path="ressources/:id" element={<ResourceDetailPage />} />
         <Route path="recherche" element={<SearchPage />} />
+        <Route path="evaluations" element={<StudentEvaluations />} />
         <Route path="classe" element={<ClassDiscussionPage />} />
         <Route path="annonces" element={<FeedPage />} />
         <Route path="profil" element={<ProfilePage />} />
@@ -70,6 +73,7 @@ export default function App() {
         <Route path="mes-ressources" element={<MyResourcesPage />} />
         <Route path="ressources" element={<ResourcesPage />} />
         <Route path="ressources/:id" element={<ResourceDetailPage />} />
+        <Route path="evaluations" element={<StudentEvaluations />} />
         <Route path="classe" element={<ClassDiscussionPage />} />
         <Route path="annonces" element={<FeedPage />} />
         <Route path="profil" element={<ProfilePage />} />
@@ -85,6 +89,7 @@ export default function App() {
         <Route path="publier" element={<AdminPublishPage />} />
         <Route path="controle" element={<ControlCenterPage />} />
         <Route path="pedagogie" element={<PedagogiePage />} />
+        <Route path="evaluations" element={<AdminEvaluations />} />
         <Route path="utilisateurs" element={<UsersPage />} />
         <Route path="moderation" element={<ModerationPage />} />
         <Route path="annonces" element={<FeedPage />} />

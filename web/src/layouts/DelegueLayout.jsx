@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import DashboardShell from '../components/DashboardShell';
 import { useAuth } from '../context/AuthContext';
-import { IconDashboard, IconUpload, IconFolder, IconBook, IconUser, IconCap, IconChat, IconMegaphone } from '../components/Icons';
+import { IconDashboard, IconUpload, IconFolder, IconBook, IconUser, IconCap, IconChat, IconMegaphone, IconStar } from '../components/Icons';
 
 const link = ({ isActive }) => 'nav-item' + (isActive ? ' active' : '');
 
@@ -15,6 +15,7 @@ export default function DelegueLayout() {
       <NavLink to="/delegue/publier" className={link}><IconUpload /><span>Publier une ressource</span></NavLink>
       <NavLink to="/delegue/mes-ressources" className={link}><IconFolder /><span>Mes ressources</span></NavLink>
       <NavLink to="/delegue/ressources" className={link}><IconBook /><span>Toutes les ressources</span></NavLink>
+      <NavLink to="/delegue/evaluations" className={link}><IconStar /><span>Évaluer les enseignants</span></NavLink>
 
       <div className="group-title">ÉCHANGES</div>
       <NavLink to="/delegue/classe" className={link}><IconChat /><span>Ma classe</span></NavLink>

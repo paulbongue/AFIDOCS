@@ -136,6 +136,13 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {user?.must_change_password && (
+        <div className="card mt" style={{ borderColor: 'var(--red)', background: 'var(--accent-soft)' }}>
+          <b>Veuillez changer votre mot de passe.</b> Votre compte a été créé avec un mot de passe par défaut ;
+          remplacez-le dans la section « Sécurité — Mot de passe » ci-dessous pour sécuriser votre accès.
+        </div>
+      )}
+
       <div className="collapse-group">
         <Section id="info" title="Informations personnelles" open={open} onToggle={toggle}>
           <div className="spread"><span className="muted">Nom d'utilisateur</span><b>{user?.name}</b></div>
