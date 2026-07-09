@@ -206,7 +206,8 @@ export default function PedagogiePage() {
                     <input className="input" style={{ flex: 1, padding: '4px 8px', fontSize: 13 }}
                            placeholder="Nom de l’enseignant (pour l’évaluation)"
                            value={ensDrafts[m.id] ?? (m.enseignant || '')}
-                           onChange={(e) => setEnsDrafts((d) => ({ ...d, [m.id]: e.target.value }))} />
+                           onChange={(e) => setEnsDrafts((d) => ({ ...d, [m.id]: e.target.value }))}
+                           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); saveEnseignant(m); } }} />
                     <button type="button" className="btn btn-red" style={{ padding: '4px 12px', fontSize: 13 }}
                             disabled={(ensDrafts[m.id] ?? (m.enseignant || '')).trim() === (m.enseignant || '')}
                             onClick={() => saveEnseignant(m)}>
