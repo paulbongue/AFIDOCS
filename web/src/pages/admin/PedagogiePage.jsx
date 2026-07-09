@@ -11,6 +11,15 @@ export default function PedagogiePage() {
   const [newF, setNewF] = useState({ code: '', nom: '', couleur: '#C0392B' });
   const [newN, setNewN] = useState('');
   const [newM, setNewM] = useState('');
+  const [newMSem, setNewMSem] = useState('');
+  const [annees, setAnnees] = useState([]);
+  const [newAnnee, setNewAnnee] = useState('');
+
+  // Semestres possibles d'un niveau (numérotation globale) : ordre n → S(2n-1), S(2n).
+  const semestresForNiveau = (niveau) => {
+    const o = Number(niveau?.ordre) || 0;
+    return o > 0 ? [2 * o - 1, 2 * o] : [];
+  };
 
   const niveauxRef = useRef(null);
   const matieresRef = useRef(null);
@@ -29,6 +38,10 @@ export default function PedagogiePage() {
     setFilieres(list);
     // resync sélections
     setSelF((p) => (p ? list.find((f) => f.id === p.id) || null : null));
+    try {
+      const a = await client.get('/annees-academiques');
+      setAnnees(a.data.data || []);
+    } catch (_) { /* ignore */ }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -65,13 +78,35 @@ export default function PedagogiePage() {
   async function addMatiere(e) {
     e.preventDefault();
     if (!newM || !selN) return;
-    await client.post('/admin/matieres', { nom: newM, niveau_id: selN.id });
-    setNewM('');
+    const sem = newMSem || (semestresForNiveau(selN)[0] ?? null);
+    await client.post('/admin/matieres', { nom: newM, niveau_id: selN.id, semestre: sem });
+    setNewM(''); setNewMSem('');
+    await load();
+  }
+  async function setMatiereSem(id, semestre) {
+    await client.put(`/admin/matieres/${id}`, { semestre: Number(semestre) });
     await load();
   }
   async function delMatiere(id) {
     if (!confirm('Supprimer cette matière ?')) return;
     await client.delete(`/admin/matieres/${id}`);
+    await load();
+  }
+
+  async function addAnnee(e) {
+    e.preventDefault();
+    if (!newAnnee.trim()) return;
+    await client.post('/admin/annees-academiques', { libelle: newAnnee.trim() });
+    setNewAnnee('');
+    await load();
+  }
+  async function setCurrentAnnee(id) {
+    await client.post(`/admin/annees-academiques/${id}/courante`);
+    await load();
+  }
+  async function delAnnee(id) {
+    if (!confirm('Supprimer cette année académique ?')) return;
+    await client.delete(`/admin/annees-academiques/${id}`);
     await load();
   }
 
@@ -137,18 +172,57 @@ export default function PedagogiePage() {
           {!selN ? <div className="muted">Sélectionnez un niveau.</div> : (
             <>
               {matieres.map((m) => (
-                <div key={m.id} className="nav-item" style={{ justifyContent: 'space-between', cursor: 'default' }}>
-                  <span>{m.nom}</span>
+                <div key={m.id} className="nav-item" style={{ justifyContent: 'space-between', cursor: 'default', gap: 8 }}>
+                  <span style={{ flex: 1 }}>{m.nom}</span>
+                  {semestresForNiveau(selN).length > 0 && (
+                    <select className="input" style={{ width: 84, padding: '4px 6px' }} value={m.semestre || ''}
+                            onChange={(e) => setMatiereSem(m.id, e.target.value)}>
+                      {semestresForNiveau(selN).map((s) => <option key={s} value={s}>S{s}</option>)}
+                    </select>
+                  )}
                   <span onClick={() => delMatiere(m.id)} style={{ color: 'var(--red)', cursor: 'pointer' }}>✕</span>
                 </div>
               ))}
-              <form className="row mt" onSubmit={addMatiere}>
+              <form className="row mt" onSubmit={addMatiere} style={{ gap: 8 }}>
                 <input className="input" placeholder="Nom de la matière" value={newM} onChange={(e) => setNewM(e.target.value)} />
+                {semestresForNiveau(selN).length > 0 && (
+                  <select className="input" style={{ width: 84 }} value={newMSem} onChange={(e) => setNewMSem(e.target.value)}>
+                    <option value="">S ?</option>
+                    {semestresForNiveau(selN).map((s) => <option key={s} value={s}>S{s}</option>)}
+                  </select>
+                )}
                 <button className="btn btn-red">+</button>
               </form>
             </>
           )}
         </div>
+      </div>
+
+      {/* Années académiques */}
+      <div className="card mt">
+        <h3>Années académiques</h3>
+        <p className="muted" style={{ marginTop: 0 }}>
+          L'année « courante » sert de valeur par défaut (notamment pour les évaluations des enseignants).
+        </p>
+        {annees.map((a) => (
+          <div key={a.id} className="nav-item" style={{ justifyContent: 'space-between', cursor: 'default' }}>
+            <span>
+              {a.libelle}
+              {a.est_courante && <span className="tgt-chip on" style={{ background: 'var(--success)', marginLeft: 8 }}>courante</span>}
+            </span>
+            <span className="row" style={{ gap: 10 }}>
+              {!a.est_courante && (
+                <button className="btn btn-ghost" onClick={() => setCurrentAnnee(a.id)}>Définir courante</button>
+              )}
+              <span onClick={() => delAnnee(a.id)} style={{ color: 'var(--red)', cursor: 'pointer' }}>✕</span>
+            </span>
+          </div>
+        ))}
+        <form className="row mt" onSubmit={addAnnee} style={{ gap: 8 }}>
+          <input className="input" placeholder="Ex : 2026-2027" value={newAnnee}
+                 onChange={(e) => setNewAnnee(e.target.value)} style={{ maxWidth: 220 }} />
+          <button className="btn btn-red">Ajouter l'année</button>
+        </form>
       </div>
     </div>
   );

@@ -9,22 +9,29 @@ const FEATURES = [
   { icon: IconDownload, t: 'Téléchargement & hors-ligne', d: 'Téléchargez vos cours et consultez-les sans connexion, où que vous soyez.' },
   { icon: IconBell, t: 'Notifications en temps réel', d: 'Soyez prévenu dès qu’une nouvelle ressource est publiée pour votre classe.' },
   { icon: IconEye, t: 'Aperçu intégré', d: 'Visualisez PDF et images directement dans la plateforme, sans rien installer.' },
-  { icon: IconLock, t: 'Accès sécurisé', d: 'Connexion par compte, chiffrement HTTPS et limite d’appareils par utilisateur.' },
+  { icon: IconLock, t: 'Accès sécurisé', d: 'Connexion par compte, double authentification par e-mail, connexion Google, chiffrement HTTPS et limite d’appareils par utilisateur.' },
   { icon: IconUsers, t: 'Délégués & administration', d: 'Les délégués publient pour leur classe ; l’administration garde le contrôle.' },
 ];
 
-// Grands domaines stables (la liste précise des filières peut évoluer en cours d'usage).
+// Les douze filières de l'AFI (code — intitulé).
 const DOMAINES = [
-  'Gestion & Management',
-  'Informatique & Réseaux',
-  'Banque, Finance & Assurance',
-  'Industrie & QHSE',
-  'Communication & Langues',
+  'BAF — Banque-Assurance-Finance',
+  'DWMD — Développement Web et Marketing Digital',
+  'GL — Génie Logiciel',
+  'GRH — Gestion des Ressources Humaines',
+  'GSE — Gestion et Stratégie des Entreprises',
+  'LEA — Langues Étrangères Appliquées à la Gestion',
+  'MAI — Management des Affaires Internationales',
+  'MJF — Management Juridique et Fiscal',
+  'MMC — Marketing, Management et Communication Digitale',
+  'QHSE — Qualité, Hygiène, Sécurité et Environnement',
+  'SRT — Système, Réseau et Télécom',
+  'TL — Transport et Logistique',
 ];
 
 const STATS = [
-  { v: 'Plusieurs', l: 'Filières' },
-  { v: 'PDF · Word · PPT…', l: 'Tous formats' },
+  { v: '12', l: 'Filières' },
+  { v: 'PDF · Word · PPT · MP4…', l: 'Tous formats' },
   { v: 'Hors-ligne', l: 'Cours téléchargés' },
 ];
 
@@ -101,8 +108,8 @@ export default function LandingPage() {
 
       <section className="lp-section lp-filieres">
         <div className="lp-section-head">
-          <h2>Nos domaines de formation</h2>
-          <p className="muted">Les filières de l'AFI couvrent plusieurs grands domaines, chacun avec ses classes et ses matières.</p>
+          <h2>Nos douze filières</h2>
+          <p className="muted">Les filières de l'AFI sont au nombre de douze, chacune avec ses classes (L3, M1, M2) et ses matières.</p>
         </div>
         <div className="lp-chips">
           {DOMAINES.map((d) => <span key={d} className="lp-chip">{d}</span>)}

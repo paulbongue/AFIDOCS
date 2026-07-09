@@ -13,6 +13,8 @@ class MatiereController extends Controller
         $data = $request->validate([
             'nom' => ['required', 'string', 'max:255'],
             'niveau_id' => ['required', 'integer', 'exists:niveaux,id'],
+            // Semestre global (1 à 10). Facultatif : sinon déduit du niveau.
+            'semestre' => ['nullable', 'integer', 'between:1,10'],
         ]);
 
         return response()->json(['data' => Matiere::create($data)], 201);
@@ -23,6 +25,7 @@ class MatiereController extends Controller
         $data = $request->validate([
             'nom' => ['sometimes', 'string', 'max:255'],
             'niveau_id' => ['sometimes', 'integer', 'exists:niveaux,id'],
+            'semestre' => ['nullable', 'integer', 'between:1,10'],
         ]);
 
         $matiere->update($data);

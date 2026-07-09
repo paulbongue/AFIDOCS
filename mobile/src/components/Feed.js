@@ -219,30 +219,38 @@ export default function Feed({ focusPost, focusTs }) {
                 <TouchableOpacity onPress={() => setImage(null)}><Text style={styles.removeLink}>Retirer la photo</Text></TouchableOpacity>
               </View>
             )}
-            <Text style={styles.smallLabel}>Cibler des filières (optionnel) :</Text>
-            <View style={styles.chips}>
-              {filieres.map((f) => {
-                const c = f.couleur || colorForFiliere(f.code);
-                const on = targets.includes(f.id);
-                return (
-                  <TouchableOpacity key={f.id} onPress={() => toggleTarget(f.id)}
-                    style={[styles.chip, { borderColor: c }, on && { backgroundColor: c }]}>
-                    <Text style={[styles.chipText, { color: on ? '#fff' : c }]}>{f.code}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            {availableNiveaux.length > 0 && (
-              <View style={styles.chips}>
-                {availableNiveaux.map((n) => {
-                  const on = niveauIds.includes(n.id);
-                  return (
-                    <TouchableOpacity key={n.id} style={[styles.chipN, on && styles.chipNOn]} onPress={() => toggleNiveau(n.id)}>
-                      <Text style={[styles.chipNText, on && styles.chipNTextOn]}>{n.filiereCode} · {n.nom}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+            {is_admin ? (
+              <>
+                <Text style={styles.smallLabel}>Cibler des filières (optionnel) :</Text>
+                <View style={styles.chips}>
+                  {filieres.map((f) => {
+                    const c = f.couleur || colorForFiliere(f.code);
+                    const on = targets.includes(f.id);
+                    return (
+                      <TouchableOpacity key={f.id} onPress={() => toggleTarget(f.id)}
+                        style={[styles.chip, { borderColor: c }, on && { backgroundColor: c }]}>
+                        <Text style={[styles.chipText, { color: on ? '#fff' : c }]}>{f.code}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                {availableNiveaux.length > 0 && (
+                  <View style={styles.chips}>
+                    {availableNiveaux.map((n) => {
+                      const on = niveauIds.includes(n.id);
+                      return (
+                        <TouchableOpacity key={n.id} style={[styles.chipN, on && styles.chipNOn]} onPress={() => toggleNiveau(n.id)}>
+                          <Text style={[styles.chipNText, on && styles.chipNTextOn]}>{n.filiereCode} · {n.nom}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
+              </>
+            ) : (
+              <Text style={styles.smallLabel}>
+                Cette annonce sera envoyée aux étudiants de votre filière{user?.filiere ? ` ${user.filiere.code}` : ''}{user?.niveau ? ` · ${user.niveau.nom}` : ''}.
+              </Text>
             )}
             <View style={styles.composerActions}>
               <TouchableOpacity style={styles.photoBtn} onPress={pickImage}>

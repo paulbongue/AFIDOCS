@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActiviteController;
+use App\Http\Controllers\AnneeAcademiqueController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClasseController;
 use App\Http\Controllers\CommentaireController;
@@ -58,6 +59,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Catalogue (filieres -> niveaux -> matieres) : alimente filtres + cache offline.
     Route::get('/filieres', [FiliereController::class, 'index']);
+
+    // Années académiques (lecture : tous ; la courante sert de valeur par défaut).
+    Route::get('/annees-academiques', [AnneeAcademiqueController::class, 'index']);
 
     // Ressources : consultation TOUTES FILIERES (acces libre).
     Route::get('/ressources', [RessourceController::class, 'index']);
@@ -121,6 +125,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/matieres', [MatiereController::class, 'store']);
         Route::put('/matieres/{matiere}', [MatiereController::class, 'update']);
         Route::delete('/matieres/{matiere}', [MatiereController::class, 'destroy']);
+
+        // Années académiques : ajout, définition de la courante, suppression.
+        Route::post('/annees-academiques', [AnneeAcademiqueController::class, 'store']);
+        Route::post('/annees-academiques/{annee}/courante', [AnneeAcademiqueController::class, 'setCurrent']);
+        Route::delete('/annees-academiques/{annee}', [AnneeAcademiqueController::class, 'destroy']);
 
         // publication par l'admin (dans n'importe quelle filiere)
         Route::post('/ressources', [RessourceController::class, 'store']);

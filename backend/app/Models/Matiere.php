@@ -18,6 +18,7 @@ class Matiere extends Model
     protected $fillable = [
         'nom',
         'niveau_id',
+        'semestre',
     ];
 
     public function niveau(): BelongsTo

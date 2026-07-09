@@ -98,11 +98,18 @@ class FeedController extends Controller
             ? $request->file('image')->store('posts', 'public')
             : null;
 
-        // Niveaux ciblés : nouveau champ multiple, avec repli sur l'ancien champ unique.
-        $niveauIds = array_values(array_unique(array_map(
-            'intval',
-            $data['target_niveau_ids'] ?? (isset($data['target_niveau_id']) ? [$data['target_niveau_id']] : [])
-        )));
+        // Ciblage. Un DÉLÉGUÉ ne peut viser QUE sa propre filière et son propre
+        // niveau (ses étudiants) ; l'administrateur choisit librement.
+        if ($user->isDelegue()) {
+            $filiereIds = $user->filiere_id ? [(int) $user->filiere_id] : [];
+            $niveauIds = $user->niveau_id ? [(int) $user->niveau_id] : [];
+        } else {
+            $filiereIds = array_values(array_unique(array_map('intval', $data['target_filiere_ids'] ?? [])));
+            $niveauIds = array_values(array_unique(array_map(
+                'intval',
+                $data['target_niveau_ids'] ?? (isset($data['target_niveau_id']) ? [$data['target_niveau_id']] : [])
+            )));
+        }
 
         $post = Post::create([
             'user_id' => $user->id,
@@ -110,8 +117,8 @@ class FeedController extends Controller
             'image' => $imagePath,
         ]);
 
-        if (! empty($data['target_filiere_ids'])) {
-            $post->filieres()->sync(array_values(array_unique($data['target_filiere_ids'])));
+        if (! empty($filiereIds)) {
+            $post->filieres()->sync($filiereIds);
         }
         if (! empty($niveauIds)) {
             $post->niveaux()->sync($niveauIds);
@@ -124,7 +131,7 @@ class FeedController extends Controller
             'commentaires.auteur:id,name,role',
         ]);
 
-        $this->notifyAnnonce($post, $user, $data['target_filiere_ids'] ?? [], $niveauIds);
+        $this->notifyAnnonce($post, $user, $filiereIds, $niveauIds);
 
         return response()->json(['data' => $post], 201);
     }

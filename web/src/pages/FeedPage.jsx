@@ -204,34 +204,43 @@ export default function FeedPage() {
               <button type="button" className="btn btn-ghost" onClick={() => { setImage(null); setPreview(null); }}>Retirer la photo</button>
             </div>
           )}
-          <div className="muted" style={{ fontSize: 13, marginTop: 10 }}>Cibler des filières (optionnel) :</div>
-          <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
-            {filieres.map((f) => {
-              const c = f.couleur || colorForFiliere(f.code);
-              const on = targets.includes(f.id);
-              return (
-                <button type="button" key={f.id} className="tgt-chip" onClick={() => toggleTarget(f.id)}
-                        style={{ background: on ? c : 'transparent', color: on ? '#fff' : c, borderColor: c }}>
-                  {f.code}
-                </button>
-              );
-            })}
-          </div>
-          {availableNiveaux.length > 0 && (
+          {is_admin ? (
             <>
-              <div className="muted" style={{ fontSize: 13, marginTop: 10 }}>Cibler des niveaux (optionnel — sinon toute la filière) :</div>
+              <div className="muted" style={{ fontSize: 13, marginTop: 10 }}>Cibler des filières (optionnel) :</div>
               <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
-                {availableNiveaux.map((n) => {
-                  const on = niveauIds.includes(n.id);
+                {filieres.map((f) => {
+                  const c = f.couleur || colorForFiliere(f.code);
+                  const on = targets.includes(f.id);
                   return (
-                    <button type="button" key={n.id} className="tgt-chip" onClick={() => toggleNiveau(n.id)}
-                            style={{ background: on ? 'var(--navy)' : 'transparent', color: on ? '#fff' : 'var(--navy)', borderColor: 'var(--navy)' }}>
-                      {n.filiereCode} · {n.nom}
+                    <button type="button" key={f.id} className="tgt-chip" onClick={() => toggleTarget(f.id)}
+                            style={{ background: on ? c : 'transparent', color: on ? '#fff' : c, borderColor: c }}>
+                      {f.code}
                     </button>
                   );
                 })}
               </div>
+              {availableNiveaux.length > 0 && (
+                <>
+                  <div className="muted" style={{ fontSize: 13, marginTop: 10 }}>Cibler des niveaux (optionnel — sinon toute la filière) :</div>
+                  <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
+                    {availableNiveaux.map((n) => {
+                      const on = niveauIds.includes(n.id);
+                      return (
+                        <button type="button" key={n.id} className="tgt-chip" onClick={() => toggleNiveau(n.id)}
+                                style={{ background: on ? 'var(--navy)' : 'transparent', color: on ? '#fff' : 'var(--navy)', borderColor: 'var(--navy)' }}>
+                          {n.filiereCode} · {n.nom}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </>
+          ) : (
+            <div className="muted" style={{ fontSize: 13, marginTop: 10 }}>
+              Cette annonce sera envoyée aux étudiants de votre filière
+              {user?.filiere ? ` ${user.filiere.code}` : ''}{user?.niveau ? ` · ${user.niveau.nom}` : ''}.
+            </div>
           )}
           <div className="row mt" style={{ gap: 8, alignItems: 'center' }}>
             <label className="btn btn-ghost" style={{ cursor: 'pointer' }}>

@@ -22,11 +22,25 @@ class RessourceController extends Controller
         $query = Ressource::query()
             ->with([
                 'auteur:id,name,role',
-                'matiere:id,nom,niveau_id',
-                'matiere.niveau:id,nom,filiere_id',
+                'matiere:id,nom,niveau_id,semestre',
+                'matiere.niveau:id,nom,filiere_id,ordre',
                 'matiere.niveau.filiere:id,code,nom,couleur',
             ])
             ->withCount('commentaires');
+
+        // --- Restriction d'accès : sauf l'admin, chacun ne voit que SA filière et
+        // les ressources de SON niveau et des niveaux inférieurs (toutes années
+        // confondues jusqu'à son niveau). L'admin voit tout.
+        $user = $request->user();
+        if (! $user->isAdmin()) {
+            $ordre = optional($user->niveau)->ordre ?? 0;
+            $query->whereHas('matiere.niveau', function ($q) use ($user, $ordre) {
+                $q->where('filiere_id', $user->filiere_id);
+                if ($ordre > 0) {
+                    $q->where('ordre', '<=', $ordre);
+                }
+            });
+        }
 
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
@@ -37,6 +51,10 @@ class RessourceController extends Controller
 
         if ($type = $request->query('type_fichier')) {
             $query->where('type_fichier', $type);
+        }
+
+        if ($semestre = $request->query('semestre')) {
+            $query->whereHas('matiere', fn ($q) => $q->where('semestre', $semestre));
         }
 
         // Filtres hierarchiques via la chaine matiere -> niveau -> filiere.
@@ -65,15 +83,29 @@ class RessourceController extends Controller
         ]);
     }
 
-    public function show(Ressource $ressource): JsonResponse
+    public function show(Request $request, Ressource $ressource): JsonResponse
     {
         $ressource->load([
             'auteur:id,name,role',
-            'matiere:id,nom,niveau_id',
-            'matiere.niveau:id,nom,filiere_id',
+            'matiere:id,nom,niveau_id,semestre',
+            'matiere.niveau:id,nom,filiere_id,ordre',
             'matiere.niveau.filiere:id,code,nom,couleur',
             'commentaires.auteur:id,name,role',
         ]);
+
+        // Même règle qu'à la liste : hors admin, filière propre + niveau et en-dessous.
+        $user = $request->user();
+        if (! $user->isAdmin()) {
+            $niveau = $ressource->matiere?->niveau;
+            $ordre = optional($user->niveau)->ordre ?? 0;
+            abort_unless(
+                $niveau
+                    && (int) $niveau->filiere_id === (int) $user->filiere_id
+                    && ($ordre === 0 || (int) $niveau->ordre <= $ordre),
+                403,
+                'Accès interdit à cette ressource.'
+            );
+        }
 
         return response()->json(['data' => $ressource]);
     }
