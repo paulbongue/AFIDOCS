@@ -38,6 +38,7 @@ export default function ResourcesPage() {
   const [filieres, setFilieres] = useState([]);
   const [active, setActive] = useState(null);
   const [activeNiveau, setActiveNiveau] = useState(null); // classe/niveau choisi dans la filière
+  const [activeSemestre, setActiveSemestre] = useState(null);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -65,6 +66,7 @@ export default function ResourcesPage() {
     const params = {};
     if (active) params.filiere_id = active;
     if (activeNiveau) params.niveau_id = activeNiveau;
+    if (activeSemestre) params.semestre = activeSemestre;
     if (search) params.search = search;
     const t = setTimeout(() => {
       client.get('/ressources', { params })
@@ -72,7 +74,7 @@ export default function ResourcesPage() {
         .finally(() => setLoading(false));
     }, 250);
     return () => clearTimeout(t);
-  }, [browse, active, activeNiveau, search]);
+  }, [browse, active, activeNiveau, activeSemestre, search]);
 
   return (
     <div>
@@ -120,12 +122,12 @@ export default function ResourcesPage() {
 
           <div className="row mt" style={{ flexWrap: 'wrap', gap: 8 }}>
             <button className={'btn ' + (!active ? 'btn-red' : 'btn-ghost')}
-                    onClick={() => { setActive(null); setActiveNiveau(null); }}>Toutes</button>
+                    onClick={() => { setActive(null); setActiveNiveau(null); setActiveSemestre(null); }}>Toutes</button>
             {filieres.map((f) => (
               <button key={f.id}
                 className={'btn ' + (active === f.id ? 'btn-red' : 'btn-ghost')}
                 style={active === f.id ? { background: f.couleur || colorForFiliere(f.code), border: 'none', color: '#fff' } : {}}
-                onClick={() => { setActive(f.id); setActiveNiveau(null); }}>
+                onClick={() => { setActive(f.id); setActiveNiveau(null); setActiveSemestre(null); }}>
                 {f.code}
               </button>
             ))}
@@ -134,6 +136,9 @@ export default function ResourcesPage() {
           {active && (() => {
             const fil = filieres.find((f) => String(f.id) === String(active));
             const niveaux = fil?.niveaux || [];
+            const selN = niveaux.find((n) => String(n.id) === String(activeNiveau));
+            const o = Number(selN?.ordre) || 0;
+            const semestres = o > 0 ? [2 * o - 1, 2 * o] : [];
             return (
               <>
                 <h3 className="mt" style={{ fontSize: 15 }}>{fil?.nom}</h3>
@@ -141,12 +146,26 @@ export default function ResourcesPage() {
                   <div className="row mt" style={{ flexWrap: 'wrap', gap: 8 }}>
                     <span className="muted" style={{ alignSelf: 'center' }}>Niveau :</span>
                     <button className={'btn ' + (!activeNiveau ? 'btn-navy' : 'btn-ghost')}
-                            onClick={() => setActiveNiveau(null)}>Tous</button>
+                            onClick={() => { setActiveNiveau(null); setActiveSemestre(null); }}>Tous</button>
                     {niveaux.map((n) => (
                       <button key={n.id}
                         className={'btn ' + (String(activeNiveau) === String(n.id) ? 'btn-navy' : 'btn-ghost')}
-                        onClick={() => setActiveNiveau(n.id)}>
+                        onClick={() => { setActiveNiveau(n.id); setActiveSemestre(null); }}>
                         {n.nom}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {semestres.length > 0 && (
+                  <div className="row mt" style={{ flexWrap: 'wrap', gap: 8 }}>
+                    <span className="muted" style={{ alignSelf: 'center' }}>Semestre :</span>
+                    <button className={'btn ' + (!activeSemestre ? 'btn-navy' : 'btn-ghost')}
+                            onClick={() => setActiveSemestre(null)}>Tous</button>
+                    {semestres.map((s) => (
+                      <button key={s}
+                        className={'btn ' + (String(activeSemestre) === String(s) ? 'btn-navy' : 'btn-ghost')}
+                        onClick={() => setActiveSemestre(s)}>
+                        S{s}
                       </button>
                     ))}
                   </div>

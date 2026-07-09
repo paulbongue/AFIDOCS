@@ -23,7 +23,7 @@ export default function ResourceCard({ ressource, onOpen, actions }) {
       <div className="res-card-body" style={{ cursor: onOpen ? 'pointer' : 'default' }} onClick={onOpen}>
         <div className="res-title">{ressource.titre}</div>
         <div className="res-meta">
-          {[f?.code, niveau?.nom, ressource.matiere?.nom].filter(Boolean).join(' · ')}
+          {[f?.code, niveau?.nom, ressource.matiere?.semestre ? `S${ressource.matiere.semestre}` : null, ressource.matiere?.nom].filter(Boolean).join(' · ')}
         </div>
         <div className="res-meta">{ressource.auteur?.name} · {formatSize(ressource.taille_fichier)}</div>
       </div>

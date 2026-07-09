@@ -21,6 +21,15 @@ export default function AdminPedagogieScreen() {
   const [newF, setNewF] = useState({ code: '', nom: '', couleur: PALETTE[0] });
   const [newN, setNewN] = useState('');
   const [newM, setNewM] = useState('');
+  const [newMSem, setNewMSem] = useState(null);
+  const [annees, setAnnees] = useState([]);
+  const [newAnnee, setNewAnnee] = useState('');
+
+  // Semestres possibles d'un niveau (numérotation globale) : ordre n → S(2n-1), S(2n).
+  const semestresForNiveau = (niveau) => {
+    const o = Number(niveau?.ordre) || 0;
+    return o > 0 ? [2 * o - 1, 2 * o] : [];
+  };
 
   const load = useCallback(async () => {
     const { data } = await client.get('/filieres');
@@ -32,6 +41,7 @@ export default function AdminPedagogieScreen() {
       const f = list.find((x) => x.niveaux?.some((n) => n.id === p.id));
       return f?.niveaux.find((n) => n.id === p.id) || null;
     });
+    try { const a = await client.get('/annees-academiques'); setAnnees(a.data.data || []); } catch (_) {}
   }, []);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -64,8 +74,30 @@ export default function AdminPedagogieScreen() {
   }
   async function addMatiere() {
     if (!newM || !selN) return;
-    try { await client.post('/admin/matieres', { nom: newM, niveau_id: selN.id }); setNewM(''); await load(); }
+    const sem = newMSem || (semestresForNiveau(selN)[0] ?? null);
+    try { await client.post('/admin/matieres', { nom: newM, niveau_id: selN.id, semestre: sem }); setNewM(''); setNewMSem(null); await load(); }
     catch (_) { Alert.alert('Erreur', 'Ajout impossible.'); }
+  }
+  async function setMatiereSem(id, semestre) {
+    try { await client.put(`/admin/matieres/${id}`, { semestre }); await load(); }
+    catch (_) { Alert.alert('Erreur', 'Modification impossible.'); }
+  }
+  async function addAnnee() {
+    if (!newAnnee.trim()) return;
+    try { await client.post('/admin/annees-academiques', { libelle: newAnnee.trim() }); setNewAnnee(''); await load(); }
+    catch (e) { Alert.alert('Erreur', e?.response?.data?.message || 'Ajout impossible.'); }
+  }
+  async function setCurrentAnnee(id) {
+    try { await client.post(`/admin/annees-academiques/${id}/courante`); await load(); }
+    catch (_) { Alert.alert('Erreur', 'Modification impossible.'); }
+  }
+  function delAnnee(a) {
+    Alert.alert('Supprimer', `Supprimer l'année ${a.libelle} ?`, [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Supprimer', style: 'destructive', onPress: async () => {
+        try { await client.delete(`/admin/annees-academiques/${a.id}`); await load(); }
+        catch (_) { Alert.alert('Erreur', 'Suppression impossible.'); } } },
+    ]);
   }
   function delMatiere(m) {
     Alert.alert('Supprimer', `Supprimer la matière « ${m.nom} » ?`, [
@@ -119,6 +151,27 @@ export default function AdminPedagogieScreen() {
               </View>
               <TouchableOpacity style={styles.add} onPress={addFiliere}><Text style={styles.addText}>Ajouter</Text></TouchableOpacity>
             </View>
+
+            {/* Années académiques */}
+            <Text style={[styles.title, { marginTop: 24 }]}>Années académiques</Text>
+            {annees.map((a) => (
+              <View key={a.id} style={styles.row}>
+                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={styles.rowText}>{a.libelle}</Text>
+                  {a.est_courante && <View style={styles.currentChip}><Text style={styles.currentChipText}>courante</Text></View>}
+                </View>
+                {!a.est_courante && (
+                  <TouchableOpacity onPress={() => setCurrentAnnee(a.id)}><Text style={styles.crumbLink}>Courante</Text></TouchableOpacity>
+                )}
+                <TouchableOpacity style={styles.xBtn} onPress={() => delAnnee(a)}><Icon name="trash" size={16} color={colors.brand} /></TouchableOpacity>
+              </View>
+            ))}
+            <View style={styles.addCard}>
+              <Text style={styles.addTitle}>Ajouter une année académique</Text>
+              <TextInput style={styles.input} placeholder="Ex : 2026-2027" placeholderTextColor={colors.textLight}
+                         value={newAnnee} onChangeText={setNewAnnee} />
+              <TouchableOpacity style={styles.add} onPress={addAnnee}><Text style={styles.addText}>Ajouter</Text></TouchableOpacity>
+            </View>
           </>
         )}
 
@@ -148,15 +201,41 @@ export default function AdminPedagogieScreen() {
           <>
             <Text style={styles.title}>Matières — {selF.code} · {selN.nom}</Text>
             {matieres.map((m) => (
-              <View key={m.id} style={styles.row}>
-                <Text style={[styles.rowText, { flex: 1 }]} numberOfLines={2}>{m.nom}</Text>
-                <TouchableOpacity style={styles.xBtn} onPress={() => delMatiere(m)}><Icon name="trash" size={16} color={colors.brand} /></TouchableOpacity>
+              <View key={m.id} style={[styles.row, { flexDirection: 'column', alignItems: 'stretch', gap: 8 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <Text style={[styles.rowText, { flex: 1 }]} numberOfLines={2}>{m.nom}</Text>
+                  <TouchableOpacity style={styles.xBtn} onPress={() => delMatiere(m)}><Icon name="trash" size={16} color={colors.brand} /></TouchableOpacity>
+                </View>
+                {semestresForNiveau(selN).length > 0 && (
+                  <View style={styles.semRow}>
+                    {semestresForNiveau(selN).map((s) => {
+                      const on = Number(m.semestre) === s;
+                      return (
+                        <TouchableOpacity key={s} style={[styles.semChip, on && styles.semChipOn]} onPress={() => setMatiereSem(m.id, s)}>
+                          <Text style={[styles.semChipText, on && styles.semChipTextOn]}>S{s}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
               </View>
             ))}
             <View style={styles.addCard}>
               <Text style={styles.addTitle}>Ajouter une matière</Text>
               <TextInput style={styles.input} placeholder="Nom de la matière" placeholderTextColor={colors.textLight}
                          value={newM} onChangeText={setNewM} />
+              {semestresForNiveau(selN).length > 0 && (
+                <View style={[styles.semRow, { marginBottom: 8 }]}>
+                  {semestresForNiveau(selN).map((s) => {
+                    const on = newMSem === s;
+                    return (
+                      <TouchableOpacity key={s} style={[styles.semChip, on && styles.semChipOn]} onPress={() => setNewMSem(s)}>
+                        <Text style={[styles.semChipText, on && styles.semChipTextOn]}>S{s}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
               <TouchableOpacity style={styles.add} onPress={addMatiere}><Text style={styles.addText}>Ajouter</Text></TouchableOpacity>
             </View>
           </>
@@ -192,4 +271,11 @@ const styles = StyleSheet.create({
   swatchActive: { borderColor: colors.brandDark },
   add: { backgroundColor: colors.brand, borderRadius: radius.md, paddingVertical: 12, alignItems: 'center' },
   addText: { color: '#fff', fontWeight: '800' },
+  semRow: { flexDirection: 'row', gap: 8 },
+  semChip: { borderWidth: 1.5, borderColor: colors.navy, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4 },
+  semChipOn: { backgroundColor: colors.navy },
+  semChipText: { color: colors.navy, fontWeight: '700', fontSize: 12 },
+  semChipTextOn: { color: '#fff' },
+  currentChip: { backgroundColor: colors.success, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
+  currentChipText: { color: '#fff', fontWeight: '700', fontSize: 11 },
 });

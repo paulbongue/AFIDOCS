@@ -43,6 +43,7 @@ export async function initDatabase() {
       taille_fichier INTEGER,
       matiere_id INTEGER,
       matiere_nom TEXT,
+      matiere_semestre INTEGER,
       niveau_id INTEGER,
       niveau_nom TEXT,
       filiere_id INTEGER,
@@ -77,8 +78,9 @@ export async function initDatabase() {
     );
   `);
 
-  // Migration douce : ajoute user_id aux installations existantes (ignore si déjà présent).
+  // Migrations douces : ajoutent des colonnes aux installations existantes (ignorées si déjà présentes).
   try { await db.execAsync('ALTER TABLE commentaires ADD COLUMN user_id INTEGER;'); } catch (_) { /* déjà là */ }
+  try { await db.execAsync('ALTER TABLE ressources ADD COLUMN matiere_semestre INTEGER;'); } catch (_) { /* déjà là */ }
 
   return db;
 }
@@ -136,6 +138,7 @@ function flatten(r) {
     taille_fichier: r.taille_fichier ?? 0,
     matiere_id: r.matiere_id,
     matiere_nom: r.matiere?.nom ?? '',
+    matiere_semestre: r.matiere?.semestre ?? null,
     niveau_id: niveau?.id ?? null,
     niveau_nom: niveau?.nom ?? '',
     filiere_id: filiere?.id ?? null,
@@ -155,9 +158,9 @@ export async function upsertRessources(list) {
       await db.runAsync(
         `INSERT INTO ressources
           (id, titre, description, type_fichier, url_fichier, taille_fichier,
-           matiere_id, matiere_nom, niveau_id, niveau_nom, filiere_id,
+           matiere_id, matiere_nom, matiere_semestre, niveau_id, niveau_nom, filiere_id,
            filiere_code, filiere_couleur, auteur_nom, commentaires_count, updated_at)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
          ON CONFLICT(id) DO UPDATE SET
            titre=excluded.titre,
            description=excluded.description,
@@ -166,6 +169,7 @@ export async function upsertRessources(list) {
            taille_fichier=excluded.taille_fichier,
            matiere_id=excluded.matiere_id,
            matiere_nom=excluded.matiere_nom,
+           matiere_semestre=excluded.matiere_semestre,
            niveau_id=excluded.niveau_id,
            niveau_nom=excluded.niveau_nom,
            filiere_id=excluded.filiere_id,
@@ -176,7 +180,7 @@ export async function upsertRessources(list) {
            updated_at=excluded.updated_at`,
         [
           r.id, r.titre, r.description, r.type_fichier, r.url_fichier, r.taille_fichier,
-          r.matiere_id, r.matiere_nom, r.niveau_id, r.niveau_nom, r.filiere_id,
+          r.matiere_id, r.matiere_nom, r.matiere_semestre, r.niveau_id, r.niveau_nom, r.filiere_id,
           r.filiere_code, r.filiere_couleur, r.auteur_nom, r.commentaires_count, r.updated_at,
         ]
       );

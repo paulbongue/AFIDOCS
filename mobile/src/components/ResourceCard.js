@@ -13,6 +13,7 @@ export default function ResourceCard({ ressource, onPress, compact = false }) {
   const meta = [
     ressource.filiere_code,
     ressource.niveau_nom,
+    ressource.matiere_semestre ? `S${ressource.matiere_semestre}` : null,
     ressource.matiere_nom,
   ].filter(Boolean).join(' · ');
 

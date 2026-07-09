@@ -13,8 +13,9 @@ export default function ResourceListItem({ ressource, onOpen, actions }) {
   const niveau = ressource.matiere?.niveau;
   const accent = f?.couleur || colorForFiliere(f?.code);
   const tColor = TYPE_COLORS[ressource.type_fichier] || TYPE_COLORS.autre;
+  const sem = ressource.matiere?.semestre ? `S${ressource.matiere.semestre}` : null;
   const meta = [
-    f?.code, niveau?.nom, ressource.matiere?.nom, ressource.auteur?.name,
+    f?.code, niveau?.nom, sem, ressource.matiere?.nom, ressource.auteur?.name,
   ].filter(Boolean).join(' · ');
 
   return (
