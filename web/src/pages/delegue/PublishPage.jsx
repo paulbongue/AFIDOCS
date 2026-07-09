@@ -88,10 +88,10 @@ export default function PublishPage() {
         <label className="field">Description (optionnelle)</label>
         <textarea className="input" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
 
-        <label className="field">Fichier (PDF, DOCX, PPTX, XLSX, image, vidéo — max 50 Mo)</label>
+        <label className="field">Fichier (PDF, DOCX, PPTX, XLSX, image, vidéo — max 250 Mo)</label>
         <FilePicker file={file} onChange={setFile}
                     accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.mp4"
-                    hint="PDF, Word, PPT, Excel, image, vidéo — max 50 Mo" />
+                    hint="PDF, Word, PPT, Excel, image, vidéo — max 250 Mo" />
 
         {msg && (
           <div style={{ marginTop: 12, color: msg.type === 'ok' ? 'var(--success)' : 'var(--red)' }}>{msg.text}</div>

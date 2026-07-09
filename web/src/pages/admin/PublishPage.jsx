@@ -123,8 +123,8 @@ export default function AdminPublishPage() {
           })}
         </div>
 
-        <label className="field">Fichier (tout type, max 50 Mo)</label>
-        <FilePicker file={file} onChange={setFile} hint="PDF, Word, PPT, Excel, image, vidéo — max 50 Mo" />
+        <label className="field">Fichier (tout type, max 250 Mo)</label>
+        <FilePicker file={file} onChange={setFile} hint="PDF, Word, PPT, Excel, image, vidéo — max 250 Mo" />
 
         {msg && <div style={{ marginTop: 12, color: msg.type === 'ok' ? 'var(--success)' : 'var(--red)' }}>{msg.text}</div>}
         <button className="btn btn-red mt" disabled={busy}>
