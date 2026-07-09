@@ -28,6 +28,9 @@ class ClasseController extends Controller
                 'niveau_id' => $n->id,
                 'niveau' => $n->nom,
                 'filiere' => $n->filiere,
+                'effectif' => User::where('niveau_id', $n->id)
+                    ->whereIn('role', [User::ROLE_ETUDIANT, User::ROLE_DELEGUE])
+                    ->count(),
                 'delegues' => User::where('niveau_id', $n->id)
                     ->where('role', User::ROLE_DELEGUE)
                     ->get(['id', 'name', 'email']),
@@ -83,5 +86,26 @@ class ClasseController extends Controller
         }
 
         return response()->json(['message' => 'Délégué révoqué.']);
+    }
+
+    /**
+     * Vider une classe : supprime tous ses étudiants ET délégués d'un coup
+     * (utile en fin d'année). N'affecte ni la classe ni les administrateurs.
+     */
+    public function clearStudents(Niveau $niveau): JsonResponse
+    {
+        $users = User::where('niveau_id', $niveau->id)
+            ->whereIn('role', [User::ROLE_ETUDIANT, User::ROLE_DELEGUE])
+            ->get();
+
+        $count = $users->count();
+        foreach ($users as $u) {
+            $u->delete(); // même comportement que la suppression individuelle
+        }
+
+        return response()->json([
+            'message' => "{$count} étudiant(s) supprimé(s) de la classe {$niveau->nom}.",
+            'deleted' => $count,
+        ]);
     }
 }

@@ -53,6 +53,28 @@ export default function AdminControlScreen() {
     ]);
   }
 
+  function confirmClearClass(niveauId, label, effectif) {
+    if (!effectif) { Alert.alert('Classe vide', 'Cette classe ne contient aucun étudiant.'); return; }
+    Alert.alert(
+      'Vider la classe',
+      `Supprimer définitivement les ${effectif} étudiant(s) et délégué(s) de « ${label} » ?\n\nAction irréversible.`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Vider', style: 'destructive',
+          onPress: async () => {
+            try {
+              const { data } = await client.delete(`/admin/classes/${niveauId}/etudiants`);
+              await load();
+              Alert.alert('Classe vidée', data?.message || '');
+            } catch (e) {
+              Alert.alert('Erreur', e?.response?.data?.message || 'Action impossible.');
+            }
+          },
+        },
+      ]);
+  }
+
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.red} /></View>;
 
   const filieres = [...new Map(classes.filter((c) => c.filiere).map((c) => [c.filiere.code, c.filiere])).values()];
@@ -104,6 +126,11 @@ export default function AdminControlScreen() {
 
               {isOpen && (
                 <View style={styles.students}>
+                  <TouchableOpacity style={styles.btnClear}
+                    onPress={() => confirmClearClass(item.niveau_id, `${item.filiere?.code} · ${item.niveau}`, eleves.length)}>
+                    <Icon name="trash" size={14} color="#fff" />
+                    <Text style={styles.btnClearText}>Vider la classe ({eleves.length})</Text>
+                  </TouchableOpacity>
                   {eleves.length === 0 ? (
                     <Text style={styles.muted}>Aucun élève dans cette classe.</Text>
                   ) : eleves.map((u) => {
@@ -171,5 +198,7 @@ const styles = StyleSheet.create({
   btnDesignateText: { color: '#fff', fontWeight: '700', fontSize: 12 },
   btnRevoke: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.brand, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 },
   btnRevokeText: { color: colors.brand, fontWeight: '700', fontSize: 12 },
+  btnClear: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.brand, borderRadius: radius.md, paddingVertical: 10, marginBottom: 8 },
+  btnClearText: { color: '#fff', fontWeight: '800', fontSize: 13 },
   muted: { color: colors.textMuted, padding: 16, textAlign: 'center' },
 });

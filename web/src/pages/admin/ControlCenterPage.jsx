@@ -63,6 +63,20 @@ export default function ControlCenterPage() {
     }
   }
 
+  async function clearClass(niveauId, label, effectif) {
+    if (!effectif) { setMsg({ type: 'err', text: 'Cette classe est déjà vide.' }); return; }
+    if (!confirm(`Vider la classe « ${label} » ?\n\nCela supprimera définitivement les ${effectif} étudiant(s) et délégué(s) de cette classe. Action irréversible.`)) return;
+    if (!confirm('Dernière confirmation : supprimer tous les étudiants de cette classe ?')) return;
+    setMsg(null);
+    try {
+      const { data } = await client.delete(`/admin/classes/${niveauId}/etudiants`);
+      await load();
+      setMsg({ type: 'ok', text: data?.message || 'Classe vidée.' });
+    } catch (e) {
+      setMsg({ type: 'err', text: e?.response?.data?.message || 'Action impossible.' });
+    }
+  }
+
   const filieres = [...new Map(classes.filter((c) => c.filiere).map((c) => [c.filiere.code, c.filiere])).values()];
   const shown = filtreFiliere ? classes.filter((c) => c.filiere?.code === filtreFiliere) : classes;
   const pg = usePagination(shown, 10);
@@ -165,7 +179,13 @@ export default function ControlCenterPage() {
                         <span className="muted">Aucun élève dans cette classe.</span>
                       ) : (
                         <div>
-                          <div className="muted" style={{ marginBottom: 6 }}>Élèves de la classe :</div>
+                          <div className="spread" style={{ marginBottom: 8, alignItems: 'center' }}>
+                            <span className="muted">Élèves de la classe :</span>
+                            <button className="btn btn-danger"
+                                    onClick={() => clearClass(c.niveau_id, `${c.filiere?.code} · ${c.niveau}`, elevesClasse.length)}>
+                              🗑 Vider la classe ({elevesClasse.length})
+                            </button>
+                          </div>
                           {elevesClasse.map((u) => (
                             <div key={u.id} className="spread"
                                  style={{ padding: '7px 4px', borderBottom: '1px solid #E6E6E6' }}>

@@ -117,6 +117,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/classes', [ClasseController::class, 'index']);
         Route::post('/classes/{niveau}/delegue', [ClasseController::class, 'assignDelegate']);
         Route::delete('/classes/{niveau}/delegue/{user}', [ClasseController::class, 'revokeDelegate']);
+        // Vider une classe : supprime tous ses étudiants + délégués (fin d'année).
+        Route::delete('/classes/{niveau}/etudiants', [ClasseController::class, 'clearStudents']);
 
         // Import en masse d'étudiants (CSV) — avant apiResource pour la priorité.
         Route::post('/users/import', [UserController::class, 'importCsv']);

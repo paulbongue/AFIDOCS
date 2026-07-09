@@ -2,7 +2,7 @@
   "expo": {
     "name": "AFI Docs",
     "slug": "afi-mobile",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "backgroundColor": "#14213D",
@@ -21,7 +21,7 @@
     },
     "android": {
       "package": "sn.afi.docs",
-      "versionCode": 6,
+      "versionCode": 7,
       "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
