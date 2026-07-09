@@ -13,6 +13,7 @@ export default function PedagogiePage() {
   const [newM, setNewM] = useState('');
   const [newMSem, setNewMSem] = useState('');
   const [newMEns, setNewMEns] = useState('');
+  const [ensDrafts, setEnsDrafts] = useState({}); // brouillons « enseignant » par matière
   const [annees, setAnnees] = useState([]);
   const [newAnnee, setNewAnnee] = useState('');
 
@@ -80,17 +81,30 @@ export default function PedagogiePage() {
     e.preventDefault();
     if (!newM || !selN) return;
     const sem = newMSem || (semestresForNiveau(selN)[0] ?? null);
-    await client.post('/admin/matieres', { nom: newM, niveau_id: selN.id, semestre: sem, enseignant: newMEns.trim() || null });
-    setNewM(''); setNewMSem(''); setNewMEns('');
-    await load();
+    try {
+      await client.post('/admin/matieres', { nom: newM, niveau_id: selN.id, semestre: sem, enseignant: newMEns.trim() || null });
+      setNewM(''); setNewMSem(''); setNewMEns('');
+      await load();
+    } catch (err) {
+      alert(err?.response?.data?.message
+        || "Impossible d'ajouter la matière. Vérifiez que la mise à jour du serveur (migration « enseignant ») a bien été appliquée.");
+    }
   }
   async function setMatiereSem(id, semestre) {
     await client.put(`/admin/matieres/${id}`, { semestre: Number(semestre) });
     await load();
   }
-  async function setMatiereEnseignant(id, enseignant) {
-    await client.put(`/admin/matieres/${id}`, { enseignant: enseignant || null });
-    await load();
+  async function saveEnseignant(m) {
+    const v = (ensDrafts[m.id] ?? (m.enseignant || '')).trim();
+    if (v === (m.enseignant || '')) return;
+    try {
+      await client.put(`/admin/matieres/${m.id}`, { enseignant: v || null });
+      setEnsDrafts((d) => { const n = { ...d }; delete n[m.id]; return n; });
+      await load();
+    } catch (err) {
+      alert(err?.response?.data?.message
+        || "Enregistrement impossible. Le serveur a-t-il bien été mis à jour (migration « enseignant ») ?");
+    }
   }
   async function delMatiere(id) {
     if (!confirm('Supprimer cette matière ?')) return;
@@ -188,11 +202,17 @@ export default function PedagogiePage() {
                     )}
                     <span onClick={() => delMatiere(m.id)} style={{ color: 'var(--red)', cursor: 'pointer' }}>✕</span>
                   </div>
-                  <input className="input" style={{ marginTop: 6, padding: '4px 8px', fontSize: 13 }}
-                         placeholder="Enseignant (pour l’évaluation)"
-                         key={'ens-' + m.id + '|' + (m.enseignant || '')}
-                         defaultValue={m.enseignant || ''}
-                         onBlur={(e) => { const v = e.target.value.trim(); if (v !== (m.enseignant || '')) setMatiereEnseignant(m.id, v); }} />
+                  <div className="row" style={{ gap: 8, marginTop: 6, alignItems: 'center' }}>
+                    <input className="input" style={{ flex: 1, padding: '4px 8px', fontSize: 13 }}
+                           placeholder="Nom de l’enseignant (pour l’évaluation)"
+                           value={ensDrafts[m.id] ?? (m.enseignant || '')}
+                           onChange={(e) => setEnsDrafts((d) => ({ ...d, [m.id]: e.target.value }))} />
+                    <button type="button" className="btn btn-red" style={{ padding: '4px 12px', fontSize: 13 }}
+                            disabled={(ensDrafts[m.id] ?? (m.enseignant || '')).trim() === (m.enseignant || '')}
+                            onClick={() => saveEnseignant(m)}>
+                      Enregistrer
+                    </button>
+                  </div>
                 </div>
               ))}
               <form className="mt" onSubmit={addMatiere} style={{ display: 'grid', gap: 8 }}>

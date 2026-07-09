@@ -152,6 +152,19 @@ export default function UsersPage() {
       {csvResult && (
         <div className="card mt" style={{ borderColor: csvResult.errors?.length ? 'var(--red)' : 'var(--success)' }}>
           <b>{csvResult.message}</b> — mot de passe par défaut : <code>{csvResult.default_password}</code> (à changer à la 1re connexion).
+          {csvResult.detected && (
+            <div className="muted" style={{ marginTop: 8, fontSize: 12.5 }}>
+              Colonnes reconnues :{' '}
+              {[
+                ['Prénom', csvResult.detected.prenom],
+                ['Nom', csvResult.detected.nom],
+                ['Nom complet', csvResult.detected.fullname],
+                ['E-mail', csvResult.detected.email],
+                ['Filière', csvResult.detected.filiere],
+                ['Niveau', csvResult.detected.niveau],
+              ].filter(([, v]) => v).map(([k, v]) => `${k} → « ${v} »`).join(' · ') || 'aucune'}
+            </div>
+          )}
           {csvResult.errors?.length > 0 && (
             <ul style={{ marginTop: 8, color: 'var(--red)' }}>
               {csvResult.errors.slice(0, 20).map((er, i) => <li key={i}>{er}</li>)}
@@ -159,7 +172,9 @@ export default function UsersPage() {
             </ul>
           )}
           <div className="muted" style={{ marginTop: 8, fontSize: 12.5 }}>
-            Colonnes attendues (avec ligne d'en-tête) : <b>prénom, nom, email, filière</b> (code, ex. GL), <b>niveau</b> (ex. L3). Séparateur « ; » ou « , ».
+            Le fichier doit contenir prénom, nom, e-mail, filière (code ou nom, ex. GL) et niveau (ex. L3).
+            Les intitulés de colonnes sont reconnus automatiquement (synonymes FR/EN, colonne « Nom complet »,
+            ou détection par le contenu) — l'ordre et les noms exacts n'ont pas d'importance. Séparateur « ; », « , » ou tabulation.
           </div>
         </div>
       )}

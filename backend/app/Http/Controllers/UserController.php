@@ -124,27 +124,53 @@ class UserController extends Controller
             return response()->json(['message' => 'Fichier CSV vide ou sans données.'], 422);
         }
 
-        // Séparateur : « ; » (Excel FR) ou « , ».
-        $sep = substr_count($lines[0], ';') >= substr_count($lines[0], ',') ? ';' : ',';
-        $headers = array_map(fn ($h) => $this->normKey($h), str_getcsv($lines[0], $sep));
+        // Séparateur : « ; » (Excel FR), « , » ou tabulation.
+        $sep = $this->detectSeparator($lines[0]);
+        $rawHeaders = str_getcsv($lines[0], $sep);
+        $headers = array_map(fn ($h) => $this->normKey($h), $rawHeaders);
+        $ncols = count($headers);
+
+        // Toutes les lignes de données, ajustées à la largeur de l'en-tête.
+        $dataRows = [];
+        foreach (array_slice($lines, 1) as $line) {
+            $cols = str_getcsv($line, $sep);
+            $dataRows[] = array_slice(array_pad($cols, $ncols, null), 0, $ncols);
+        }
+
+        // Détection tolérante des colonnes : par en-tête (synonymes) puis par contenu,
+        // pour accepter un CSV dont les noms de colonnes diffèrent du format demandé.
+        $map = $this->mapColumns($headers, $dataRows, $ncols);
+        $get = function (array $r, string $field) use ($map) {
+            $i = $map[$field];
+
+            return $i === null ? '' : trim((string) ($r[$i] ?? ''));
+        };
 
         $defaultPassword = 'Afi@2026';
         $created = 0;
         $errors = [];
 
-        foreach (array_slice($lines, 1) as $idx => $line) {
+        foreach ($dataRows as $idx => $r) {
             $num = $idx + 2; // n° de ligne dans le fichier (1 = en-tête)
-            $cols = str_getcsv($line, $sep);
-            $cols = array_slice(array_pad($cols, count($headers), null), 0, count($headers));
-            $row = array_combine($headers, $cols);
 
-            $prenom = trim($row['prenom'] ?? '');
-            $nom = trim($row['nom'] ?? '');
-            $email = trim($row['email'] ?? ($row['mail'] ?? ''));
-            $filiereKey = trim($row['filiere'] ?? '');
-            $niveauKey = trim($row['niveau'] ?? '');
+            $prenom = $get($r, 'prenom');
+            $nom = $get($r, 'nom');
+            // Colonne unique « Nom complet » : découpage (1er mot = prénom, reste = nom).
+            if (($prenom === '' || $nom === '') && $map['fullname'] !== null) {
+                $parts = preg_split('/\s+/', $get($r, 'fullname'), -1, PREG_SPLIT_NO_EMPTY);
+                if (count($parts) >= 2) {
+                    $prenom = $prenom !== '' ? $prenom : $parts[0];
+                    $nom = $nom !== '' ? $nom : implode(' ', array_slice($parts, 1));
+                } elseif (count($parts) === 1) {
+                    $nom = $nom !== '' ? $nom : $parts[0];
+                }
+            }
 
-            if ($prenom === '' || $nom === '') { $errors[] = "Ligne {$num} : prénom/nom manquant."; continue; }
+            $email = $get($r, 'email');
+            $filiereKey = $get($r, 'filiere');
+            $niveauKey = $get($r, 'niveau');
+
+            if ($prenom === '' || $nom === '') { $errors[] = "Ligne {$num} : nom ou prénom manquant."; continue; }
 
             $filiere = Filiere::whereRaw('UPPER(code) = ?', [strtoupper($filiereKey)])
                 ->orWhereRaw('LOWER(nom) = ?', [mb_strtolower($filiereKey)])->first();
@@ -174,12 +200,122 @@ class UserController extends Controller
             $created++;
         }
 
+        // Récapitulatif des colonnes reconnues (transparence : l'admin voit le mapping).
+        $detected = [];
+        foreach (['prenom', 'nom', 'fullname', 'email', 'filiere', 'niveau'] as $f) {
+            $detected[$f] = $map[$f] !== null ? ($rawHeaders[$map[$f]] ?? null) : null;
+        }
+
         return response()->json([
             'message' => "{$created} compte(s) créé(s).",
             'created' => $created,
             'errors' => $errors,
+            'detected' => $detected,
             'default_password' => $defaultPassword,
         ]);
+    }
+
+    /** Détecte le séparateur du CSV : « ; », « , » ou tabulation. */
+    private function detectSeparator(string $headerLine): string
+    {
+        $counts = [
+            ';' => substr_count($headerLine, ';'),
+            ',' => substr_count($headerLine, ','),
+            "\t" => substr_count($headerLine, "\t"),
+        ];
+        arsort($counts);
+        $sep = array_key_first($counts);
+
+        return $counts[$sep] > 0 ? $sep : ',';
+    }
+
+    /**
+     * Associe chaque champ logique (prénom, nom, e-mail, filière, niveau…) à une
+     * colonne du CSV. D'abord par l'en-tête (nombreux synonymes FR/EN), puis, si
+     * l'en-tête ne suffit pas, par le CONTENU des colonnes : une colonne d'e-mails
+     * valides, ou dont les valeurs correspondent au catalogue filières/niveaux,
+     * est reconnue même si son intitulé est inhabituel.
+     */
+    private function mapColumns(array $headers, array $dataRows, int $ncols): array
+    {
+        $alias = [
+            'prenom' => ['prenom', 'prenoms', 'firstname', 'givenname'],
+            'nom' => ['nom', 'noms', 'lastname', 'surname', 'familyname', 'nomdefamille', 'nomfamille'],
+            'fullname' => ['nomcomplet', 'fullname', 'name', 'nomprenom', 'prenomnom', 'nomprenoms', 'nometprenom', 'nometprenoms', 'etudiant', 'apprenant'],
+            'email' => ['email', 'mail', 'emails', 'courriel', 'adresseemail', 'adresseelectronique', 'emailaddress', 'mel', 'adressemail'],
+            'filiere' => ['filiere', 'filieres', 'specialite', 'specialisation', 'departement', 'formation', 'option', 'parcours', 'section'],
+            'niveau' => ['niveau', 'niveaux', 'classe', 'annee', 'anneeetude', 'anneedetude', 'promotion', 'level', 'grade', 'niv'],
+        ];
+
+        $map = [];
+        foreach ($alias as $field => $names) {
+            $map[$field] = null;
+            foreach ($headers as $i => $h) {
+                if ($h !== '' && in_array($h, $names, true)) { $map[$field] = $i; break; }
+            }
+        }
+
+        // Closure par référence : reflète les colonnes déjà retenues au fil des détections.
+        $used = function () use (&$map) {
+            return array_values(array_filter($map, fn ($v) => $v !== null));
+        };
+
+        // E-mail : colonne majoritairement composée d'adresses valides.
+        if ($map['email'] === null) {
+            $map['email'] = $this->detectColumn($dataRows, $ncols, $used(),
+                fn ($v) => filter_var($v, FILTER_VALIDATE_EMAIL) !== false);
+        }
+
+        // Filière : valeurs correspondant au catalogue (code ou nom).
+        if ($map['filiere'] === null) {
+            $set = [];
+            foreach (Filiere::all() as $f) {
+                $set[$this->normLoose($f->code)] = true;
+                $set[$this->normLoose($f->nom)] = true;
+            }
+            $map['filiere'] = $this->detectColumn($dataRows, $ncols, $used(),
+                fn ($v) => isset($set[$this->normLoose($v)]));
+        }
+
+        // Niveau : valeurs correspondant aux niveaux existants (ex : L3, M1…).
+        if ($map['niveau'] === null) {
+            $set = [];
+            foreach (Niveau::all() as $n) { $set[$this->normLoose($n->nom)] = true; }
+            $map['niveau'] = $this->detectColumn($dataRows, $ncols, $used(),
+                fn ($v) => isset($set[$this->normLoose($v)]));
+        }
+
+        return $map;
+    }
+
+    /** Trouve la colonne (non déjà utilisée) dont ≥ 60 % des valeurs valident le test. */
+    private function detectColumn(array $dataRows, int $ncols, array $used, callable $matches): ?int
+    {
+        $best = null;
+        $bestScore = 0.0;
+        for ($c = 0; $c < $ncols; $c++) {
+            if (in_array($c, $used, true)) { continue; }
+            $n = 0;
+            $ok = 0;
+            foreach ($dataRows as $r) {
+                $v = trim((string) ($r[$c] ?? ''));
+                if ($v === '') { continue; }
+                $n++;
+                if ($matches($v)) { $ok++; }
+            }
+            if ($n > 0) {
+                $score = $ok / $n;
+                if ($score >= 0.6 && $score > $bestScore) { $bestScore = $score; $best = $c; }
+            }
+        }
+
+        return $best;
+    }
+
+    /** Normalise une valeur pour comparaison souple (sans accent/ponctuation, chiffres conservés). */
+    private function normLoose(string $s): string
+    {
+        return Str::of($s)->ascii()->lower()->replaceMatches('/[^a-z0-9]+/', '')->value();
     }
 
     /** Normalise un en-tête de colonne (minuscule, sans accent ni ponctuation). */

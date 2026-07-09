@@ -78,7 +78,7 @@ export default function AdminPedagogieScreen() {
     if (!newM || !selN) return;
     const sem = newMSem || (semestresForNiveau(selN)[0] ?? null);
     try { await client.post('/admin/matieres', { nom: newM, niveau_id: selN.id, semestre: sem, enseignant: newMEns.trim() || null }); setNewM(''); setNewMSem(null); setNewMEns(''); await load(); }
-    catch (_) { Alert.alert('Erreur', 'Ajout impossible.'); }
+    catch (e) { Alert.alert('Erreur', e?.response?.data?.message || "Ajout impossible. Le serveur a-t-il bien été mis à jour (migration « enseignant ») ?"); }
   }
   async function setMatiereSem(id, semestre) {
     try { await client.put(`/admin/matieres/${id}`, { semestre }); await load(); }
@@ -87,8 +87,13 @@ export default function AdminPedagogieScreen() {
   async function saveEnseignant(m) {
     const v = (ensDrafts[m.id] ?? m.enseignant ?? '').trim();
     if (v === (m.enseignant || '')) return; // rien à changer
-    try { await client.put(`/admin/matieres/${m.id}`, { enseignant: v || null }); await load(); }
-    catch (_) { Alert.alert('Erreur', 'Modification impossible.'); }
+    try {
+      await client.put(`/admin/matieres/${m.id}`, { enseignant: v || null });
+      setEnsDrafts((d) => { const n = { ...d }; delete n[m.id]; return n; });
+      await load();
+    } catch (e) {
+      Alert.alert('Erreur', e?.response?.data?.message || "Enregistrement impossible. Le serveur a-t-il bien été mis à jour (migration « enseignant ») ?");
+    }
   }
   async function addAnnee() {
     if (!newAnnee.trim()) return;
@@ -226,15 +231,24 @@ export default function AdminPedagogieScreen() {
                     })}
                   </View>
                 )}
-                <TextInput
-                  style={[styles.input, { marginBottom: 0 }]}
-                  placeholder="Enseignant (pour l'évaluation)"
-                  placeholderTextColor={colors.textLight}
-                  value={ensDrafts[m.id] ?? m.enseignant ?? ''}
-                  onChangeText={(t) => setEnsDrafts((d) => ({ ...d, [m.id]: t }))}
-                  onEndEditing={() => saveEnseignant(m)}
-                  returnKeyType="done"
-                />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <TextInput
+                    style={[styles.input, { marginBottom: 0, flex: 1 }]}
+                    placeholder="Nom de l'enseignant (évaluation)"
+                    placeholderTextColor={colors.textLight}
+                    value={ensDrafts[m.id] ?? m.enseignant ?? ''}
+                    onChangeText={(t) => setEnsDrafts((d) => ({ ...d, [m.id]: t }))}
+                    returnKeyType="done"
+                    onSubmitEditing={() => saveEnseignant(m)}
+                  />
+                  <TouchableOpacity
+                    style={[styles.saveBtn, (ensDrafts[m.id] ?? m.enseignant ?? '').trim() === (m.enseignant || '') && { opacity: 0.4 }]}
+                    disabled={(ensDrafts[m.id] ?? m.enseignant ?? '').trim() === (m.enseignant || '')}
+                    onPress={() => saveEnseignant(m)}
+                  >
+                    <Text style={styles.saveBtnText}>Enreg.</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             ))}
             <View style={styles.addCard}>
@@ -290,6 +304,8 @@ const styles = StyleSheet.create({
   swatchActive: { borderColor: colors.brandDark },
   add: { backgroundColor: colors.brand, borderRadius: radius.md, paddingVertical: 12, alignItems: 'center' },
   addText: { color: '#fff', fontWeight: '800' },
+  saveBtn: { backgroundColor: colors.brand, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 10 },
+  saveBtnText: { color: '#fff', fontWeight: '800', fontSize: 13 },
   semRow: { flexDirection: 'row', gap: 8 },
   semChip: { borderWidth: 1.5, borderColor: colors.navy, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4 },
   semChipOn: { backgroundColor: colors.navy },
