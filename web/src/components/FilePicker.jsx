@@ -3,18 +3,32 @@ import { IconUpload } from './Icons';
 import { formatSize } from '../theme';
 
 // Sélecteur de fichier moderne : zone cliquable + glisser-déposer + aperçu du nom.
-export default function FilePicker({ file, onChange, accept, hint }) {
+export default function FilePicker({ file, onChange, accept, hint, maxSizeMB = 250, onError }) {
   const ref = useRef(null);
   const [drag, setDrag] = useState(false);
+  const [err, setErr] = useState('');
+
+  // Contrôle de taille côté client : message clair AVANT tout envoi.
+  function pick(f) {
+    if (f && f.size > maxSizeMB * 1024 * 1024) {
+      const msg = `Le fichier dépasse la taille maximale autorisée (${maxSizeMB} Mo).`;
+      setErr(msg);
+      onError?.(msg);
+      return;
+    }
+    setErr('');
+    onChange(f);
+  }
 
   function onDrop(e) {
     e.preventDefault();
     setDrag(false);
     const f = e.dataTransfer.files?.[0];
-    if (f) onChange(f);
+    if (f) pick(f);
   }
 
   return (
+    <>
     <div
       className={'filepicker' + (drag ? ' drag' : '') + (file ? ' has-file' : '')}
       onClick={() => ref.current?.click()}
@@ -25,7 +39,7 @@ export default function FilePicker({ file, onChange, accept, hint }) {
       tabIndex={0}
     >
       <input ref={ref} type="file" accept={accept} hidden
-             onChange={(e) => onChange(e.target.files?.[0] || null)} />
+             onChange={(e) => pick(e.target.files?.[0] || null)} />
       <div className="filepicker-icon"><IconUpload size={20} /></div>
       <div className="filepicker-body">
         {file ? (
@@ -42,8 +56,10 @@ export default function FilePicker({ file, onChange, accept, hint }) {
       </div>
       {file && (
         <button type="button" className="filepicker-clear" title="Retirer"
-                onClick={(e) => { e.stopPropagation(); onChange(null); }}>✕</button>
+                onClick={(e) => { e.stopPropagation(); setErr(''); onChange(null); }}>✕</button>
       )}
     </div>
+    {err && <div className="filepicker-err">{err}</div>}
+    </>
   );
 }

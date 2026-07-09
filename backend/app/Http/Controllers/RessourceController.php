@@ -90,8 +90,12 @@ class RessourceController extends Controller
             'matiere_id' => ['nullable', 'integer', 'exists:matieres,id'],
             'matiere_ids' => ['nullable', 'array'],
             'matiere_ids.*' => ['integer', 'exists:matieres,id'],
-            // Tout type de document accepte (jusqu'a 50 Mo).
-            'fichier' => ['required', 'file', 'max:51200'],
+            // Tout type de document accepté (jusqu'à 250 Mo). 256000 Ko = 250 Mo.
+            'fichier' => ['required', 'file', 'max:256000'],
+        ], [
+            'fichier.max' => 'Le fichier dépasse la taille maximale autorisée (250 Mo).',
+            'fichier.required' => 'Veuillez sélectionner un fichier à publier.',
+            'fichier.file' => 'Le document envoyé n\'est pas un fichier valide.',
         ]);
 
         // Cibles : une OU plusieurs matieres (classes/filieres partageant le cours).
@@ -219,8 +223,11 @@ class RessourceController extends Controller
         $data = $request->validate([
             'titre' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            // Remplacement de fichier facultatif (tout type, jusqu'a 50 Mo).
-            'fichier' => ['nullable', 'file', 'max:51200'],
+            // Remplacement de fichier facultatif (tout type, jusqu'à 250 Mo).
+            'fichier' => ['nullable', 'file', 'max:256000'],
+        ], [
+            'fichier.max' => 'Le fichier dépasse la taille maximale autorisée (250 Mo).',
+            'fichier.file' => 'Le document envoyé n\'est pas un fichier valide.',
         ]);
 
         $payload = [

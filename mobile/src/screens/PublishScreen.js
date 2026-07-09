@@ -62,7 +62,12 @@ export default function PublishScreen({ navigation }) {
     try {
       const res = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
       if (res.canceled) return;
-      setFile(res.assets?.[0] || null);
+      const picked = res.assets?.[0] || null;
+      // Contrôle de taille côté client (250 Mo) : message clair avant l'envoi.
+      if (picked?.size && picked.size > 250 * 1024 * 1024) {
+        return Alert.alert('Fichier trop volumineux', 'Le fichier dépasse la taille maximale autorisée (250 Mo).');
+      }
+      setFile(picked);
     } catch (_) {
       Alert.alert('Erreur', 'Impossible de sélectionner le fichier.');
     }
