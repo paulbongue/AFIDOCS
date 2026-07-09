@@ -44,6 +44,8 @@ export async function initDatabase() {
       matiere_id INTEGER,
       matiere_nom TEXT,
       matiere_semestre INTEGER,
+      annee_academique_id INTEGER,
+      annee_libelle TEXT,
       niveau_id INTEGER,
       niveau_nom TEXT,
       filiere_id INTEGER,
@@ -81,6 +83,8 @@ export async function initDatabase() {
   // Migrations douces : ajoutent des colonnes aux installations existantes (ignorées si déjà présentes).
   try { await db.execAsync('ALTER TABLE commentaires ADD COLUMN user_id INTEGER;'); } catch (_) { /* déjà là */ }
   try { await db.execAsync('ALTER TABLE ressources ADD COLUMN matiere_semestre INTEGER;'); } catch (_) { /* déjà là */ }
+  try { await db.execAsync('ALTER TABLE ressources ADD COLUMN annee_academique_id INTEGER;'); } catch (_) { /* déjà là */ }
+  try { await db.execAsync('ALTER TABLE ressources ADD COLUMN annee_libelle TEXT;'); } catch (_) { /* déjà là */ }
 
   return db;
 }
@@ -139,6 +143,8 @@ function flatten(r) {
     matiere_id: r.matiere_id,
     matiere_nom: r.matiere?.nom ?? '',
     matiere_semestre: r.matiere?.semestre ?? null,
+    annee_academique_id: r.annee_academique_id ?? r.annee?.id ?? null,
+    annee_libelle: r.annee?.libelle ?? null,
     niveau_id: niveau?.id ?? null,
     niveau_nom: niveau?.nom ?? '',
     filiere_id: filiere?.id ?? null,
@@ -158,9 +164,10 @@ export async function upsertRessources(list) {
       await db.runAsync(
         `INSERT INTO ressources
           (id, titre, description, type_fichier, url_fichier, taille_fichier,
-           matiere_id, matiere_nom, matiere_semestre, niveau_id, niveau_nom, filiere_id,
+           matiere_id, matiere_nom, matiere_semestre, annee_academique_id, annee_libelle,
+           niveau_id, niveau_nom, filiere_id,
            filiere_code, filiere_couleur, auteur_nom, commentaires_count, updated_at)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
          ON CONFLICT(id) DO UPDATE SET
            titre=excluded.titre,
            description=excluded.description,
@@ -170,6 +177,8 @@ export async function upsertRessources(list) {
            matiere_id=excluded.matiere_id,
            matiere_nom=excluded.matiere_nom,
            matiere_semestre=excluded.matiere_semestre,
+           annee_academique_id=excluded.annee_academique_id,
+           annee_libelle=excluded.annee_libelle,
            niveau_id=excluded.niveau_id,
            niveau_nom=excluded.niveau_nom,
            filiere_id=excluded.filiere_id,
@@ -180,7 +189,8 @@ export async function upsertRessources(list) {
            updated_at=excluded.updated_at`,
         [
           r.id, r.titre, r.description, r.type_fichier, r.url_fichier, r.taille_fichier,
-          r.matiere_id, r.matiere_nom, r.matiere_semestre, r.niveau_id, r.niveau_nom, r.filiere_id,
+          r.matiere_id, r.matiere_nom, r.matiere_semestre, r.annee_academique_id, r.annee_libelle,
+          r.niveau_id, r.niveau_nom, r.filiere_id,
           r.filiere_code, r.filiere_couleur, r.auteur_nom, r.commentaires_count, r.updated_at,
         ]
       );
@@ -207,6 +217,8 @@ export function getRessources(filters = {}, userId = null) {
   if (filters.filiere_id) { where.push('r.filiere_id = ?'); params.push(filters.filiere_id); }
   if (filters.niveau_id) { where.push('r.niveau_id = ?'); params.push(filters.niveau_id); }
   if (filters.matiere_id) { where.push('r.matiere_id = ?'); params.push(filters.matiere_id); }
+  if (filters.semestre) { where.push('r.matiere_semestre = ?'); params.push(filters.semestre); }
+  if (filters.annee_academique_id) { where.push('r.annee_academique_id = ?'); params.push(filters.annee_academique_id); }
   if (filters.type_fichier) { where.push('r.type_fichier = ?'); params.push(filters.type_fichier); }
   if (filters.offlineOnly) { where.push('d.local_uri IS NOT NULL'); }
 

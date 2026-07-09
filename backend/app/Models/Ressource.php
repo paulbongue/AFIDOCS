@@ -25,6 +25,7 @@ class Ressource extends Model
         'taille_fichier',
         'matiere_id',
         'user_id',
+        'annee_academique_id',
     ];
 
     protected $appends = ['url_fichier'];
@@ -32,6 +33,11 @@ class Ressource extends Model
     public function matiere(): BelongsTo
     {
         return $this->belongsTo(Matiere::class);
+    }
+
+    public function annee(): BelongsTo
+    {
+        return $this->belongsTo(AnneeAcademique::class, 'annee_academique_id');
     }
 
     public function auteur(): BelongsTo

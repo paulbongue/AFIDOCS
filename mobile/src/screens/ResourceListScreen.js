@@ -18,44 +18,48 @@ import { colors, colorForFiliere } from '../theme';
 export default function ResourceListScreen({ navigation }) {
   const { isOnline } = useNetwork();
   const { user } = useAuth();
-  const [ressources, setRessources] = useState([]);
+  const isAdmin = user?.role === 'admin';
+  const [allRes, setAllRes] = useState([]);   // ressources accessibles (source des filtres)
   const [filieres, setFilieres] = useState([]);
   const [search, setSearch] = useState('');
-  const [activeFiliere, setActiveFiliere] = useState(null);
-  const [activeNiveau, setActiveNiveau] = useState(null); // niveau_id choisi dans la filière
-  const [niveauxList, setNiveauxList] = useState([]);     // niveaux de la filière active
-  const [browse, setBrowse] = useState(false);   // false = recommandées (ma classe)
+  const [activeFiliere, setActiveFiliere] = useState(null); // admin uniquement
+  const [activeNiveau, setActiveNiveau] = useState(null);
+  const [activeSemestre, setActiveSemestre] = useState(null);
+  const [activeAnnee, setActiveAnnee] = useState(null);
   const [view, setView] = useState('list');       // 'list' | 'grid'
   const [refreshing, setRefreshing] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [firstLoad, setFirstLoad] = useState(true);
 
-  // Lecture depuis SQLite (fonctionne aussi hors-ligne).
+  // Lecture depuis SQLite (fonctionne aussi hors-ligne). Le serveur ayant déjà
+  // restreint l'accès, la base locale ne contient QUE les ressources autorisées.
   const loadLocal = useCallback(async () => {
-    const fils = await dbApi.getFilieres();
-    setFilieres(fils);
-
-    // Tous les niveaux/classes de la filière sélectionnée (pas seulement ceux
-    // qui ont déjà des ressources).
-    setNiveauxList(activeFiliere != null ? await dbApi.getNiveaux(activeFiliere) : []);
-
-    let list;
-    if (browse || !user?.filiere_id) {
-      // Exploration (ou admin sans classe) : toutes les ressources.
-      const filters = {};
-      if (search) filters.search = search;
-      if (activeFiliere) filters.filiere_id = activeFiliere;
-      if (activeNiveau) filters.niveau_id = activeNiveau;
-      list = await dbApi.getRessources(filters, user?.id);
-    } else {
-      // Recommandées : filière + niveau de l'utilisateur.
-      const filters = { filiere_id: user.filiere_id };
-      if (user?.niveau_id) filters.niveau_id = user.niveau_id;
-      list = await dbApi.getRessources(filters, user?.id);
-    }
-    setRessources(list);
+    setFilieres(await dbApi.getFilieres());
+    const filters = {};
+    if (search) filters.search = search;
+    if (isAdmin && activeFiliere) filters.filiere_id = activeFiliere;
+    setAllRes(await dbApi.getRessources(filters, user?.id));
     setFirstLoad(false);
-  }, [browse, search, activeFiliere, activeNiveau, user]);
+  }, [search, isAdmin, activeFiliere, user]);
+
+  // Options de filtre dérivées des ressources accessibles.
+  const uniqueBy = (arr, keyFn) => {
+    const seen = new Map();
+    arr.forEach((x) => { const k = keyFn(x); if (k != null && !seen.has(k)) seen.set(k, x); });
+    return [...seen.values()];
+  };
+  const niveauOptions = uniqueBy(allRes.filter((r) => r.niveau_id), (r) => r.niveau_id)
+    .map((r) => ({ id: r.niveau_id, nom: r.niveau_nom }));
+  const semestreOptions = uniqueBy(allRes.filter((r) => r.matiere_semestre), (r) => r.matiere_semestre)
+    .map((r) => r.matiere_semestre).sort((a, b) => a - b);
+  const anneeOptions = uniqueBy(allRes.filter((r) => r.annee_academique_id), (r) => r.annee_academique_id)
+    .map((r) => ({ id: r.annee_academique_id, libelle: r.annee_libelle }));
+
+  // Application des filtres côté client.
+  const ressources = allRes.filter((r) =>
+    (!activeNiveau || String(r.niveau_id) === String(activeNiveau))
+    && (!activeSemestre || Number(r.matiere_semestre) === Number(activeSemestre))
+    && (!activeAnnee || String(r.annee_academique_id) === String(activeAnnee)));
 
   const doSync = useCallback(async () => {
     if (!isOnline) return;
@@ -74,7 +78,7 @@ export default function ResourceListScreen({ navigation }) {
     }, [loadLocal, doSync, isOnline])
   );
 
-  useEffect(() => { loadLocal(); }, [browse, search, activeFiliere, activeNiveau, loadLocal]);
+  useEffect(() => { loadLocal(); }, [loadLocal]);
 
   async function onRefresh() {
     setRefreshing(true);
@@ -87,32 +91,18 @@ export default function ResourceListScreen({ navigation }) {
     return <View style={styles.flex}><SkeletonRows /></View>;
   }
 
-  const hasClass = !!user?.filiere_id;
-  const showBrowseUI = browse || !hasClass;
-
   const header = (
     <View>
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>
-            {!hasClass ? 'Ressources' : browse ? 'Explorer les ressources' : 'Recommandées pour vous'}
-          </Text>
+          <Text style={styles.headerTitle}>Ressources</Text>
           <Text style={styles.headerSub}>
-            {ressources.length} fichier{ressources.length > 1 ? 's' : ''} · {filieres.length} filière{filieres.length > 1 ? 's' : ''}
+            {ressources.length} fichier{ressources.length > 1 ? 's' : ''}
           </Text>
         </View>
-        {hasClass && (
-          <TouchableOpacity style={[styles.browseBtn, browse && styles.browseBtnAlt]}
-                            onPress={() => { setBrowse((b) => !b); setSearch(''); setActiveFiliere(null); setActiveNiveau(null); }}>
-            <Icon name={browse ? 'back' : 'search'} size={14} color={browse ? colors.text : '#fff'} />
-            <Text style={[styles.browseText, browse && styles.browseTextAlt]}>
-              {browse ? 'Ma classe' : 'Autres'}
-            </Text>
-          </TouchableOpacity>
-        )}
       </View>
 
-      {!browse && user?.filiere && (
+      {!isAdmin && user?.filiere && (
         <Text style={styles.classLine}>
           {user.filiere.code}{user.niveau ? ` · ${user.niveau.nom}` : ''} — {user.filiere.nom}
         </Text>
@@ -146,57 +136,86 @@ export default function ResourceListScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {showBrowseUI && (
-        <>
-          <View style={styles.searchWrap}>
-            <View style={styles.searchField}>
-              <Icon name="search" size={18} color={colors.textMuted} />
-              <TextInput style={styles.search} value={search} onChangeText={setSearch}
-                         placeholder="Rechercher une ressource…" placeholderTextColor={colors.textMuted} />
-              {search.length > 0 && (
-                <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
-                  <Icon name="close" size={16} color={colors.textMuted} />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-            {[{ id: null, code: 'Toutes' }, ...filieres].map((item) => {
-              const act = activeFiliere === item.id;
-              const c = item.id ? (item.couleur || colorForFiliere(item.code)) : colors.red;
-              return (
-                <TouchableOpacity key={String(item.id)}
-                  style={[styles.chip, { borderColor: c }, act && { backgroundColor: c }]}
-                  onPress={() => { setActiveFiliere(item.id); setActiveNiveau(null); }}>
-                  <Text style={[styles.chipText, { color: act ? '#fff' : c }]}>{item.code}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-          {activeFiliere != null && (
-            <Text style={styles.filiereTitle}>{filieres.find((f) => f.id === activeFiliere)?.nom || ''}</Text>
+      {/* Recherche */}
+      <View style={styles.searchWrap}>
+        <View style={styles.searchField}>
+          <Icon name="search" size={18} color={colors.textMuted} />
+          <TextInput style={styles.search} value={search} onChangeText={setSearch}
+                     placeholder="Rechercher une ressource…" placeholderTextColor={colors.textMuted} />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
+              <Icon name="close" size={16} color={colors.textMuted} />
+            </TouchableOpacity>
           )}
-          {/* Sous-filtre par niveau / classe une fois la filière choisie */}
-          {activeFiliere != null && niveauxList.length > 0 && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-              <TouchableOpacity
-                style={[styles.chipN, !activeNiveau && styles.chipNActive]}
-                onPress={() => setActiveNiveau(null)}>
-                <Text style={[styles.chipNText, !activeNiveau && styles.chipNTextActive]}>Tous niveaux</Text>
+        </View>
+      </View>
+
+      {/* Admin : filière à explorer (l'admin voit toutes les filières) */}
+      {isAdmin && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          {[{ id: null, code: 'Toutes' }, ...filieres].map((item) => {
+            const act = activeFiliere === item.id;
+            const c = item.id ? (item.couleur || colorForFiliere(item.code)) : colors.red;
+            return (
+              <TouchableOpacity key={String(item.id)}
+                style={[styles.chip, { borderColor: c }, act && { backgroundColor: c }]}
+                onPress={() => { setActiveFiliere(item.id); setActiveNiveau(null); setActiveSemestre(null); setActiveAnnee(null); }}>
+                <Text style={[styles.chipText, { color: act ? '#fff' : c }]}>{item.code}</Text>
               </TouchableOpacity>
-              {niveauxList.map((n) => {
-                const act = String(activeNiveau) === String(n.id);
-                return (
-                  <TouchableOpacity key={n.id}
-                    style={[styles.chipN, act && styles.chipNActive]}
-                    onPress={() => setActiveNiveau(n.id)}>
-                    <Text style={[styles.chipNText, act && styles.chipNTextActive]}>{n.nom}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          )}
-        </>
+            );
+          })}
+        </ScrollView>
+      )}
+
+      {/* Filtre niveau */}
+      {niveauOptions.length > 1 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          <TouchableOpacity style={[styles.chipN, !activeNiveau && styles.chipNActive]} onPress={() => setActiveNiveau(null)}>
+            <Text style={[styles.chipNText, !activeNiveau && styles.chipNTextActive]}>Tous niveaux</Text>
+          </TouchableOpacity>
+          {niveauOptions.map((n) => {
+            const act = String(activeNiveau) === String(n.id);
+            return (
+              <TouchableOpacity key={n.id} style={[styles.chipN, act && styles.chipNActive]} onPress={() => setActiveNiveau(n.id)}>
+                <Text style={[styles.chipNText, act && styles.chipNTextActive]}>{n.nom}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
+
+      {/* Filtre semestre */}
+      {semestreOptions.length > 1 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          <TouchableOpacity style={[styles.chipN, !activeSemestre && styles.chipNActive]} onPress={() => setActiveSemestre(null)}>
+            <Text style={[styles.chipNText, !activeSemestre && styles.chipNTextActive]}>Tous semestres</Text>
+          </TouchableOpacity>
+          {semestreOptions.map((s) => {
+            const act = Number(activeSemestre) === Number(s);
+            return (
+              <TouchableOpacity key={s} style={[styles.chipN, act && styles.chipNActive]} onPress={() => setActiveSemestre(s)}>
+                <Text style={[styles.chipNText, act && styles.chipNTextActive]}>S{s}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
+
+      {/* Filtre année académique */}
+      {anneeOptions.length > 1 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          <TouchableOpacity style={[styles.chipN, !activeAnnee && styles.chipNActive]} onPress={() => setActiveAnnee(null)}>
+            <Text style={[styles.chipNText, !activeAnnee && styles.chipNTextActive]}>Toutes années</Text>
+          </TouchableOpacity>
+          {anneeOptions.map((a) => {
+            const act = String(activeAnnee) === String(a.id);
+            return (
+              <TouchableOpacity key={a.id} style={[styles.chipN, act && styles.chipNActive]} onPress={() => setActiveAnnee(a.id)}>
+                <Text style={[styles.chipNText, act && styles.chipNTextActive]}>{a.libelle}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       )}
 
       {syncing && <Text style={styles.syncing}>Synchronisation en cours…</Text>}
@@ -221,9 +240,7 @@ export default function ResourceListScreen({ navigation }) {
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyText}>
-              {showBrowseUI
-                ? (isOnline ? 'Aucune ressource trouvée.' : 'Aucune ressource en cache.')
-                : 'Aucune ressource pour votre classe pour l’instant.\nTouchez « Autres ressources » pour explorer.'}
+              {isOnline ? 'Aucune ressource trouvée.' : 'Aucune ressource en cache.'}
             </Text>
           </View>
         }

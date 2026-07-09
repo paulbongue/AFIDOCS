@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AnneeAcademique;
 use App\Models\Matiere;
 use App\Models\Ressource;
 use Illuminate\Http\JsonResponse;
@@ -22,6 +23,7 @@ class RessourceController extends Controller
         $query = Ressource::query()
             ->with([
                 'auteur:id,name,role',
+                'annee:id,libelle',
                 'matiere:id,nom,niveau_id,semestre',
                 'matiere.niveau:id,nom,filiere_id,ordre',
                 'matiere.niveau.filiere:id,code,nom,couleur',
@@ -57,6 +59,10 @@ class RessourceController extends Controller
             $query->whereHas('matiere', fn ($q) => $q->where('semestre', $semestre));
         }
 
+        if ($anneeId = $request->query('annee_academique_id')) {
+            $query->where('annee_academique_id', $anneeId);
+        }
+
         // Filtres hierarchiques via la chaine matiere -> niveau -> filiere.
         if ($matiereId = $request->query('matiere_id')) {
             $query->where('matiere_id', $matiereId);
@@ -87,6 +93,7 @@ class RessourceController extends Controller
     {
         $ressource->load([
             'auteur:id,name,role',
+            'annee:id,libelle',
             'matiere:id,nom,niveau_id,semestre',
             'matiere.niveau:id,nom,filiere_id,ordre',
             'matiere.niveau.filiere:id,code,nom,couleur',
@@ -164,6 +171,9 @@ class RessourceController extends Controller
         $size = $file->getSize();
         $basePath = $file->store('ressources', 'public');
 
+        // Année académique de la publication : l'année en cours par défaut.
+        $anneeId = AnneeAcademique::courante()?->id;
+
         $created = [];
         foreach ($matieres as $i => $m) {
             // 1re cible : on reutilise le fichier stocke ; suivantes : une copie.
@@ -177,6 +187,7 @@ class RessourceController extends Controller
                 'taille_fichier' => $size,
                 'matiere_id' => $m->id,
                 'user_id' => $request->user()->id,
+                'annee_academique_id' => $anneeId,
             ]);
             $ressource->load(['auteur:id,name,role', 'matiere.niveau.filiere:id,code,nom,couleur']);
 
