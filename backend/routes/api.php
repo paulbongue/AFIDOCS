@@ -48,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Adresse e-mail de sécurité (OTP) : saisie + confirmation par code.
     Route::post('/me/contact-email', [AuthController::class, 'setContactEmail']);
     Route::post('/me/contact-email/confirm', [AuthController::class, 'confirmContactEmail']);
+    Route::post('/me/contact-email/confirm-pending', [AuthController::class, 'confirmPendingContactEmail']);
 
     // Notifications in-app (cloche)
     Route::get('/notifications', [NotificationController::class, 'index']);

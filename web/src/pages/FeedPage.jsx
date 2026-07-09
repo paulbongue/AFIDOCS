@@ -23,7 +23,7 @@ export default function FeedPage() {
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [targets, setTargets] = useState([]);   // ids de filières ciblées
-  const [niveauId, setNiveauId] = useState('');
+  const [niveauIds, setNiveauIds] = useState([]);
   const [posting, setPosting] = useState(false);
   const [postErr, setPostErr] = useState(null);
 
@@ -82,10 +82,16 @@ export default function FeedPage() {
 
   function toggleTarget(id) {
     setTargets((t) => (t.includes(id) ? t.filter((x) => x !== id) : [...t, id]));
-    setNiveauId('');
   }
 
-  const singleFiliere = targets.length === 1 ? filieres.find((f) => f.id === targets[0]) : null;
+  function toggleNiveau(id) {
+    setNiveauIds((v) => (v.includes(id) ? v.filter((x) => x !== id) : [...v, id]));
+  }
+
+  // Niveaux proposés = ceux des filières sélectionnées (étiquetés par code filière).
+  const availableNiveaux = filieres
+    .filter((f) => targets.includes(f.id))
+    .flatMap((f) => (f.niveaux || []).map((n) => ({ ...n, filiereCode: f.code })));
 
   async function submitPost(e) {
     e.preventDefault();
@@ -97,9 +103,12 @@ export default function FeedPage() {
       if (text.trim()) fd.append('contenu', text.trim());
       if (image) fd.append('image', image);
       targets.forEach((id) => fd.append('target_filiere_ids[]', id));
-      if (niveauId) fd.append('target_niveau_id', niveauId);
+      // On n'envoie que les niveaux appartenant aux filières encore sélectionnées.
+      niveauIds
+        .filter((id) => availableNiveaux.some((n) => n.id === id))
+        .forEach((id) => fd.append('target_niveau_ids[]', id));
       await client.post('/feed/posts', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setText(''); setImage(null); setPreview(null); setTargets([]); setNiveauId('');
+      setText(''); setImage(null); setPreview(null); setTargets([]); setNiveauIds([]);
       await load();
     } catch (e2) {
       const st = e2?.response?.status;
@@ -208,11 +217,21 @@ export default function FeedPage() {
               );
             })}
           </div>
-          {singleFiliere?.niveaux?.length > 0 && (
-            <select className="input mt" value={niveauId} onChange={(e) => setNiveauId(e.target.value)} style={{ maxWidth: 280 }}>
-              <option value="">Tous les niveaux de {singleFiliere.code}</option>
-              {singleFiliere.niveaux.map((n) => <option key={n.id} value={n.id}>{n.nom}</option>)}
-            </select>
+          {availableNiveaux.length > 0 && (
+            <>
+              <div className="muted" style={{ fontSize: 13, marginTop: 10 }}>Cibler des niveaux (optionnel — sinon toute la filière) :</div>
+              <div className="row" style={{ flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
+                {availableNiveaux.map((n) => {
+                  const on = niveauIds.includes(n.id);
+                  return (
+                    <button type="button" key={n.id} className="tgt-chip" onClick={() => toggleNiveau(n.id)}
+                            style={{ background: on ? 'var(--navy)' : 'transparent', color: on ? '#fff' : 'var(--navy)', borderColor: 'var(--navy)' }}>
+                      {n.filiereCode} · {n.nom}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
           <div className="row mt" style={{ gap: 8, alignItems: 'center' }}>
             <label className="btn btn-ghost" style={{ cursor: 'pointer' }}>
@@ -253,12 +272,14 @@ export default function FeedPage() {
             )}
           </div>
 
-          {(p.filieres?.length > 0 || p.target_niveau) && (
+          {(p.filieres?.length > 0 || p.niveaux?.length > 0) && (
             <div className="row" style={{ flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
               {p.filieres.map((f) => (
                 <span key={f.id} className="tgt-chip on" style={{ background: f.couleur || colorForFiliere(f.code) }}>{f.code}</span>
               ))}
-              {p.target_niveau && <span className="tgt-chip on" style={{ background: 'var(--navy)' }}>{p.target_niveau.nom}</span>}
+              {p.niveaux?.map((n) => (
+                <span key={n.id} className="tgt-chip on" style={{ background: 'var(--navy)' }}>{n.nom}</span>
+              ))}
             </div>
           )}
 

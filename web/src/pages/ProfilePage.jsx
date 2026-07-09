@@ -71,6 +71,21 @@ export default function ProfilePage() {
     }
   }
 
+  // Confirmation en un clic d'une adresse pré-renseignée par l'administration.
+  async function confirmPending() {
+    setSecMsg(null);
+    setSecBusy(true);
+    try {
+      const { data } = await client.post('/me/contact-email/confirm-pending');
+      updateUser(data.user);
+      setSecMsg({ type: 'ok', text: 'Adresse e-mail de sécurité confirmée.' });
+    } catch (err) {
+      setSecMsg({ type: 'err', text: err?.response?.data?.message || 'Confirmation impossible.' });
+    } finally {
+      setSecBusy(false);
+    }
+  }
+
   async function changePassword(e) {
     e.preventDefault();
     setMsg(null);
@@ -163,7 +178,15 @@ export default function ProfilePage() {
               <b style={{ color: 'var(--success)' }}>✓ {user.contact_email}</b>
             </div>
           )}
-          {!user?.contact_email && user?.contact_email_pending && (
+          {user?.contact_email_awaiting_confirm && (
+            <div className="mt" style={{ background: 'var(--accent-soft)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px' }}>
+              <div>Une adresse e-mail a été renseignée par l'administration : <b>{user.contact_email_pending}</b>. Confirmez-la pour sécuriser votre compte.</div>
+              <button type="button" className="btn btn-red mt" disabled={secBusy} onClick={confirmPending}>
+                {secBusy ? 'Confirmation…' : 'Confirmer mon adresse en un clic'}
+              </button>
+            </div>
+          )}
+          {!user?.contact_email && !user?.contact_email_awaiting_confirm && user?.contact_email_pending && (
             <div className="mt muted">Une confirmation est en attente pour {user.contact_email_pending}.</div>
           )}
 

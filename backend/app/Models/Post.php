@@ -42,6 +42,14 @@ class Post extends Model
         return $this->belongsTo(Niveau::class, 'target_niveau_id');
     }
 
+    /**
+     * Niveaux ciblés par l'annonce (ciblage multiple).
+     */
+    public function niveaux(): BelongsToMany
+    {
+        return $this->belongsToMany(Niveau::class, 'post_niveau');
+    }
+
     public function commentaires(): HasMany
     {
         return $this->hasMany(PostComment::class);

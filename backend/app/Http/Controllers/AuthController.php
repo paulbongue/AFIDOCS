@@ -375,6 +375,34 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Confirmation EN UN CLIC d'une adresse e-mail de sécurité pré-enregistrée par
+     * l'administration (import/création). Autorisée uniquement lorsqu'une adresse
+     * est en attente SANS code (donc fournie par l'admin, pas saisie par l'usager).
+     */
+    public function confirmPendingContactEmail(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! $user->contact_email_pending || $user->contact_email_code_hash) {
+            throw ValidationException::withMessages([
+                'email' => ['Aucune adresse à confirmer en un clic.'],
+            ]);
+        }
+
+        $user->forceFill([
+            'contact_email' => $user->contact_email_pending,
+            'contact_email_pending' => null,
+        ])->save();
+
+        $user->load('filiere', 'niveau');
+
+        return response()->json([
+            'message' => 'Adresse e-mail de sécurité confirmée.',
+            'user' => $this->userPayload($user),
+        ]);
+    }
+
     // -------------------------------------------------------------------
     // Helpers OTP / session
     // -------------------------------------------------------------------
@@ -519,6 +547,8 @@ class AuthController extends Controller
             'contact_email' => $user->contact_email,
             'contact_email_pending' => $user->contact_email_pending
                 ? $this->maskEmail($user->contact_email_pending) : null,
+            // Adresse pré-enregistrée par l'admin (sans code) → confirmable en un clic.
+            'contact_email_awaiting_confirm' => (bool) ($user->contact_email_pending && ! $user->contact_email_code_hash),
             'otp_enabled' => (bool) config('otp.enabled'),
         ];
     }

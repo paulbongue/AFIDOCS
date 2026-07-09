@@ -4,7 +4,7 @@ import Badge from '../../components/Badge';
 import Pagination, { usePagination } from '../../components/Pagination';
 import { ROLE_LABEL } from '../../theme';
 
-const NEW = { prenom: '', nom: '', password: '', role: 'etudiant', filiere_id: '', niveau_id: '' };
+const NEW = { prenom: '', nom: '', email_contact: '', password: '', role: 'etudiant', filiere_id: '', niveau_id: '' };
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -149,6 +149,14 @@ export default function UsersPage() {
               <label className="field">Mot de passe</label>
               <input className="input" type="text" value={form.password}
                      onChange={(e) => setForm({ ...form, password: e.target.value })} />
+            </div>
+          </div>
+          <div className="row mt" style={{ gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 260 }}>
+              <label className="field">E-mail réel (facultatif — pour l'envoi automatique des accès)</label>
+              <input className="input" type="email" value={form.email_contact}
+                     placeholder="prenom.nom@gmail.com"
+                     onChange={(e) => setForm({ ...form, email_contact: e.target.value })} />
             </div>
           </div>
           <div className="row mt" style={{ gap: 12, flexWrap: 'wrap' }}>

@@ -16,7 +16,7 @@ const ROLES = [
 ];
 // Création : prénom + nom (identifiant généré côté serveur, comme sur le web).
 // Édition : nom complet + email (identifiant modifiable).
-const EMPTY = { prenom: '', nom: '', name: '', email: '', password: '', role: 'etudiant', filiere_id: null, niveau_id: null };
+const EMPTY = { prenom: '', nom: '', name: '', email: '', email_contact: '', password: '', role: 'etudiant', filiere_id: null, niveau_id: null };
 
 export default function AdminUsersScreen() {
   const [users, setUsers] = useState([]);
@@ -83,6 +83,7 @@ export default function AdminUsersScreen() {
       } else {
         // Identifiant généré côté serveur à partir du prénom, du nom, de la filière et du niveau.
         const payload = { ...base, prenom: form.prenom, nom: form.nom, password: form.password };
+        if (form.email_contact?.trim()) payload.email_contact = form.email_contact.trim();
         await client.post('/admin/users', payload);
       }
       closeForm(); await load();
@@ -144,6 +145,9 @@ export default function AdminUsersScreen() {
                            value={form.prenom} onChangeText={(t) => setForm({ ...form, prenom: t })} />
                 <TextInput style={styles.input} placeholder="Nom" placeholderTextColor={colors.textLight}
                            value={form.nom} onChangeText={(t) => setForm({ ...form, nom: t })} />
+                <TextInput style={styles.input} placeholder="E-mail réel (facultatif — envoi auto des accès)"
+                           placeholderTextColor={colors.textLight} autoCapitalize="none" keyboardType="email-address"
+                           value={form.email_contact} onChangeText={(t) => setForm({ ...form, email_contact: t })} />
               </>
             )}
 

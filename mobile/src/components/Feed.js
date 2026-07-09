@@ -35,7 +35,7 @@ export default function Feed({ focusPost, focusTs }) {
   const [text, setText] = useState('');
   const [image, setImage] = useState(null);
   const [targets, setTargets] = useState([]);
-  const [niveauId, setNiveauId] = useState(null);
+  const [niveauIds, setNiveauIds] = useState([]);
   const [posting, setPosting] = useState(false);
 
   const [comment, setComment] = useState({});
@@ -73,11 +73,17 @@ export default function Feed({ focusPost, focusTs }) {
   }
 
   const { posts, schedule, can_post, is_admin, ttl_days } = data;
-  const singleFiliere = targets.length === 1 ? filieres.find((f) => f.id === targets[0]) : null;
+  // Niveaux proposés = ceux des filières sélectionnées (étiquetés par code).
+  const availableNiveaux = filieres
+    .filter((f) => targets.includes(f.id))
+    .flatMap((f) => (f.niveaux || []).map((n) => ({ ...n, filiereCode: f.code })));
 
   function toggleTarget(id) {
     setTargets((t) => (t.includes(id) ? t.filter((x) => x !== id) : [...t, id]));
-    setNiveauId(null);
+  }
+
+  function toggleNiveau(id) {
+    setNiveauIds((v) => (v.includes(id) ? v.filter((x) => x !== id) : [...v, id]));
   }
 
   async function pickImage() {
@@ -95,9 +101,11 @@ export default function Feed({ focusPost, focusTs }) {
       if (text.trim()) fd.append('contenu', text.trim());
       if (image) fd.append('image', { uri: image.uri, name: image.name || 'photo.jpg', type: image.mimeType || 'image/jpeg' });
       targets.forEach((id) => fd.append('target_filiere_ids[]', String(id)));
-      if (niveauId) fd.append('target_niveau_id', String(niveauId));
+      niveauIds
+        .filter((id) => availableNiveaux.some((n) => n.id === id))
+        .forEach((id) => fd.append('target_niveau_ids[]', String(id)));
       await client.post('/feed/posts', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setText(''); setImage(null); setTargets([]); setNiveauId(null);
+      setText(''); setImage(null); setTargets([]); setNiveauIds([]);
       await load();
     } catch (e) {
       const st = e?.response?.status;
@@ -224,16 +232,16 @@ export default function Feed({ focusPost, focusTs }) {
                 );
               })}
             </View>
-            {singleFiliere?.niveaux?.length > 0 && (
+            {availableNiveaux.length > 0 && (
               <View style={styles.chips}>
-                <TouchableOpacity style={[styles.chipN, !niveauId && styles.chipNOn]} onPress={() => setNiveauId(null)}>
-                  <Text style={[styles.chipNText, !niveauId && styles.chipNTextOn]}>Tous niveaux</Text>
-                </TouchableOpacity>
-                {singleFiliere.niveaux.map((n) => (
-                  <TouchableOpacity key={n.id} style={[styles.chipN, niveauId === n.id && styles.chipNOn]} onPress={() => setNiveauId(n.id)}>
-                    <Text style={[styles.chipNText, niveauId === n.id && styles.chipNTextOn]}>{n.nom}</Text>
-                  </TouchableOpacity>
-                ))}
+                {availableNiveaux.map((n) => {
+                  const on = niveauIds.includes(n.id);
+                  return (
+                    <TouchableOpacity key={n.id} style={[styles.chipN, on && styles.chipNOn]} onPress={() => toggleNiveau(n.id)}>
+                      <Text style={[styles.chipNText, on && styles.chipNTextOn]}>{n.filiereCode} · {n.nom}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             )}
             <View style={styles.composerActions}>
@@ -266,18 +274,18 @@ export default function Feed({ focusPost, focusTs }) {
               )}
             </View>
 
-            {(p.filieres?.length > 0 || p.target_niveau) && (
+            {(p.filieres?.length > 0 || p.niveaux?.length > 0) && (
               <View style={styles.chips}>
                 {p.filieres.map((f) => (
                   <View key={f.id} style={[styles.chip, { backgroundColor: f.couleur || colorForFiliere(f.code), borderColor: 'transparent' }]}>
                     <Text style={[styles.chipText, { color: '#fff' }]}>{f.code}</Text>
                   </View>
                 ))}
-                {p.target_niveau && (
-                  <View style={[styles.chip, { backgroundColor: colors.navy, borderColor: 'transparent' }]}>
-                    <Text style={[styles.chipText, { color: '#fff' }]}>{p.target_niveau.nom}</Text>
+                {p.niveaux?.map((n) => (
+                  <View key={n.id} style={[styles.chip, { backgroundColor: colors.navy, borderColor: 'transparent' }]}>
+                    <Text style={[styles.chipText, { color: '#fff' }]}>{n.nom}</Text>
                   </View>
-                )}
+                ))}
               </View>
             )}
 

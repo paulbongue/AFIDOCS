@@ -64,6 +64,18 @@ export default function ProfileScreen() {
     } finally { setSecBusy(false); }
   }
 
+  // Confirmation en un clic d'une adresse pré-renseignée par l'administration.
+  async function confirmPending() {
+    setSecBusy(true);
+    try {
+      const { data } = await client.post('/me/contact-email/confirm-pending');
+      await updateUser(data.user);
+      Alert.alert('Confirmée', 'Adresse e-mail de sécurité confirmée.');
+    } catch (e) {
+      Alert.alert('Erreur', e?.response?.data?.message || 'Confirmation impossible.');
+    } finally { setSecBusy(false); }
+  }
+
   const refresh = useCallback(async () => {
     setLastSync(await getLastSyncAt());
     const row = await dbApi.countDownloaded(user?.id);
@@ -218,7 +230,19 @@ export default function ProfileScreen() {
           {!!user?.contact_email && (
             <Row label="Adresse confirmée" value={`✓ ${user.contact_email}`} valueColor={colors.success} />
           )}
-          {!user?.contact_email && !!user?.contact_email_pending && (
+
+          {!!user?.contact_email_awaiting_confirm && (
+            <View style={{ marginTop: 8 }}>
+              <Text style={styles.deviceNote}>
+                Une adresse e-mail a été renseignée par l'administration : {user.contact_email_pending}. Confirme-la pour sécuriser ton compte.
+              </Text>
+              <TouchableOpacity style={styles.btnRed} onPress={confirmPending} disabled={secBusy} activeOpacity={0.85}>
+                <Text style={styles.btnRedText}>{secBusy ? 'Confirmation…' : 'Confirmer mon adresse'}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {!user?.contact_email && !user?.contact_email_awaiting_confirm && !!user?.contact_email_pending && (
             <Row label="En attente" value={user.contact_email_pending} />
           )}
 

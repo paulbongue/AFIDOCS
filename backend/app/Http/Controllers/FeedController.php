@@ -49,7 +49,7 @@ class FeedController extends Controller
         $posts = Post::with([
             'auteur:id,name,role',
             'filieres:id,code,nom,couleur',
-            'targetNiveau:id,nom',
+            'niveaux:id,nom',
             'commentaires' => fn ($q) => $q->with('auteur:id,name,role')->orderBy('created_at'),
         ])->latest()->get();
 
@@ -81,6 +81,9 @@ class FeedController extends Controller
             'image' => ['nullable', 'image', 'max:10240'],
             'target_filiere_ids' => ['nullable', 'array'],
             'target_filiere_ids.*' => ['integer', 'exists:filieres,id'],
+            // Ciblage par niveaux (multiple). L'ancien champ unique reste accepté.
+            'target_niveau_ids' => ['nullable', 'array'],
+            'target_niveau_ids.*' => ['integer', 'exists:niveaux,id'],
             'target_niveau_id' => ['nullable', 'integer', 'exists:niveaux,id'],
         ]);
 
@@ -95,25 +98,33 @@ class FeedController extends Controller
             ? $request->file('image')->store('posts', 'public')
             : null;
 
+        // Niveaux ciblés : nouveau champ multiple, avec repli sur l'ancien champ unique.
+        $niveauIds = array_values(array_unique(array_map(
+            'intval',
+            $data['target_niveau_ids'] ?? (isset($data['target_niveau_id']) ? [$data['target_niveau_id']] : [])
+        )));
+
         $post = Post::create([
             'user_id' => $user->id,
             'contenu' => $data['contenu'] ?? null,
             'image' => $imagePath,
-            'target_niveau_id' => $data['target_niveau_id'] ?? null,
         ]);
 
         if (! empty($data['target_filiere_ids'])) {
             $post->filieres()->sync(array_values(array_unique($data['target_filiere_ids'])));
         }
+        if (! empty($niveauIds)) {
+            $post->niveaux()->sync($niveauIds);
+        }
 
         $post->load([
             'auteur:id,name,role',
             'filieres:id,code,nom,couleur',
-            'targetNiveau:id,nom',
+            'niveaux:id,nom',
             'commentaires.auteur:id,name,role',
         ]);
 
-        $this->notifyAnnonce($post, $user, $data['target_filiere_ids'] ?? [], $data['target_niveau_id'] ?? null);
+        $this->notifyAnnonce($post, $user, $data['target_filiere_ids'] ?? [], $niveauIds);
 
         return response()->json(['data' => $post], 201);
     }
@@ -122,15 +133,15 @@ class FeedController extends Controller
      * Notifie les destinataires d'une annonce : tout le monde si aucune filière
      * n'est ciblée, sinon les utilisateurs des filières (et niveau) ciblés.
      */
-    private function notifyAnnonce(Post $post, User $author, array $filiereIds, $niveauId): void
+    private function notifyAnnonce(Post $post, User $author, array $filiereIds, array $niveauIds = []): void
     {
         try {
             $query = User::where('id', '!=', $author->id);
             if (! empty($filiereIds)) {
                 $query->whereIn('filiere_id', $filiereIds);
-                if ($niveauId) {
-                    $query->where('niveau_id', $niveauId);
-                }
+            }
+            if (! empty($niveauIds)) {
+                $query->whereIn('niveau_id', $niveauIds);
             }
             $recipients = $query->get();
             if ($recipients->isEmpty()) {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\WelcomeStudentMail;
 use App\Models\Filiere;
 use App\Models\Niveau;
 use App\Models\User;
@@ -10,6 +11,7 @@ use App\Services\ExpoPushService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -42,6 +44,9 @@ class UserController extends Controller
             'nom' => ['nullable', 'string', 'max:120'],
             'name' => ['nullable', 'string', 'max:255'],   // compat : nom complet (mobile)
             'email' => ['nullable', 'email', 'unique:users,email'],
+            // E-mail RÉEL (facultatif) : sert à l'envoi automatique de l'e-mail de bienvenue
+            // et de sécurité (OTP). Distinct de l'identifiant de connexion généré.
+            'email_contact' => ['nullable', 'email:rfc'],
             'password' => ['required', 'string', 'min:6'],
             'role' => ['required', Rule::in([User::ROLE_ADMIN, User::ROLE_DELEGUE, User::ROLE_ETUDIANT])],
             'filiere_id' => ['nullable', 'integer', 'exists:filieres,id'],
@@ -94,6 +99,12 @@ class UserController extends Controller
             $this->notifyNewMember($user, $niveau);
         }
 
+        // E-mail réel fourni : envoi automatique de l'e-mail de bienvenue et
+        // pré-enregistrement de l'adresse de sécurité (à confirmer en un clic).
+        if (! empty($data['email_contact'])) {
+            $this->sendWelcome($user, Str::lower($data['email_contact']), $data['password']);
+        }
+
         return response()->json(['data' => $user->load('filiere', 'niveau')], 201);
     }
 
@@ -101,6 +112,31 @@ class UserController extends Controller
      * Notifie les membres existants d'une classe (étudiants + délégué) qu'un
      * nouvel utilisateur vient d'y être ajouté. Cloche in-app + push.
      */
+    /**
+     * Envoie l'e-mail de bienvenue (identifiant + mot de passe + confirmation) et
+     * pré-enregistre l'adresse comme e-mail de sécurité EN ATTENTE. Comme le code
+     * de confirmation est laissé à null, l'étudiant pourra la confirmer en UN CLIC
+     * une fois connecté (l'adresse a été fournie par l'administration).
+     */
+    private function sendWelcome(User $user, string $email, string $plainPassword): void
+    {
+        try {
+            $user->forceFill([
+                'contact_email_pending' => $email,
+                'contact_email_code_hash' => null,
+                'contact_email_code_expires_at' => null,
+            ])->save();
+
+            Mail::to($email)->send(new WelcomeStudentMail(
+                $user->name ?: 'étudiant',
+                $user->email,
+                $plainPassword,
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('E-mail de bienvenue échoué : '.$e->getMessage());
+        }
+    }
+
     private function notifyNewMember(User $newUser, Niveau $niveau): void
     {
         try {
