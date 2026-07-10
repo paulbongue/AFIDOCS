@@ -81,8 +81,7 @@ export default function UsersPage() {
   // ----- Édition -----
   function startEdit(u) {
     setEditForm({
-      id: u.id, name: u.name || '', email: u.email || '',
-      email_contact: u.contact_email || '', password: '',
+      id: u.id, name: u.name || '', email: u.email || '', password: '',
       role: u.role || 'etudiant',
       filiere_id: u.filiere?.id ? String(u.filiere.id) : '',
       niveau_id: u.niveau?.id ? String(u.niveau.id) : '',
@@ -99,7 +98,6 @@ export default function UsersPage() {
     try {
       const payload = {
         name: editForm.name, email: editForm.email, role: editForm.role,
-        email_contact: editForm.email_contact ?? '',
         filiere_id: editForm.filiere_id || null, niveau_id: editForm.niveau_id || null,
       };
       if (editForm.password) payload.password = editForm.password;
@@ -276,14 +274,6 @@ export default function UsersPage() {
                   Réinitialiser
                 </button>
               </div>
-            </div>
-          </div>
-          <div className="row mt" style={{ gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: 260 }}>
-              <label className="field">E-mail de sécurité (réel — OTP, connexion Google)</label>
-              <input className="input" type="email" value={editForm.email_contact}
-                     placeholder="prenom.nom@gmail.com"
-                     onChange={(e) => setEditForm({ ...editForm, email_contact: e.target.value })} />
             </div>
           </div>
           <div className="row mt" style={{ gap: 12, flexWrap: 'wrap' }}>

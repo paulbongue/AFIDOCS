@@ -53,7 +53,7 @@ export default function AdminUsersScreen() {
     setEditingId(u.id);
     setForm({
       prenom: '', nom: '',
-      name: u.name || '', email: u.email || '', email_contact: u.contact_email || '', password: '',
+      name: u.name || '', email: u.email || '', password: '',
       role: u.role || 'etudiant',
       filiere_id: u.filiere?.id ?? null, niveau_id: u.niveau?.id ?? null,
     });
@@ -77,7 +77,7 @@ export default function AdminUsersScreen() {
     try {
       const base = { role: form.role, filiere_id: form.filiere_id || null, niveau_id: form.niveau_id || null };
       if (editingId) {
-        const payload = { ...base, name: form.name, email: form.email, email_contact: form.email_contact ?? '' };
+        const payload = { ...base, name: form.name, email: form.email };
         if (form.password) payload.password = form.password;
         await client.put(`/admin/users/${editingId}`, payload);
       } else {
@@ -138,9 +138,6 @@ export default function AdminUsersScreen() {
                 <TextInput style={styles.input} placeholder="Identifiant (email)" placeholderTextColor={colors.textLight}
                            autoCapitalize="none" keyboardType="email-address"
                            value={form.email} onChangeText={(t) => setForm({ ...form, email: t })} />
-                <TextInput style={styles.input} placeholder="E-mail de sécurité (OTP, Google)" placeholderTextColor={colors.textLight}
-                           autoCapitalize="none" keyboardType="email-address"
-                           value={form.email_contact} onChangeText={(t) => setForm({ ...form, email_contact: t })} />
               </>
             ) : (
               <>
