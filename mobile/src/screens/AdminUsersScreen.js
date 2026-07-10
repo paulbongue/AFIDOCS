@@ -53,7 +53,7 @@ export default function AdminUsersScreen() {
     setEditingId(u.id);
     setForm({
       prenom: '', nom: '',
-      name: u.name || '', email: u.email || '', password: '',
+      name: u.name || '', email: u.email || '', email_contact: u.contact_email || '', password: '',
       role: u.role || 'etudiant',
       filiere_id: u.filiere?.id ?? null, niveau_id: u.niveau?.id ?? null,
     });
@@ -77,7 +77,7 @@ export default function AdminUsersScreen() {
     try {
       const base = { role: form.role, filiere_id: form.filiere_id || null, niveau_id: form.niveau_id || null };
       if (editingId) {
-        const payload = { ...base, name: form.name, email: form.email };
+        const payload = { ...base, name: form.name, email: form.email, email_contact: form.email_contact ?? '' };
         if (form.password) payload.password = form.password;
         await client.put(`/admin/users/${editingId}`, payload);
       } else {
@@ -138,6 +138,9 @@ export default function AdminUsersScreen() {
                 <TextInput style={styles.input} placeholder="Identifiant (email)" placeholderTextColor={colors.textLight}
                            autoCapitalize="none" keyboardType="email-address"
                            value={form.email} onChangeText={(t) => setForm({ ...form, email: t })} />
+                <TextInput style={styles.input} placeholder="E-mail de sécurité (OTP, Google)" placeholderTextColor={colors.textLight}
+                           autoCapitalize="none" keyboardType="email-address"
+                           value={form.email_contact} onChangeText={(t) => setForm({ ...form, email_contact: t })} />
               </>
             ) : (
               <>
@@ -155,6 +158,11 @@ export default function AdminUsersScreen() {
                        placeholder={editingId ? 'Mot de passe (laisser vide = inchangé)' : 'Mot de passe'}
                        placeholderTextColor={colors.textLight}
                        value={form.password} onChangeText={(t) => setForm({ ...form, password: t })} />
+            {editingId && (
+              <TouchableOpacity style={styles.resetLink} onPress={() => setForm({ ...form, password: 'Afi@2026' })}>
+                <Text style={styles.resetLinkText}>Réinitialiser à « Afi@2026 » (l'étudiant devra le changer)</Text>
+              </TouchableOpacity>
+            )}
             <Text style={styles.lbl}>Rôle</Text>
             <View style={styles.chips}>
               {ROLES.map((r) => (
@@ -273,6 +281,8 @@ const styles = StyleSheet.create({
   chip: { borderWidth: 1.5, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 5 },
   chipText: { fontWeight: '700', fontSize: 12 },
   note: { color: colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: 10 },
+  resetLink: { marginTop: -2, marginBottom: 8 },
+  resetLinkText: { color: colors.red, fontWeight: '700', fontSize: 12 },
   create: { backgroundColor: colors.red, borderRadius: radius.sm, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
   createText: { color: '#fff', fontWeight: '800' },
   uRow: {

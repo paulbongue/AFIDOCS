@@ -81,7 +81,8 @@ export default function UsersPage() {
   // ----- Édition -----
   function startEdit(u) {
     setEditForm({
-      id: u.id, name: u.name || '', email: u.email || '', password: '',
+      id: u.id, name: u.name || '', email: u.email || '',
+      email_contact: u.contact_email || '', password: '',
       role: u.role || 'etudiant',
       filiere_id: u.filiere?.id ? String(u.filiere.id) : '',
       niveau_id: u.niveau?.id ? String(u.niveau.id) : '',
@@ -98,6 +99,7 @@ export default function UsersPage() {
     try {
       const payload = {
         name: editForm.name, email: editForm.email, role: editForm.role,
+        email_contact: editForm.email_contact ?? '',
         filiere_id: editForm.filiere_id || null, niveau_id: editForm.niveau_id || null,
       };
       if (editForm.password) payload.password = editForm.password;
@@ -263,10 +265,25 @@ export default function UsersPage() {
               <label className="field">Identifiant (email)</label>
               <input className="input" type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
             </div>
-            <div style={{ flex: 1, minWidth: 160 }}>
+            <div style={{ flex: 1, minWidth: 220 }}>
               <label className="field">Mot de passe (vide = inchangé)</label>
-              <input className="input" type="text" value={editForm.password}
-                     onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} />
+              <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                <input className="input" type="text" style={{ flex: 1 }} value={editForm.password}
+                       placeholder="Nouveau mot de passe…"
+                       onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} />
+                <button type="button" className="btn btn-ghost" style={{ whiteSpace: 'nowrap' }}
+                        onClick={() => setEditForm({ ...editForm, password: 'Afi@2026' })}>
+                  Réinitialiser
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="row mt" style={{ gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 260 }}>
+              <label className="field">E-mail de sécurité (réel — OTP, connexion Google)</label>
+              <input className="input" type="email" value={editForm.email_contact}
+                     placeholder="prenom.nom@gmail.com"
+                     onChange={(e) => setEditForm({ ...editForm, email_contact: e.target.value })} />
             </div>
           </div>
           <div className="row mt" style={{ gap: 12, flexWrap: 'wrap' }}>
@@ -297,6 +314,10 @@ export default function UsersPage() {
                 </select>
               </div>
             )}
+          </div>
+          <div className="muted" style={{ fontSize: 12.5, marginTop: 10 }}>
+            Si vous définissez un nouveau mot de passe, l'étudiant récupère l'accès avec ce mot de passe
+            et devra le changer à sa prochaine connexion.
           </div>
           {msg && <div style={{ marginTop: 12, color: msg.type === 'ok' ? 'var(--success)' : 'var(--red)' }}>{msg.text}</div>}
           <div className="row mt">

@@ -22,7 +22,7 @@ class UserController extends Controller
     {
         $users = User::with(['filiere:id,code,nom,couleur', 'niveau:id,nom,filiere_id'])
             ->orderBy('name')
-            ->get(['id', 'name', 'email', 'role', 'filiere_id', 'niveau_id']);
+            ->get(['id', 'name', 'email', 'contact_email', 'role', 'filiere_id', 'niveau_id']);
 
         return response()->json(['data' => $users]);
     }
@@ -421,14 +421,29 @@ class UserController extends Controller
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
             'email' => ['sometimes', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+            // E-mail de sécurité (réel) : défini/corrigé par l'admin.
+            'email_contact' => ['nullable', 'email:rfc'],
             'password' => ['nullable', 'string', 'min:6'],
             'role' => ['sometimes', Rule::in([User::ROLE_ADMIN, User::ROLE_DELEGUE, User::ROLE_ETUDIANT])],
             'filiere_id' => ['nullable', 'integer', 'exists:filieres,id'],
             'niveau_id' => ['nullable', 'integer', 'exists:niveaux,id'],
         ]);
 
+        // E-mail de contact fourni par l'admin : pris comme adresse de sécurité
+        // confirmée (sert à l'OTP et à la connexion Google). Vide => on l'efface.
+        if ($request->has('email_contact')) {
+            $val = trim((string) ($data['email_contact'] ?? ''));
+            $data['contact_email'] = $val !== '' ? Str::lower($val) : null;
+            $data['contact_email_pending'] = null;
+        }
+        unset($data['email_contact']);
+
+        // Réinitialisation du mot de passe par l'admin : le mot de passe est haché
+        // automatiquement (cast) et on force son changement à la prochaine connexion.
         if (empty($data['password'])) {
             unset($data['password']);
+        } else {
+            $data['must_change_password'] = true;
         }
 
         // La filiere suit la classe (niveau) lorsqu'elle est fournie.
