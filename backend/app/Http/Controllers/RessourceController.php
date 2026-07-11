@@ -246,6 +246,14 @@ class RessourceController extends Controller
                     $ressource->titre,
                     ['ressource_id' => $ressource->id]
                 );
+                // En plus de l'app : notification par e-mail (adresse de sécurité réelle).
+                // Réservée aux étudiants/délégués (on n'e-maile pas les admins).
+                \App\Services\MailNotifier::send(
+                    $recipients->where('role', '!=', \App\Models\User::ROLE_ADMIN),
+                    "Nouvelle ressource — {$filiere->code}",
+                    "Une nouvelle ressource est disponible dans « {$matiere->nom} » ({$filiere->code}) :\n\n« {$ressource->titre} »",
+                    'https://afidocs.duckdns.org'
+                );
             }
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Notification publication echouee : '.$e->getMessage());

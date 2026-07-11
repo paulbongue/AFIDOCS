@@ -167,6 +167,14 @@ class FeedController extends Controller
                 $message,
                 ['post_id' => $post->id, 'link' => 'annonces']
             );
+            // En plus de l'app : notification par e-mail (adresse de sécurité réelle).
+            $extraitMail = $post->contenu ?: 'Une nouvelle annonce a été publiée.';
+            \App\Services\MailNotifier::send(
+                $recipients,
+                'Nouvelle annonce',
+                "{$author->name} a publié une annonce :\n\n{$extraitMail}",
+                'https://afidocs.duckdns.org'
+            );
         } catch (\Throwable $e) {
             Log::warning('Notification annonce echouee : '.$e->getMessage());
         }
