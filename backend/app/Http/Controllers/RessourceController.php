@@ -242,7 +242,7 @@ class RessourceController extends Controller
                 );
                 \App\Services\ExpoPushService::send(
                     $recipients->pluck('expo_push_token')->all(),
-                    "Nouvelle ressource — {$filiere->code}",
+                    "Nouvelle ressource — {$filiere->nom}",
                     $ressource->titre,
                     ['ressource_id' => $ressource->id]
                 );
@@ -250,8 +250,8 @@ class RessourceController extends Controller
                 // Réservée aux étudiants/délégués (on n'e-maile pas les admins).
                 \App\Services\MailNotifier::send(
                     $recipients->where('role', '!=', \App\Models\User::ROLE_ADMIN),
-                    "Nouvelle ressource — {$filiere->code}",
-                    "Une nouvelle ressource est disponible dans « {$matiere->nom} » ({$filiere->code}) :\n\n« {$ressource->titre} »",
+                    "Nouvelle ressource — {$filiere->nom}",
+                    "Une nouvelle ressource est disponible dans « {$matiere->nom} » ({$filiere->nom}) :\n\n« {$ressource->titre} »",
                     'https://afidocs.duckdns.org'
                 );
             }

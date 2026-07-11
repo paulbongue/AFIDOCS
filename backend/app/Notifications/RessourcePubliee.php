@@ -3,13 +3,12 @@
 namespace App\Notifications;
 
 use App\Models\Ressource;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Notification envoyée aux étudiants d'une filière lorsqu'une nouvelle
- * ressource y est publiée. Canaux : base de données (cloche in-app) + email.
- * Le push Expo est géré séparément dans le contrôleur (jeton d'appareil).
+ * Notification envoyée aux étudiants d'une classe lorsqu'une nouvelle ressource
+ * y est publiée. Canal : base de données (cloche in-app). Le push Expo et
+ * l'e-mail (vers l'adresse réelle, en BCC) sont gérés dans le contrôleur.
  */
 class RessourcePubliee extends Notification
 {
@@ -22,7 +21,7 @@ class RessourcePubliee extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return ['database'];
     }
 
     public function toDatabase(object $notifiable): array
@@ -31,22 +30,9 @@ class RessourcePubliee extends Notification
             'ressource_id' => $this->ressource->id,
             'titre' => $this->ressource->titre,
             'filiere_code' => $this->filiereCode,
+            'filiere_nom' => $this->filiereNom,
             'matiere' => $this->matiereNom,
-            'message' => "Nouvelle ressource en {$this->filiereCode} — « {$this->ressource->titre} »",
+            'message' => "Nouvelle ressource en {$this->filiereNom} — « {$this->ressource->titre} »",
         ];
-    }
-
-    public function toMail(object $notifiable): MailMessage
-    {
-        $url = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:5173')), '/')
-            . '/etudiant/ressources/' . $this->ressource->id;
-
-        return (new MailMessage)
-            ->subject("AFI-DOCS — Nouvelle ressource en {$this->filiereCode}")
-            ->greeting("Bonjour {$notifiable->name},")
-            ->line("Une nouvelle ressource vient d'être publiée en {$this->filiereNom} ({$this->matiereNom}) :")
-            ->line("« {$this->ressource->titre} »")
-            ->action('Consulter la ressource', $url)
-            ->line('Bonne lecture sur AFI-DOCS.');
     }
 }

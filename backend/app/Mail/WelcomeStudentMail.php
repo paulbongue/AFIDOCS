@@ -21,6 +21,8 @@ class WelcomeStudentMail extends Mailable
         public string $userName,
         public string $identifiant,
         public string $motDePasse,
+        public ?string $filiereNom = null,
+        public ?string $niveauNom = null,
     ) {}
 
     public function envelope(): Envelope
