@@ -19,6 +19,9 @@
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
                  style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px;">
             <tr><td style="padding:14px 16px; font-size:14px;">
+              @if(!empty($filiereNom))
+                <div style="margin-bottom:8px;"><strong>Filière :</strong> {{ $filiereNom }}@if(!empty($niveauNom)) — {{ $niveauNom }}@endif</div>
+              @endif
               <div style="margin-bottom:8px;"><strong>Identifiant :</strong> {{ $identifiant }}</div>
               <div><strong>Mot de passe :</strong> {{ $motDePasse }}</div>
             </td></tr>

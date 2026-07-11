@@ -38,6 +38,8 @@ class WelcomeStudentMail extends Mailable
                 'userName' => $this->userName,
                 'identifiant' => $this->identifiant,
                 'motDePasse' => $this->motDePasse,
+                'filiereNom' => $this->filiereNom,
+                'niveauNom' => $this->niveauNom,
             ],
         );
     }

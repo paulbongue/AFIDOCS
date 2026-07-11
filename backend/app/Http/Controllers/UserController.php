@@ -346,10 +346,13 @@ class UserController extends Controller
                 'contact_email_code_expires_at' => null,
             ])->save();
 
+            $user->loadMissing('filiere', 'niveau');
             Mail::to($email)->send(new WelcomeStudentMail(
                 $user->name ?: 'étudiant',
                 $user->email,
                 $plainPassword,
+                $user->filiere?->nom,
+                $user->niveau?->nom,
             ));
         } catch (\Throwable $e) {
             Log::warning('E-mail de bienvenue échoué : '.$e->getMessage());
