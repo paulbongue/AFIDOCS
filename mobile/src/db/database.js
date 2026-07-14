@@ -260,7 +260,34 @@ export function getDownloaded(userId) {
 }
 
 export function countDownloaded(userId) {
-  return db.getFirstAsync('SELECT COUNT(*) AS n FROM downloads WHERE user_id = ?', [userId]);
+  // On ne compte QUE les téléchargements dont la ressource existe encore dans le
+  // cache : ainsi une ressource supprimée/devenue inaccessible n'est plus comptée.
+  return db.getFirstAsync(
+    'SELECT COUNT(*) AS n FROM downloads d ' +
+    'JOIN ressources r ON r.id = d.ressource_id ' +
+    'WHERE d.user_id = ? AND d.local_uri IS NOT NULL',
+    [userId]
+  );
+}
+
+// Téléchargements devenus orphelins pour un utilisateur : la ressource n'est
+// plus présente dans le cache (supprimée côté serveur ou hors de son périmètre
+// filière/niveau). Sert à nettoyer les fichiers hors-ligne périmés.
+export function getOrphanDownloads(userId) {
+  return db.getAllAsync(
+    'SELECT local_uri FROM downloads ' +
+    'WHERE user_id = ? AND local_uri IS NOT NULL ' +
+    'AND ressource_id NOT IN (SELECT id FROM ressources)',
+    [userId]
+  );
+}
+
+export async function deleteOrphanDownloads(userId) {
+  await db.runAsync(
+    'DELETE FROM downloads WHERE user_id = ? ' +
+    'AND ressource_id NOT IN (SELECT id FROM ressources)',
+    [userId]
+  );
 }
 
 // --- Commentaires ----------------------------------------------------------

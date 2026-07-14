@@ -34,7 +34,7 @@ export default function HomeScreen({ navigation }) {
     (async () => {
       await load();
       if (isOnline) {
-        try { await fullSync(); } catch (_) {}
+        try { await fullSync(user?.id); } catch (_) {}
         if (active) await load();
       }
     })();
@@ -43,7 +43,7 @@ export default function HomeScreen({ navigation }) {
 
   async function onRefresh() {
     setRefreshing(true);
-    if (isOnline) { try { await fullSync(); } catch (_) {} }
+    if (isOnline) { try { await fullSync(user?.id); } catch (_) {} }
     await load();
     setRefreshing(false);
   }
@@ -74,12 +74,14 @@ export default function HomeScreen({ navigation }) {
             icon={<Icon name="resources" size={18} color={colors.filePdf} />}
             tintBg="#EFE7FC"
           />
-          <StatCard
-            value={stats.telechargees}
-            label="Hors-ligne"
-            icon={<Icon name="download" size={18} color={colors.download} />}
-            tintBg="#E3F4E7"
-          />
+          {user?.role !== 'admin' && (
+            <StatCard
+              value={stats.telechargees}
+              label="Hors-ligne"
+              icon={<Icon name="download" size={18} color={colors.download} />}
+              tintBg="#E3F4E7"
+            />
+          )}
           {user?.filiere_id ? (
             <StatCard
               value={user.filiere?.code || '—'}

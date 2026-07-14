@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Alert,
 } from 'react-native';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { GoogleSignin, statusCodes, googleAvailable } from '../services/googleSignin';
 import { useAuth } from '../context/AuthContext';
 import { useNetwork } from '../context/NetworkContext';
 import { colors, radius } from '../theme';
@@ -25,9 +25,10 @@ export default function LoginScreen() {
   const [remember, setRemember] = useState(true);
   const [maskedEmail, setMaskedEmail] = useState('');
 
-  // Configuration Google Sign-In (une fois, si le Client ID est renseigné).
+  // Configuration Google Sign-In (une fois) — uniquement si le module natif est
+  // disponible (build autonome). Ignoré dans Expo Go.
   useEffect(() => {
-    if (GOOGLE_WEB_CLIENT_ID) {
+    if (googleAvailable && GOOGLE_WEB_CLIENT_ID) {
       GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
     }
   }, []);
@@ -159,7 +160,7 @@ export default function LoginScreen() {
               <Text style={styles.offline}>● Hors-ligne — connexion internet requise pour s'identifier</Text>
             )}
 
-            {!!GOOGLE_WEB_CLIENT_ID && (
+            {googleAvailable && !!GOOGLE_WEB_CLIENT_ID && (
               <>
                 <View style={styles.orRow}>
                   <View style={styles.orLine} />

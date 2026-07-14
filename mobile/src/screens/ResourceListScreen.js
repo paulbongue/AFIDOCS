@@ -50,8 +50,12 @@ export default function ResourceListScreen({ navigation }) {
   };
   const niveauOptions = uniqueBy(allRes.filter((r) => r.niveau_id), (r) => r.niveau_id)
     .map((r) => ({ id: r.niveau_id, nom: r.niveau_nom }));
-  const semestreOptions = uniqueBy(allRes.filter((r) => r.matiere_semestre), (r) => r.matiere_semestre)
-    .map((r) => r.matiere_semestre).sort((a, b) => a - b);
+  // Semestres : uniquement ceux du niveau sélectionné (ex. M1 -> S7, S8).
+  const semestreOptions = uniqueBy(
+    allRes.filter((r) => r.matiere_semestre
+      && (!activeNiveau || String(r.niveau_id) === String(activeNiveau))),
+    (r) => r.matiere_semestre,
+  ).map((r) => r.matiere_semestre).sort((a, b) => a - b);
   const anneeOptions = uniqueBy(allRes.filter((r) => r.annee_academique_id), (r) => r.annee_academique_id)
     .map((r) => ({ id: r.annee_academique_id, libelle: r.annee_libelle }));
 
@@ -64,8 +68,8 @@ export default function ResourceListScreen({ navigation }) {
   const doSync = useCallback(async () => {
     if (!isOnline) return;
     setSyncing(true);
-    try { await fullSync(); } catch (_) {} finally { setSyncing(false); }
-  }, [isOnline]);
+    try { await fullSync(user?.id); } catch (_) {} finally { setSyncing(false); }
+  }, [isOnline, user?.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -170,13 +174,15 @@ export default function ResourceListScreen({ navigation }) {
       {/* Filtre niveau */}
       {niveauOptions.length > 1 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-          <TouchableOpacity style={[styles.chipN, !activeNiveau && styles.chipNActive]} onPress={() => setActiveNiveau(null)}>
+          <TouchableOpacity style={[styles.chipN, !activeNiveau && styles.chipNActive]}
+                            onPress={() => { setActiveNiveau(null); setActiveSemestre(null); }}>
             <Text style={[styles.chipNText, !activeNiveau && styles.chipNTextActive]}>Tous niveaux</Text>
           </TouchableOpacity>
           {niveauOptions.map((n) => {
             const act = String(activeNiveau) === String(n.id);
             return (
-              <TouchableOpacity key={n.id} style={[styles.chipN, act && styles.chipNActive]} onPress={() => setActiveNiveau(n.id)}>
+              <TouchableOpacity key={n.id} style={[styles.chipN, act && styles.chipNActive]}
+                                onPress={() => { setActiveNiveau(n.id); setActiveSemestre(null); }}>
                 <Text style={[styles.chipNText, act && styles.chipNTextActive]}>{n.nom}</Text>
               </TouchableOpacity>
             );

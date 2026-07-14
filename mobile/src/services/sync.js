@@ -46,9 +46,24 @@ export async function syncCatalogue() {
 // Ressources : synchronisation COMPLETE (remplace le cache local).
 // On récupère toute la liste et on remplace, ce qui évite les ressources
 // obsolètes/fantômes (ex. après un re-seed qui change les IDs de filière).
-export async function syncRessources() {
+// Si `userId` est fourni, on nettoie aussi les fichiers hors-ligne devenus
+// orphelins (ressource supprimée ou sortie du périmètre filière/niveau).
+export async function syncRessources(userId = null) {
   const { data } = await client.get('/ressources');
   await dbApi.replaceRessources(data.data || []);
+
+  if (userId) {
+    try {
+      const orphans = await dbApi.getOrphanDownloads(userId);
+      for (const o of orphans) {
+        if (o.local_uri) {
+          try { await FileSystem.deleteAsync(o.local_uri, { idempotent: true }); } catch (_) { /* ignore */ }
+        }
+      }
+      await dbApi.deleteOrphanDownloads(userId);
+    } catch (_) { /* le nettoyage ne doit jamais bloquer la synchro */ }
+  }
+
   if (data.server_time) {
     await dbApi.setMeta(LAST_SYNC_KEY, data.server_time);
   }
@@ -56,9 +71,9 @@ export async function syncRessources() {
 }
 
 // Synchronisation complete (a l'ouverture de l'app quand on est en ligne).
-export async function fullSync() {
+export async function fullSync(userId = null) {
   await syncCatalogue();
-  const count = await syncRessources();
+  const count = await syncRessources(userId);
   await dbApi.setMeta('last_sync_at', new Date().toISOString());
   return count;
 }

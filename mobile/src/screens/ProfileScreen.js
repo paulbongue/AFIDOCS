@@ -117,7 +117,7 @@ export default function ProfileScreen() {
     if (!isOnline) return Alert.alert('Hors-ligne', 'Connecte-toi à internet pour synchroniser.');
     setSyncing(true);
     try {
-      const n = await fullSync();
+      const n = await fullSync(user?.id);
       await refresh();
       Alert.alert('Synchronisation terminée', `${n} ressource(s) à jour.`);
     } catch (_) {
