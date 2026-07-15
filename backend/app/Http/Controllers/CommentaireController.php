@@ -16,10 +16,36 @@ use Illuminate\Support\Facades\Notification;
 class CommentaireController extends Controller
 {
     /**
-     * Commentaires d'une ressource (inter-filieres, sans contrainte de filiere).
+     * Vérifie que l'utilisateur peut accéder à la ressource (donc la commenter) :
+     * hors admin, la ressource doit relever de SA filière et d'un niveau inférieur
+     * ou égal au sien. Même règle que RessourceController@show.
      */
-    public function index(Ressource $ressource): JsonResponse
+    private function authorizeAccess(Request $request, Ressource $ressource): void
     {
+        $user = $request->user();
+        if ($user->isAdmin()) {
+            return;
+        }
+        $ressource->loadMissing('matiere.niveau');
+        $niveau = $ressource->matiere?->niveau;
+        $ordre = optional($user->niveau)->ordre ?? 0;
+        abort_unless(
+            $niveau
+                && (int) $niveau->filiere_id === (int) $user->filiere_id
+                && ($ordre === 0 || (int) $niveau->ordre <= $ordre),
+            403,
+            'Commentaire interdit : cette ressource sort de votre périmètre (filière et niveau).'
+        );
+    }
+
+    /**
+     * Commentaires d'une ressource, accessibles uniquement dans le périmètre de
+     * l'utilisateur (sa filière et son niveau, ainsi que les niveaux inférieurs).
+     */
+    public function index(Request $request, Ressource $ressource): JsonResponse
+    {
+        $this->authorizeAccess($request, $ressource);
+
         $commentaires = $ressource->commentaires()
             ->with('auteur:id,name,role')
             ->latest()
@@ -29,10 +55,13 @@ class CommentaireController extends Controller
     }
 
     /**
-     * Tout utilisateur authentifie peut commenter toute ressource (H4).
+     * Publier un commentaire : borné au périmètre d'accès de l'utilisateur
+     * (sa filière, quelle que soit l'année, et son niveau + niveaux inférieurs).
      */
     public function store(Request $request, Ressource $ressource): JsonResponse
     {
+        $this->authorizeAccess($request, $ressource);
+
         $data = $request->validate([
             'contenu' => ['required', 'string', 'max:2000'],
         ]);
