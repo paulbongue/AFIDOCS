@@ -1,0 +1,139 @@
+// ============================================================
+// AFI-DOCS — Schéma de la base de données (MySQL 8)
+// À coller sur https://dbdiagram.io  (Import/Editor)
+// puis Export > PNG/SVG/PDF
+// ============================================================
+
+Table filieres {
+  id bigint [pk, increment]
+  code varchar
+  nom varchar
+  couleur varchar
+}
+
+Table niveaux {
+  id bigint [pk, increment]
+  nom varchar
+  ordre int
+  filiere_id bigint [ref: > filieres.id]
+}
+
+Table matieres {
+  id bigint [pk, increment]
+  nom varchar
+  semestre varchar
+  enseignant varchar
+  niveau_id bigint [ref: > niveaux.id]
+}
+
+Table annees_academiques {
+  id bigint [pk, increment]
+  libelle varchar
+  est_courante boolean
+}
+
+Table users {
+  id bigint [pk, increment]
+  name varchar
+  email varchar [unique]
+  password varchar
+  role varchar [note: 'admin | delegue | etudiant']
+  filiere_id bigint [ref: > filieres.id, note: 'NULL pour Admin']
+  niveau_id bigint [ref: > niveaux.id]
+  contact_email varchar
+  expo_push_token varchar
+  otp_code_hash varchar
+  otp_expires_at datetime
+  otp_attempts int
+}
+
+Table ressources {
+  id bigint [pk, increment]
+  titre varchar
+  description text
+  type_fichier varchar
+  chemin_fichier varchar
+  taille_fichier bigint
+  matiere_id bigint [ref: > matieres.id]
+  user_id bigint [ref: > users.id]
+  annee_academique_id bigint [ref: > annees_academiques.id]
+}
+
+Table commentaires {
+  id bigint [pk, increment]
+  contenu text
+  ressource_id bigint [ref: > ressources.id]
+  user_id bigint [ref: > users.id]
+}
+
+Table evaluations {
+  id bigint [pk, increment]
+  note int
+  reponses json
+  semestre varchar
+  enseignant varchar
+  module_nom varchar
+  user_id bigint [ref: > users.id]
+  matiere_id bigint [ref: > matieres.id]
+  filiere_id bigint [ref: > filieres.id]
+  niveau_id bigint [ref: > niveaux.id]
+  annee_academique_id bigint [ref: > annees_academiques.id]
+}
+
+Table class_messages {
+  id bigint [pk, increment]
+  contenu text
+  niveau_id bigint [ref: > niveaux.id]
+  user_id bigint [ref: > users.id]
+}
+
+Table posts {
+  id bigint [pk, increment]
+  contenu text
+  image varchar
+  target_niveau_id bigint [ref: > niveaux.id]
+  user_id bigint [ref: > users.id]
+}
+
+Table post_comments {
+  id bigint [pk, increment]
+  contenu text
+  post_id bigint [ref: > posts.id]
+  user_id bigint [ref: > users.id]
+}
+
+Table post_filiere {
+  post_id bigint [ref: > posts.id]
+  filiere_id bigint [ref: > filieres.id]
+}
+
+Table post_niveau {
+  post_id bigint [ref: > posts.id]
+  niveau_id bigint [ref: > niveaux.id]
+}
+
+Table schedules {
+  id bigint [pk, increment]
+  scope varchar
+  titre varchar
+  description text
+  chemin_fichier varchar
+  type_fichier varchar
+  taille_fichier bigint
+  niveau_id bigint [ref: > niveaux.id]
+  updated_by bigint [ref: > users.id]
+}
+
+Table activites {
+  id bigint [pk, increment]
+  type varchar
+  plateforme varchar
+  user_id bigint [ref: > users.id]
+  ressource_id bigint [ref: > ressources.id]
+}
+
+Table trusted_devices {
+  id bigint [pk, increment]
+  user_id bigint [ref: > users.id]
+  device_hash varchar
+}

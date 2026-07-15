@@ -1,0 +1,19 @@
+DIAGRAMMES — MÉMOIRE AFI-DOCS (chapitre III) — 8 figures distinctes
+====================================================================
+Formats par figure : .png (à insérer dans le Word) · .svg (vectoriel) · .drawio (éditable)
+
+OUTILS :
+- UML (.drawio)      → https://app.diagrams.net (= draw.io) : File > Open, puis File > Export as > PNG/SVG
+- Schéma BDD (.dbml) → https://dbdiagram.io : coller le code DBML, puis Export > PNG/SVG/PDF
+
+Figure_3.1_Diagramme_de_classes                     → Classes UML (12 classes du domaine)      [.drawio]
+Figure_3.2_Schema_base_de_donnees                   → Base MySQL 8 (16 tables, PK/FK)          [.dbml → dbdiagram.io]
+Figure_3.3_Diagramme_de_composants                  → Architecture Laravel / React / RN        [.drawio]
+Figure_3.4_Diagramme_cas_utilisation                → Cas d'utilisation (3 acteurs)            [.drawio]
+Figure_3.5_Diagramme_de_classes_detaille            → Classes détaillé (attributs + méthodes)  [.drawio]
+Figure_3.6_Diagramme_sequence_authentification      → Séquence : authentification + OTP        [.drawio]
+Figure_3.7_Diagramme_sequence_publication           → Séquence : publication directe (Délégué) [.drawio]
+Figure_3.8_Diagramme_sequence_consultation          → Séquence : consultation/recherche filtrée[.drawio]
+
+Note : pour la 3.2, le rendu officiel se fait sur dbdiagram.io depuis le .dbml
+(le .png/.svg/.drawio de la 3.2 ne sont que des aperçus).
