@@ -1,0 +1,79 @@
+{
+  "info": {
+    "name": "AFI-DOCS — Tests de sécurité (T06, T07, T16, T17)",
+    "description": "Vérifie les blocages côté serveur. Renseigne d'abord {{tokenDelegue}} et {{tokenEtudiant}} via les requêtes Login.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://afidocs.duckdns.org/api" },
+    { "key": "tokenDelegue", "value": "136|oEq5pbsR3rRVb2XP8hU73BzqCxRhZPXWKYRHzbbR5e8d32d1" },
+    { "key": "tokenEtudiant", "value": "137|YQdPR4BzpErJTRyMzQ8zboMqdQZcCS2eF0HGAvs9f5ed0894" }
+  ],
+  "item": [
+    {
+      "name": "0a. Login DELEGUE (recuperer le jeton)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": "{{baseUrl}}/login",
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"delegue.test@afi.sn \",\n  \"password\": \"password\"\n}" },
+        "description": "Copie la valeur 'token' de la reponse dans la variable {{tokenDelegue}}."
+      }
+    },
+    {
+      "name": "0b. Login ETUDIANT (recuperer le jeton)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" } ],
+        "url": "{{baseUrl}}/login",
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"etudiant.test@afi.sn  \",\n  \"password\": \"password\"\n}" },
+        "description": "Copie la valeur 'token' de la reponse dans la variable {{tokenEtudiant}}."
+      }
+    },
+    {
+      "name": "T17 — Acces SANS jeton  (attendu : 401)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Accept", "value": "application/json" } ],
+        "url": "{{baseUrl}}/ressources",
+        "description": "Aucun header Authorization. Le middleware auth:sanctum doit renvoyer 401 Unauthorized."
+      }
+    },
+    {
+      "name": "T16 — Etudiant accede a l'ADMIN  (attendu : 403)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{tokenEtudiant}}" } ],
+        "url": "{{baseUrl}}/admin/stats",
+        "description": "Jeton etudiant sur une route /admin/*. Le middleware role:admin doit renvoyer 403 Forbidden."
+      }
+    },
+    {
+      "name": "T07 — Etudiant PUBLIE une ressource  (attendu : 403)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{tokenEtudiant}}" } ],
+        "url": "{{baseUrl}}/ressources",
+        "description": "Jeton etudiant sur POST /ressources. Le middleware role:delegue doit renvoyer 403 Forbidden."
+      }
+    },
+    {
+      "name": "T06 — Delegue PUBLIE hors filiere  (attendu : 403)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{tokenDelegue}}" } ],
+        "url": "{{baseUrl}}/ressources",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "titre", "value": "Test securite hors filiere", "type": "text" },
+            { "key": "matiere_id", "value": "REMPLACER_id_matiere_AUTRE_filiere", "type": "text" },
+            { "key": "type_fichier", "value": "cours", "type": "text" },
+            { "key": "fichier", "type": "file", "src": [] }
+          ]
+        },
+        "description": "Jeton delegue mais matiere_id d'une AUTRE filiere. La Policy filiere doit renvoyer 403 Forbidden. Attache un petit PDF au champ 'fichier'."
+      }
+    }
+  ]
+}
