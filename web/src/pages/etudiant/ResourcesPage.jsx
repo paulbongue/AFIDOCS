@@ -7,7 +7,6 @@ import ResourceCard from '../../components/ResourceCard';
 import ViewToggle, { useViewMode } from '../../components/ViewToggle';
 import { SkeletonRows } from '../../components/Loader';
 import { IconSearch } from '../../components/Icons';
-import { colorForFiliere } from '../../theme';
 
 // Les 2 semestres (globaux) d'un niveau d'ordre n : S(2n-1) et S(2n).
 const semestresForNiveau = (niveau) => {
@@ -88,11 +87,6 @@ export default function ResourcesPage() {
     ))
   );
 
-  // Bouton de filtre « niveau » ou « semestre » (style commun).
-  const NiveauButton = ({ selected, onClick, children }) => (
-    <button className={'btn ' + (selected ? 'btn-navy' : 'btn-ghost')} onClick={onClick}>{children}</button>
-  );
-
   return (
     <div>
       <div className="spread" style={{ flexWrap: 'wrap', gap: 12 }}>
@@ -113,31 +107,29 @@ export default function ResourcesPage() {
                  placeholder="Rechercher une ressource, un auteur, une matière…" />
         </div>
 
-        {/* Filtre année académique */}
+        {/* Filtre année académique (liste déroulante) */}
         {annees.length > 0 && (
-          <div className="row mt" style={{ flexWrap: 'wrap', gap: 8 }}>
-            <span className="muted" style={{ alignSelf: 'center' }}>Année :</span>
-            <NiveauButton selected={!activeAnnee} onClick={() => setActiveAnnee(null)}>Toutes</NiveauButton>
-            {annees.map((a) => (
-              <NiveauButton key={a.id} selected={String(activeAnnee) === String(a.id)}
-                            onClick={() => setActiveAnnee(a.id)}>{a.libelle}</NiveauButton>
-            ))}
+          <div className="row mt" style={{ flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+            <span className="muted">Année :</span>
+            <select className="input" style={{ maxWidth: 220 }}
+                    value={activeAnnee || ''}
+                    onChange={(e) => setActiveAnnee(e.target.value || null)}>
+              <option value="">Toutes</option>
+              {annees.map((a) => <option key={a.id} value={a.id}>{a.libelle}</option>)}
+            </select>
           </div>
         )}
 
-        {/* Admin : sélection de la filière à explorer */}
+        {/* Admin : sélection de la filière à explorer (liste déroulante) */}
         {isAdmin && (
-          <div className="row mt" style={{ flexWrap: 'wrap', gap: 8 }}>
-            <button className={'btn ' + (!active ? 'btn-red' : 'btn-ghost')}
-                    onClick={() => { setActive(null); setActiveNiveau(null); setActiveSemestre(null); }}>Toutes</button>
-            {filieres.map((f) => (
-              <button key={f.id}
-                className={'btn ' + (active === f.id ? 'btn-red' : 'btn-ghost')}
-                style={active === f.id ? { background: f.couleur || colorForFiliere(f.code), border: 'none', color: '#fff' } : {}}
-                onClick={() => { setActive(f.id); setActiveNiveau(null); setActiveSemestre(null); }}>
-                {f.code}
-              </button>
-            ))}
+          <div className="row mt" style={{ flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+            <span className="muted">Filière :</span>
+            <select className="input" style={{ maxWidth: 340 }}
+                    value={active || ''}
+                    onChange={(e) => { setActive(e.target.value || null); setActiveNiveau(null); setActiveSemestre(null); }}>
+              <option value="">Toutes les filières</option>
+              {filieres.map((f) => <option key={f.id} value={f.id}>{f.code} — {f.nom}</option>)}
+            </select>
           </div>
         )}
 
@@ -148,26 +140,28 @@ export default function ResourcesPage() {
             : myNiveaux;
           if (niveaux.length === 0) return null;
           return (
-            <div className="row mt" style={{ flexWrap: 'wrap', gap: 8 }}>
-              <span className="muted" style={{ alignSelf: 'center' }}>Niveau :</span>
-              <NiveauButton selected={!activeNiveau} onClick={() => { setActiveNiveau(null); setActiveSemestre(null); }}>Tous</NiveauButton>
-              {niveaux.map((n) => (
-                <NiveauButton key={n.id} selected={String(activeNiveau) === String(n.id)}
-                              onClick={() => { setActiveNiveau(n.id); setActiveSemestre(null); }}>{n.nom}</NiveauButton>
-              ))}
+            <div className="row mt" style={{ flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+              <span className="muted">Niveau :</span>
+              <select className="input" style={{ maxWidth: 220 }}
+                      value={activeNiveau || ''}
+                      onChange={(e) => { setActiveNiveau(e.target.value || null); setActiveSemestre(null); }}>
+                <option value="">Tous</option>
+                {niveaux.map((n) => <option key={n.id} value={n.id}>{n.nom}</option>)}
+              </select>
             </div>
           );
         })()}
 
-        {/* Filtre semestre : uniquement quand un niveau est sélectionné */}
+        {/* Filtre semestre : uniquement quand un niveau est sélectionné (liste déroulante) */}
         {semestres.length > 0 && (
-          <div className="row mt" style={{ flexWrap: 'wrap', gap: 8 }}>
-            <span className="muted" style={{ alignSelf: 'center' }}>Semestre :</span>
-            <NiveauButton selected={!activeSemestre} onClick={() => setActiveSemestre(null)}>Tous</NiveauButton>
-            {semestres.map((s) => (
-              <NiveauButton key={s} selected={String(activeSemestre) === String(s)}
-                            onClick={() => setActiveSemestre(s)}>S{s}</NiveauButton>
-            ))}
+          <div className="row mt" style={{ flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+            <span className="muted">Semestre :</span>
+            <select className="input" style={{ maxWidth: 160 }}
+                    value={activeSemestre || ''}
+                    onChange={(e) => setActiveSemestre(e.target.value || null)}>
+              <option value="">Tous</option>
+              {semestres.map((s) => <option key={s} value={s}>S{s}</option>)}
+            </select>
           </div>
         )}
 

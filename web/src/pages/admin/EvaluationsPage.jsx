@@ -180,7 +180,7 @@ export default function AdminEvaluationsPage() {
             <span>N’imprimer que les classes ayant atteint <strong>80 %</strong> de participation</span>
           </label>
           <button className="btn btn-red" onClick={printReport} disabled={loading || forPrint.length === 0}>
-            🖨 Imprimer les notes par professeur
+            🖨 {fModule ? `Imprimer les notes du module « ${fModule} »` : 'Imprimer les notes par professeur'}
           </button>
         </div>
       </div>
