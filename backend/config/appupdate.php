@@ -16,8 +16,9 @@ return [
     // Dernière version publiée de l'APK (doit correspondre au "version" de app.json).
     'version' => env('APP_LATEST_VERSION', '1.0.7'),
 
-    // Lien de téléchargement de l'APK (page d'accueil ou fichier direct).
-    'url' => env('APP_APK_URL', 'https://afidocs.duckdns.org/telecharger'),
+    // Lien de téléchargement de l'APK. Par défaut, la page d'accueil qui contient
+    // toujours le bouton d'installation courant + les instructions.
+    'url' => env('APP_APK_URL', 'https://afidocs.duckdns.org'),
 
     // Notes de version affichées à l'utilisateur (optionnel).
     'notes' => env('APP_UPDATE_NOTES', ''),
