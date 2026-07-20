@@ -12,6 +12,7 @@ export default function AdminEvaluationsPage() {
   const [fFiliere, setFFiliere] = useState('');
   const [fNiveau, setFNiveau] = useState('');
   const [fSemestre, setFSemestre] = useState('');
+  const [fModule, setFModule] = useState('');
   const [onlyComplete, setOnlyComplete] = useState(false);
 
   useEffect(() => {
@@ -24,12 +25,23 @@ export default function AdminEvaluationsPage() {
   const filieres = useMemo(() => uniq(rows.map((r) => r.filiere)), [rows]);
   const niveaux = useMemo(() => uniq(rows.map((r) => r.niveau)), [rows]);
   const semestres = useMemo(() => uniq(rows.map((r) => r.semestre)).sort((a, b) => a - b), [rows]);
+  // Modules proposés dans la liste déroulante : dépendent des filtres déjà choisis
+  // (année / filière / niveau / semestre), pour ne montrer que les modules pertinents.
+  const modules = useMemo(() => uniq(
+    rows.filter((r) =>
+      (!fAnnee || r.annee === fAnnee) &&
+      (!fFiliere || r.filiere === fFiliere) &&
+      (!fNiveau || r.niveau === fNiveau) &&
+      (String(fSemestre) === '' || String(r.semestre) === String(fSemestre)))
+      .map((r) => r.module)).sort((a, b) => String(a).localeCompare(String(b))),
+    [rows, fAnnee, fFiliere, fNiveau, fSemestre]);
 
   const filtered = rows.filter((r) =>
     (!fAnnee || r.annee === fAnnee) &&
     (!fFiliere || r.filiere === fFiliere) &&
     (!fNiveau || r.niveau === fNiveau) &&
-    (String(fSemestre) === '' || String(r.semestre) === String(fSemestre)));
+    (String(fSemestre) === '' || String(r.semestre) === String(fSemestre)) &&
+    (!fModule || r.module === fModule));
 
   const forPrint = onlyComplete ? filtered.filter((r) => r.complet) : filtered;
 
@@ -45,6 +57,7 @@ export default function AdminEvaluationsPage() {
     const filtres = [
       fAnnee && `Année : ${fAnnee}`, fFiliere && `Filière : ${fFiliere}`,
       fNiveau && `Niveau : ${fNiveau}`, fSemestre !== '' && `Semestre : S${fSemestre}`,
+      fModule && `Module : ${fModule}`,
       onlyComplete && 'Participation ≥ 80 % uniquement',
     ].filter(Boolean).join(' · ') || 'Tous les résultats';
 
@@ -146,6 +159,17 @@ export default function AdminEvaluationsPage() {
             <select className="input" value={fSemestre} onChange={(e) => setFSemestre(e.target.value)}>
               <option value="">Tous</option>
               {semestres.map((s) => <option key={s} value={s}>S{s}</option>)}
+            </select>
+          </div>
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <label className="field">Module</label>
+            <select
+              className="input"
+              value={modules.includes(fModule) ? fModule : ''}
+              onChange={(e) => setFModule(e.target.value)}
+            >
+              <option value="">Tous les modules</option>
+              {modules.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
         </div>

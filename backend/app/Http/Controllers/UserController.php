@@ -78,10 +78,30 @@ class UserController extends Controller
             ], 422);
         }
 
+        // Regle metier : une classe (niveau) ne peut avoir qu'UN SEUL delegue.
+        // (A l'inverse, l'Admin peut etre multiple et n'a ni filiere ni classe.)
+        if ($data['role'] === User::ROLE_DELEGUE && ! empty($data['niveau_id'])) {
+            $dejaDelegue = User::where('role', User::ROLE_DELEGUE)
+                ->where('niveau_id', $data['niveau_id'])
+                ->exists();
+            if ($dejaDelegue) {
+                return response()->json([
+                    'message' => 'Cette classe a deja un delegue.',
+                    'errors' => ['role' => ['Une classe ne peut avoir qu\'un seul delegue. Retirez d\'abord le delegue actuel avant d\'en designer un nouveau.']],
+                ], 422);
+            }
+        }
+
         // La filiere est deduite de la classe (niveau) lorsqu'elle est fournie.
         $niveau = ! empty($data['niveau_id']) ? Niveau::with('filiere')->find($data['niveau_id']) : null;
         $filiere = $niveau?->filiere
             ?? (! empty($data['filiere_id']) ? Filiere::find($data['filiere_id']) : null);
+
+        // L'Admin n'appartient a aucune filiere ni classe : on ignore ces champs.
+        if ($data['role'] === User::ROLE_ADMIN) {
+            $niveau = null;
+            $filiere = null;
+        }
 
         $email = $data['email'] ?? $this->generateEmail($prenom, $nom, $filiere, $niveau);
 
@@ -441,6 +461,30 @@ class UserController extends Controller
         // La filiere suit la classe (niveau) lorsqu'elle est fournie.
         if (! empty($data['niveau_id'])) {
             $data['filiere_id'] = Niveau::findOrFail($data['niveau_id'])->filiere_id;
+        }
+
+        // Role et classe effectifs apres cette modification.
+        $roleEff = $data['role'] ?? $user->role;
+        $niveauEff = array_key_exists('niveau_id', $data) ? $data['niveau_id'] : $user->niveau_id;
+
+        // Regle metier : une classe ne peut avoir qu'UN SEUL delegue (hors utilisateur courant).
+        if ($roleEff === User::ROLE_DELEGUE && $niveauEff) {
+            $dejaDelegue = User::where('role', User::ROLE_DELEGUE)
+                ->where('niveau_id', $niveauEff)
+                ->where('id', '!=', $user->id)
+                ->exists();
+            if ($dejaDelegue) {
+                return response()->json([
+                    'message' => 'Cette classe a deja un delegue.',
+                    'errors' => ['role' => ['Une classe ne peut avoir qu\'un seul delegue. Retirez d\'abord le delegue actuel.']],
+                ], 422);
+            }
+        }
+
+        // L'Admin n'appartient a aucune filiere ni classe.
+        if ($roleEff === User::ROLE_ADMIN) {
+            $data['filiere_id'] = null;
+            $data['niveau_id'] = null;
         }
 
         $user->update($data);

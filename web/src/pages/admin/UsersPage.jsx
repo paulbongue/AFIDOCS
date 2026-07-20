@@ -217,20 +217,23 @@ export default function UsersPage() {
             <div style={{ flex: 1, minWidth: 150 }}>
               <label className="field">Rôle</label>
               <select className="input" value={form.role}
-                      onChange={(e) => setForm({ ...form, role: e.target.value, niveau_id: '' })}>
+                      onChange={(e) => setForm({ ...form, role: e.target.value, niveau_id: '', filiere_id: e.target.value === 'admin' ? '' : form.filiere_id })}>
                 <option value="etudiant">Étudiant</option>
                 <option value="delegue">Délégué</option>
                 <option value="admin">Administrateur</option>
               </select>
             </div>
-            <div style={{ flex: 1, minWidth: 180 }}>
-              <label className="field">Filière {form.role === 'delegue' ? '(obligatoire)' : '(optionnelle)'}</label>
-              <select className="input" value={form.filiere_id}
-                      onChange={(e) => setForm({ ...form, filiere_id: e.target.value, niveau_id: '' })}>
-                <option value="">—</option>
-                {filieres.map((f) => <option key={f.id} value={f.id}>{f.code} — {f.nom}</option>)}
-              </select>
-            </div>
+            {/* L'Administrateur n'a pas de filière : le champ n'apparaît pas pour ce rôle. */}
+            {form.role !== 'admin' && (
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <label className="field">Filière {form.role === 'delegue' ? '(obligatoire)' : '(optionnelle)'}</label>
+                <select className="input" value={form.filiere_id}
+                        onChange={(e) => setForm({ ...form, filiere_id: e.target.value, niveau_id: '' })}>
+                  <option value="">—</option>
+                  {filieres.map((f) => <option key={f.id} value={f.id}>{f.code} — {f.nom}</option>)}
+                </select>
+              </div>
+            )}
             {form.role !== 'admin' && (
               <div style={{ flex: 1, minWidth: 150 }}>
                 <label className="field">Niveau / Classe {form.role === 'delegue' ? '(obligatoire)' : '(optionnel)'}</label>
@@ -280,20 +283,23 @@ export default function UsersPage() {
             <div style={{ flex: 1, minWidth: 150 }}>
               <label className="field">Rôle</label>
               <select className="input" value={editForm.role}
-                      onChange={(e) => setEditForm({ ...editForm, role: e.target.value, niveau_id: '' })}>
+                      onChange={(e) => setEditForm({ ...editForm, role: e.target.value, niveau_id: '', filiere_id: e.target.value === 'admin' ? '' : editForm.filiere_id })}>
                 <option value="etudiant">Étudiant</option>
                 <option value="delegue">Délégué</option>
                 <option value="admin">Administrateur</option>
               </select>
             </div>
-            <div style={{ flex: 1, minWidth: 180 }}>
-              <label className="field">Filière</label>
-              <select className="input" value={editForm.filiere_id}
-                      onChange={(e) => setEditForm({ ...editForm, filiere_id: e.target.value, niveau_id: '' })}>
-                <option value="">—</option>
-                {filieres.map((f) => <option key={f.id} value={f.id}>{f.code} — {f.nom}</option>)}
-              </select>
-            </div>
+            {/* Pas de filière pour un Administrateur. */}
+            {editForm.role !== 'admin' && (
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <label className="field">Filière</label>
+                <select className="input" value={editForm.filiere_id}
+                        onChange={(e) => setEditForm({ ...editForm, filiere_id: e.target.value, niveau_id: '' })}>
+                  <option value="">—</option>
+                  {filieres.map((f) => <option key={f.id} value={f.id}>{f.code} — {f.nom}</option>)}
+                </select>
+              </div>
+            )}
             {editForm.role !== 'admin' && (
               <div style={{ flex: 1, minWidth: 150 }}>
                 <label className="field">Niveau / Classe</label>

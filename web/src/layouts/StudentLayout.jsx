@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import DashboardShell from '../components/DashboardShell';
+import ChatbotAssistant from '../components/ChatbotAssistant';
 import { useAuth } from '../context/AuthContext';
 import { IconDashboard, IconBook, IconSearch, IconUser, IconCap, IconChat, IconMegaphone, IconStar } from '../components/Icons';
 
@@ -9,6 +10,7 @@ const link = ({ isActive }) => 'nav-item' + (isActive ? ' active' : '');
 export default function StudentLayout() {
   const { user } = useAuth();
   return (
+    <>
     <DashboardShell profilePath="/etudiant/profil">
       <div className="group-title">NAVIGATION</div>
       <NavLink to="/etudiant" end className={link}><IconDashboard /><span>Tableau de bord</span></NavLink>
@@ -32,5 +34,7 @@ export default function StudentLayout() {
         </>
       )}
     </DashboardShell>
+    <ChatbotAssistant />
+    </>
   );
 }

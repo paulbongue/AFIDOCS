@@ -10,6 +10,7 @@ import { NetworkProvider } from './src/context/NetworkContext';
 import { NotificationsProvider } from './src/context/NotificationsContext';
 import { initDatabase } from './src/db/database';
 import RootNavigator from './src/navigation/RootNavigator';
+import { checkForUpdate } from './src/services/appUpdate';
 import { colors } from './src/theme';
 
 // Référence de navigation globale pour ouvrir le bon écran au tap d'un push.
@@ -47,6 +48,13 @@ export default function App() {
       console.error('Erreur init DB locale', e);
       setDbReady(true); // on laisse l'app demarrer malgre tout
     });
+  }, []);
+
+  // Vérifie automatiquement au démarrage si une nouvelle version de l'app est
+  // disponible et propose le téléchargement (voir src/services/appUpdate.js).
+  useEffect(() => {
+    const t = setTimeout(() => { checkForUpdate(); }, 1500);
+    return () => clearTimeout(t);
   }, []);
 
   // Tap sur un push : navigue vers l'écran concerné (app en arrière-plan ou tuée).

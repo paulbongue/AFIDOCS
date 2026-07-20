@@ -39,6 +39,17 @@ Route::post('/login/otp/resend', [AuthController::class, 'resendOtp'])->middlewa
 // Connexion « Se connecter avec Google » (web + mobile).
 Route::post('/auth/google', [AuthController::class, 'googleLogin'])->middleware('throttle:10,1');
 
+// Version de l'app mobile : consultée automatiquement au démarrage pour proposer
+// une mise à jour si une version plus récente est publiée (voir config/appupdate.php).
+Route::get('/app-version', function () {
+    return response()->json([
+        'version' => (string) config('appupdate.version'),
+        'url' => (string) config('appupdate.url'),
+        'notes' => (string) config('appupdate.notes'),
+        'mandatory' => (bool) config('appupdate.mandatory'),
+    ]);
+});
+
 // --- Authentifie (admin | delegue | etudiant) -------------------------------
 Route::middleware('auth:sanctum')->group(function () {
 
