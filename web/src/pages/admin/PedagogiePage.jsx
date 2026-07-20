@@ -146,13 +146,17 @@ export default function PedagogiePage() {
         {/* Filières */}
         <div className="card">
           <h3>Filières</h3>
-          {filieres.map((f) => (
-            <div key={f.id} className={'nav-item' + (selF?.id === f.id ? ' active' : '')}
-                 onClick={() => pickFiliere(f)} style={{ justifyContent: 'space-between' }}>
-              <span><Badge code={f.code} couleur={f.couleur} /> {f.nom}</span>
-              <span onClick={(e) => { e.stopPropagation(); delFiliere(f.id); }} style={{ color: 'var(--red)' }}>✕</span>
-            </div>
-          ))}
+          <select className="input" value={selF?.id || ''}
+                  onChange={(e) => pickFiliere(filieres.find((f) => String(f.id) === e.target.value) || null)}>
+            <option value="">— Choisir une filière —</option>
+            {filieres.map((f) => <option key={f.id} value={f.id}>{f.code} — {f.nom}</option>)}
+          </select>
+          {selF && (
+            <button type="button" className="btn btn-ghost mt" style={{ color: 'var(--red)' }}
+                    onClick={() => delFiliere(selF.id)}>
+              ✕ Supprimer la filière « {selF.code} »
+            </button>
+          )}
           <form className="mt" onSubmit={addFiliere}>
             <input className="input" placeholder="Code (ex : GL)" value={newF.code}
                    onChange={(e) => setNewF({ ...newF, code: e.target.value.toUpperCase() })} />
@@ -170,13 +174,17 @@ export default function PedagogiePage() {
           <h3>Niveaux {selF ? `· ${selF.code}` : ''}</h3>
           {!selF ? <div className="muted">Sélectionnez une filière.</div> : (
             <>
-              {niveaux.map((n) => (
-                <div key={n.id} className={'nav-item' + (selN?.id === n.id ? ' active' : '')}
-                     onClick={() => pickNiveau(n)} style={{ justifyContent: 'space-between' }}>
-                  <span>{n.nom}</span>
-                  <span onClick={(e) => { e.stopPropagation(); delNiveau(n.id); }} style={{ color: 'var(--red)' }}>✕</span>
-                </div>
-              ))}
+              <select className="input" value={selN?.id || ''}
+                      onChange={(e) => pickNiveau(niveaux.find((n) => String(n.id) === e.target.value) || null)}>
+                <option value="">— Choisir un niveau —</option>
+                {niveaux.map((n) => <option key={n.id} value={n.id}>{n.nom}</option>)}
+              </select>
+              {selN && (
+                <button type="button" className="btn btn-ghost mt" style={{ color: 'var(--red)' }}
+                        onClick={() => delNiveau(selN.id)}>
+                  ✕ Supprimer le niveau « {selN.nom} »
+                </button>
+              )}
               <form className="row mt" onSubmit={addNiveau}>
                 <input className="input" placeholder="Niveau (ex : M1)" value={newN} onChange={(e) => setNewN(e.target.value)} />
                 <button className="btn btn-red">+</button>
