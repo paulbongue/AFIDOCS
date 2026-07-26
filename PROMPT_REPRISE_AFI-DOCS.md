@@ -18,12 +18,14 @@ On travaille sur **deux choses en parallèle** : le **code** de la plateforme, e
 
 ## 2. Récupérer le projet
 
-```bash
-git clone https://github.com/paulbongue/AFIDOCS.git
-cd AFIDOCS
-```
+Le dépôt est **privé** : `https://github.com/paulbongue/AFIDOCS.git` — branche **`main`**. Il contient **le code ET les fichiers .docx du mémoire** (31 fichiers .docx suivis).
 
-Branche de travail : **`main`**. Le dépôt contient **le code ET les fichiers .docx du mémoire** (31 fichiers .docx suivis).
+**C'est moi qui clone, pas toi.** Tu n'as pas accès à mon compte GitHub et tu ne dois jamais me demander de jeton d'accès. La procédure est :
+
+1. **Je** clone le dépôt sur la nouvelle machine (`git clone …`, mes identifiants saisis par moi).
+2. **Je te connecte le dossier local** obtenu : c'est là que tu travailles, comme tu l'as toujours fait.
+
+Tu ne lis donc jamais GitHub directement : tu lis le **dossier local connecté**. Ton environnement peut techniquement joindre GitHub en lecture pour un dépôt public, mais le dépôt étant privé, cette voie est fermée — et elle est inutile.
 
 Arborescence :
 
@@ -102,12 +104,56 @@ Fichiers annexes utiles : `Memo_soutenance_AFI-DOCS.docx` (questions du jury et 
 - Jeton Sanctum stocké en `localStorage` (exposé au XSS) : piste cookie `httpOnly` + CSP.
 - Notifications push : vérifier la clé **FCM V1** (compte de service Google) dans les credentials Expo — sans elle, l'APK autonome ne reçoit rien. `ExpoPushService` ne lit pas les accusés de réception, donc les erreurs de livraison sont invisibles.
 - Domaine DuckDNS à remplacer par un sous-domaine de l'établissement pour un usage institutionnel.
-- Changer les mots de passe des comptes de démonstration sur le serveur (ils étaient à `password`).
+- **Comptes de démonstration** : le dépôt a été public un temps, et 19 commits touchent les `.docx` — les versions antérieures de l'Annexe 2 exposaient donc les trois comptes (dont l'administrateur) avec le mot de passe `password` sur l'URL de production. Le dépôt est désormais privé et le mémoire ne les affiche plus, mais l'historique reste. **Ces mots de passe doivent être changés côté serveur** (et ne pas reprendre `Afi@2026`, valeur mentionnée dans le mémoire). Vérifier aussi qu'aucun `.env` du backend n'a jamais été committé.
 
-## 8. Pour démarrer
+## 8. Ton environnement de travail : à vérifier et compléter
 
-1. Clone le dépôt (section 2) et confirme-moi ce que tu vois : dernier commit, présence de `Memoire_AFI-DOCS_FINAL_GAMMA_v16.docx`, et les trois dossiers `backend/`, `web/`, `mobile/`.
-2. Ne modifie rien avant que je te dise sur quoi on travaille.
+Ton bac à sable Linux contient déjà, en principe : **python3** (avec `python-docx`, `Pillow`, `lxml`, `cairosvg`, `pdfplumber`, `matplotlib`, `openpyxl`, `python-pptx`), **Node 22**, **Graphviz** (`dot`), **pandoc**, **LibreOffice**, **pdftotext**, **ImageMagick**, **git** et **Java**.
+
+**Premier réflexe : lancer ce contrôle**, et n'installer que ce qui manque.
+
+```bash
+for c in python3 node dot pandoc soffice pdftotext git; do
+  printf "%-11s " "$c"; command -v $c >/dev/null && echo OK || echo ABSENT
+done
+for m in docx PIL cairosvg pdfplumber lxml matplotlib; do
+  printf "%-11s " "$m"; python3 -c "import $m" 2>/dev/null && echo OK || echo ABSENT
+done
+```
+
+Si un module Python manque, **le flag `--break-system-packages` est obligatoire** :
+
+```bash
+pip install python-docx cairosvg pdfplumber Pillow --break-system-packages -q
+```
+
+À quoi sert quoi, dans notre travail :
+
+- **python-docx** — l'outil central : toutes les corrections du mémoire passent par lui (édition ciblée, styles, tableaux, champs TOC).
+- **Graphviz (`dot`)** — génération des diagrammes UML et du schéma de base de données (dossier `Diagrammes_AFI-DOCS/`).
+- **cairosvg** — conversion SVG → PNG haute résolution (diagrammes de séquence, cas d'utilisation, graphiques).
+- **pdfplumber** — lecture des PDF (brief, canevas AFI).
+- **LibreOffice / pdftotext** — vérification du rendu et de la pagination d'un .docx. Attention : LibreOffice **ne remplit pas** les champs TOC ; seul Word le fait avec Ctrl+A → F9.
+- **Pillow / matplotlib** — dimensions d'images, graphiques.
+
+**Trois limites de l'environnement, à connaître pour ne pas perdre de temps :**
+
+1. **`php` est absent.** Impossible de faire `php -l` pour valider une modification du backend Laravel. Relis attentivement, et demande-moi de lancer le lint ou `php artisan` de mon côté.
+2. **`npm install -g` échoue** (réseau restreint). N'essaie pas d'installer esbuild ou un autre binaire global. Pour valider un fichier JSX, utilise le parseur déjà présent dans le dépôt :
+   ```bash
+   cd web && node -e '
+   const {parse}=require("@babel/parser");const fs=require("fs");
+   parse(fs.readFileSync("src/pages/admin/UsersPage.jsx","utf8"),{sourceType:"module",plugins:["jsx"]});
+   console.log("OK");'
+   ```
+   Et n'utilise **pas** `web/node_modules/.bin/esbuild` : c'est un binaire Windows, inutilisable sous Linux.
+3. **Le montage de fichiers peut servir des données tronquées** (voir règle 5 de la section 5). Un `.docx` illisible en zip ou un fichier de code « coupé en fin de fichier » n'est presque jamais un vrai problème : demande-moi une copie Explorateur pour le .docx, et fie-toi à l'outil de lecture de fichiers pour le code.
+
+## 9. Pour démarrer
+
+1. Je te connecte le dossier du projet, puis tu lances le contrôle d'environnement de la section 8.
+2. Confirme-moi ce que tu vois : dernier commit git, présence de `Memoire_AFI-DOCS_FINAL_GAMMA_v16.docx`, et les trois dossiers `backend/`, `web/`, `mobile/`.
+3. Ne modifie rien avant que je te dise sur quoi on travaille.
 
 ---
 *Dernière mise à jour de ce prompt : 26 juillet 2026.*
